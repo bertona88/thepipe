@@ -30,10 +30,27 @@ data before using it to release hardware.
 | `crates/pipe_planner` | guarded gearbox assembly state machine, recovery and acceptance metrics |
 | `crates/pipe_sim` | reduced observed-volume plant, sensor boundary and end-to-end reference run |
 | `crates/pipe_sim_cli` | deterministic headless run and machine-readable report |
-| `crates/pipe_sim_wasm` | browser-neutral WebAssembly boundary; no frontend |
+| `crates/pipe_sim_wasm` | browser-neutral WebAssembly boundary consumed by the operator console |
+| `web` | engineering operator console, viewport, telemetry and report export |
 | `cad` | build123d source models, printable exports and dimension manifest |
 | `scenarios` | versioned machine and gearbox acceptance inputs |
 | `scripts` | reproducible build, CAD and verification entry points |
+
+## Browser operator console
+
+The dependency-free operator console lives in `web/`. It connects to the generated
+Rust/WASM wrapper when present and otherwise uses a clearly labelled deterministic UI preview.
+The preview is for interaction and visualization testing only; it never claims an acceptance result.
+
+```bash
+./scripts/build_wasm.sh
+cd web
+npm run check
+npm run build
+npm run preview
+```
+
+Open `http://localhost:4173/web/` after starting the preview server.
 
 ## Quick verification
 

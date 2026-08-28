@@ -1,0 +1,10 @@
+{
+  "name": "the-pipe-simulator-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node --check app.js && node --check build.mjs",
+    "preview": "python3 -m http.server 4173 --directory .."
+  }
+}

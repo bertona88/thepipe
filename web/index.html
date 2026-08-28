@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Engineering operator console for The Pipe deterministic microassembly simulator."
+    />
+    <meta name="theme-color" content="#0a0d0c" />
+    <title>The Pipe — Microassembly Simulator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="The Pipe simulator home">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="brand-copy">
+            <strong>THE PIPE</strong>
+            <small>MICROASSEMBLY SIMULATOR</small>
+          </span>
+        </a>
+
+        <div class="run-context">
+          <label class="scenario-control">
+            <span>Scenario</span>
+            <select id="scenario-select" aria-label="Simulation scenario">
+              <option value="gearbox_baseline_v1">gearbox_baseline_v1</option>
+              <option value="nominal">nominal</option>
+              <option value="collision">collision injection</option>
+              <option value="occlusion">occlusion injection</option>
+              <option value="insertion-force">insertion-force injection</option>
+              <option value="fault-suite">fault suite</option>
+            </select>
+          </label>
+          <span class="divider" aria-hidden="true"></span>
+          <div class="model-status" id="model-status" role="status">
+            <span class="status-dot status-dot--pending"></span>
+            <span>
+              <small>MODEL</small>
+              <strong>CONNECTING</strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="run-actions">
+          <button class="icon-button" id="reset-button" type="button" title="Reset run (R)" aria-label="Reset run">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6M5.1 15a8 8 0 0 0 13.2 2M18.9 9A8 8 0 0 0 5.7 7"/></svg>
+          </button>
+          <button class="step-button" id="step-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 9 7-9 7V5Zm10 0v14"/></svg>
+            STEP
+          </button>
+          <button class="run-button" id="run-toggle" type="button">
+            <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"/></svg>
+            <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM14 5h4v14h-4z"/></svg>
+            <span>RUN</span>
+          </button>
+          <button class="icon-button export-button" id="export-button" type="button" title="Export report" aria-label="Export JSON report">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="left-rail" aria-label="Run configuration">
+          <section class="panel mission-panel">
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow">MISSION</span>
+                <h2>Gearbox assembly</h2>
+              </div>
+              <span class="revision-chip">REV 01</span>
+            </div>
+
+            <div class="part-hero" aria-label="Gearbox specification">
+              <svg viewBox="0 0 280 120" role="img" aria-label="Three-gear train schematic">
+                <g class="housing-outline">
+                  <path d="M18 18h244v84H18z"/>
+                  <path d="M29 29h222v62H29z"/>
+                </g>
+                <g class="gear gear--input" transform="translate(73 60)">
+                  <circle r="25"/><circle r="7"/>
+                  <path d="M0-31v12M0 19v12M-31 0h12M19 0h12M-22-22l9 9M13 13l9 9M22-22l-9 9M-13 13l-9 9"/>
+                </g>
+                <g class="gear gear--idler" transform="translate(139 60)">
+                  <circle r="34"/><circle r="7"/>
+                  <path d="M0-40v12M0 28v12M-40 0h12M28 0h12M-28-28l9 9M19 19l9 9M28-28l-9 9M-19 19l-9 9"/>
+                </g>
+                <g class="gear gear--output" transform="translate(220 60)">
+                  <circle r="43"/><circle r="7"/>
+                  <path d="M0-49v12M0 37v12M-49 0h12M37 0h12M-35-35l9 9M26 26l9 9M35-35l-9 9M-26 26l-9 9"/>
+                </g>
+              </svg>
+              <div class="dimension-line"><span>6.00 mm</span></div>
+            </div>
+
+            <dl class="spec-grid">
+              <div><dt>Envelope</dt><dd>6 × 4 × 1.8 <small>mm</small></dd></div>
+              <div><dt>Gear module</dt><dd>0.10 <small>mm</small></dd></div>
+              <div><dt>Train</dt><dd>12 / 18 / 24 <small>T</small></dd></div>
+              <div><dt>Target ratio</dt><dd>2.000 : 1</dd></div>
+            </dl>
+          </section>
+
+          <section class="panel sequence-panel">
+            <div class="section-title-row">
+              <span class="eyebrow">ASSEMBLY SEQUENCE</span>
+              <span id="sequence-count">03 / 11</span>
+            </div>
+            <ol class="sequence-list" id="sequence-list">
+              <li class="complete" data-phase="housing"><span>01</span><div><strong>Fixture housing</strong><small>Datum lock verified</small></div></li>
+              <li class="complete" data-phase="shafts"><span>02</span><div><strong>Seat three shafts</strong><small>Coaxiality ≤ 12 µm</small></div></li>
+              <li class="active" data-phase="output_gear"><span>03</span><div><strong>Place output gear</strong><small>Visual servo + force</small></div></li>
+              <li data-phase="idler_gear"><span>04</span><div><strong>Place idler gear</strong><small>Mesh capture</small></div></li>
+              <li data-phase="input_gear"><span>05</span><div><strong>Place input gear</strong><small>Mesh capture</small></div></li>
+              <li data-phase="rotation_test"><span>06</span><div><strong>Rotation test</strong><small>Forward + reverse</small></div></li>
+              <li data-phase="cover_handoff"><span>07</span><div><strong>Cover handoff</strong><small>Dual-arm protocol</small></div></li>
+              <li data-phase="cover_closure"><span>08</span><div><strong>Close housing</strong><small>Gap inspection</small></div></li>
+              <li data-phase="post_test"><span>09</span><div><strong>Post-cover test</strong><small>Final acceptance</small></div></li>
+            </ol>
+          </section>
+        </aside>
+
+        <section class="simulator-stage" aria-label="Simulation viewport">
+          <div class="viewport-toolbar">
+            <div class="view-tabs" role="group" aria-label="Viewport projection">
+              <button class="view-tab active" data-view="iso" type="button"><kbd>1</kbd> 3D CELL</button>
+              <button class="view-tab" data-view="top" type="button"><kbd>2</kbd> TOP</button>
+              <button class="view-tab" data-view="macro" type="button"><kbd>3</kbd> MACRO</button>
+            </div>
+            <div class="viewport-tools">
+              <button class="tool-toggle active" data-layer="sensors" type="button" aria-pressed="true">
+                <span class="layer-dot layer-dot--cyan"></span>SENSORS
+              </button>
+              <button class="tool-toggle active" data-layer="collision" type="button" aria-pressed="true">
+                <span class="layer-dot layer-dot--orange"></span>COLLISION
+              </button>
+              <button class="tool-toggle" data-layer="uncertainty" type="button" aria-pressed="false">
+                <span class="layer-dot layer-dot--violet"></span>UNCERTAINTY
+              </button>
+              <button class="icon-button compact" id="fit-view" type="button" title="Fit view" aria-label="Fit view">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap" id="canvas-wrap">
+            <canvas id="simulator-canvas" aria-label="Animated microassembly cell visualization"></canvas>
+            <div class="viewport-grid" aria-hidden="true"></div>
+
+            <div class="viewport-label viewport-label--tl">
+              <span class="live-pulse"></span>
+              <div><small>REFERENCE FRAME</small><strong>TUBE_WORLD</strong></div>
+            </div>
+            <div class="viewport-label viewport-label--tr">
+              <div><small>QUALIFIED VOLUME</small><strong>Ø 80 × 320 mm</strong></div>
+            </div>
+            <div class="axis-gizmo" aria-hidden="true">
+              <span class="axis axis--z">Z</span>
+              <span class="axis axis--x">X</span>
+              <span class="axis axis--y">Y</span>
+              <i></i>
+            </div>
+
+            <div class="active-callout" id="active-callout">
+              <span class="callout-line"></span>
+              <span class="callout-anchor"></span>
+              <div>
+                <small>ACTIVE COMPONENT</small>
+                <strong id="active-part-label">OUTPUT GEAR · 24T</strong>
+                <span><i></i><span id="active-action-label">ALIGNING TO SHAFT C</span></span>
+              </div>
+            </div>
+
+            <div class="scale-bar" aria-hidden="true"><span></span><small>20 mm</small></div>
+
+            <div class="view-hint" id="view-hint">
+              <span>DRAG TO ORBIT</span><span>SCROLL TO ZOOM</span>
+            </div>
+          </div>
+
+          <div class="transport-panel">
+            <div class="transport-topline">
+              <div class="timecode">
+                <small>SIM TIME</small>
+                <strong id="timecode">00:00.060</strong>
+                <span>× <span id="speed-label">1.0</span></span>
+              </div>
+              <div class="transport-state">
+                <span class="transport-state-dot"></span>
+                <span id="transport-state-label">PAUSED · CYCLE 3</span>
+              </div>
+              <label class="speed-control">
+                <span>SPEED</span>
+                <select id="speed-select" aria-label="Playback speed">
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                </select>
+              </label>
+            </div>
+            <div class="timeline" id="timeline">
+              <div class="timeline-track">
+                <div class="timeline-fill" id="timeline-fill"></div>
+                <div class="timeline-cursor" id="timeline-cursor"></div>
+                <button class="event-tick event-tick--done" style="--x: 8%" title="Housing fixed" aria-label="Housing fixed"></button>
+                <button class="event-tick event-tick--done" style="--x: 18%" title="Shafts seated" aria-label="Shafts seated"></button>
+                <button class="event-tick event-tick--active" style="--x: 29%" title="Output gear alignment" aria-label="Output gear alignment"></button>
+                <button class="event-tick" style="--x: 44%" title="Idler mesh" aria-label="Idler mesh"></button>
+                <button class="event-tick" style="--x: 59%" title="Input mesh" aria-label="Input mesh"></button>
+                <button class="event-tick" style="--x: 74%" title="Cover closure" aria-label="Cover closure"></button>
+                <button class="event-tick" style="--x: 92%" title="Acceptance" aria-label="Acceptance"></button>
+              </div>
+              <div class="timeline-labels"><span>LOCATE</span><span>INSERT</span><span>MESH</span><span>VERIFY</span></div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-rail" aria-label="Run telemetry">
+          <section class="panel health-panel">
+            <div class="panel-heading panel-heading--tight">
+              <div>
+                <span class="eyebrow">RUN HEALTH</span>
+                <h2 id="health-title">Within guards</h2>
+              </div>
+              <span class="health-ring"><i id="health-score">96</i></span>
+            </div>
+            <div class="health-metrics">
+              <div class="metric-card">
+                <div class="metric-card__head"><span>POSITION σ</span><strong id="position-sigma">6.2 <small>µm</small></strong></div>
+                <div class="micro-chart"><canvas id="sigma-chart"></canvas><span class="limit-line">10 µm</span></div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-card__head"><span>TOOL FORCE</span><strong id="tool-force">3.1 <small>mN</small></strong></div>
+                <div class="force-bar"><span id="force-fill"></span><i></i></div>
+                <div class="bar-labels"><span>0</span><span>5 mN gate</span><span>50</span></div>
+              </div>
+              <div class="metric-card metric-card--split">
+                <div><span>MIN CLEARANCE</span><strong id="clearance-value">0.187 <small>mm</small></strong></div>
+                <div><span>VISIBLE VIEWS</span><strong id="visible-views">5 <small>/ 6</small></strong></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel inspector-panel">
+            <div class="section-title-row">
+              <span class="eyebrow">ACTIVE INSPECTION</span>
+              <button class="text-button" id="pin-inspector" type="button">PIN</button>
+            </div>
+            <div class="component-header">
+              <span class="component-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="4"/><path d="M24 4v10m0 20v10M4 24h10m20 0h10M10 10l7 7m14 14 7 7m0-28-7 7M17 31l-7 7"/></svg>
+              </span>
+              <div><small>PART 06</small><strong id="inspector-part">OUTPUT GEAR</strong><span>24 teeth · Ø 2.40 mm</span></div>
+              <span class="state-chip" id="part-state-chip">HELD</span>
+            </div>
+
+            <div class="pose-table">
+              <div class="pose-row pose-row--head"><span>ESTIMATED POSE</span><span>X</span><span>Y</span><span>Z</span></div>
+              <div class="pose-row"><strong>POS <small>mm</small></strong><span id="pose-x">+4.351</span><span id="pose-y">+2.004</span><span id="pose-z">+1.324</span></div>
+              <div class="pose-row"><strong>ROT <small>deg</small></strong><span id="rot-x">+0.06</span><span id="rot-y">−0.11</span><span id="rot-z">+14.8</span></div>
+              <div class="pose-row pose-row--sigma"><strong>σ</strong><span>±0.006</span><span>±0.007</span><span>±0.005</span></div>
+            </div>
+
+            <div class="guard-card" id="guard-card">
+              <div class="guard-card__icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+              </div>
+              <div><small>NEXT GUARD</small><strong id="guard-label">CENTER ERROR ≤ 12 µm</strong><span id="guard-detail">Current 8.4 µm · PASS</span></div>
+            </div>
+          </section>
+
+          <section class="panel telemetry-panel">
+            <div class="section-title-row">
+              <span class="eyebrow">EVENT STREAM</span>
+              <span class="stream-rate">50 Hz</span>
+            </div>
+            <div class="event-stream" id="event-stream" aria-live="polite">
+              <div><time>00.060</time><i class="event-info"></i><span>Visual servo acquired <strong>output_gear</strong></span></div>
+              <div><time>00.040</time><i class="event-pass"></i><span>Shaft C axis gate <strong>passed</strong></span></div>
+              <div><time>00.020</time><i class="event-sensor"></i><span>5 distinct camera views fused</span></div>
+              <div><time>00.000</time><i class="event-pass"></i><span>Scenario digest verified</span></div>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="statusbar">
+        <div><span class="status-dot status-dot--online"></span><span>DETERMINISTIC CLOCK</span><strong>20 ms executive cycle</strong></div>
+        <div><span>PHYSICS</span><strong>F1 reduced · f64</strong></div>
+        <div><span>OPTICS</span><strong>geometric · 6 global + 2 macro</strong></div>
+        <div><span>TRUTH FIREWALL</span><strong>ENFORCED</strong></div>
+        <div class="statusbar-shortcuts"><kbd>SPACE</kbd> RUN / PAUSE <kbd>R</kbd> RESET</div>
+      </footer>
+    </div>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
