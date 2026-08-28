@@ -1,0 +1,15 @@
+[package]
+name = "pipe_sim_cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "pipe-sim"
+path = "src/main.rs"
+
+[dependencies]
+pipe_sim = { path = "../pipe_sim" }
+serde_json = "1"
+sha2 = "0.10"

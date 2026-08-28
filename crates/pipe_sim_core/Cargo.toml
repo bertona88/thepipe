@@ -1,0 +1,12 @@
+[package]
+name = "pipe_sim_core"
+version.workspace = true
+edition.workspace = true
+description = "Deterministic, dependency-free mechanics core for the Pipe microrobotic assembly simulator"
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+
+[dependencies]

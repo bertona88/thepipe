@@ -1,0 +1,1061 @@
+{
+  "arm_actuation_bom": {
+    "arm_count": 4,
+    "channels_per_arm": 4,
+    "line_diameter_mm": 0.2,
+    "line_sides_per_shared_capstan": 2,
+    "motor_count": 16,
+    "spool_count": 16
+  },
+  "arm_joint_axes_local": [
+    {
+      "direction": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "shoulder_yaw",
+      "origin_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "direction": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "name": "shoulder_pitch",
+      "origin_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "direction": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "name": "elbow_pitch",
+      "origin_mm": [
+        31.300723223,
+        0.0,
+        -6.653174106
+      ]
+    },
+    {
+      "direction": [
+        0.984807753,
+        0.0,
+        0.173648178
+      ],
+      "name": "wrist_roll",
+      "origin_mm": [
+        75.617072109,
+        0.0,
+        1.160993889
+      ]
+    }
+  ],
+  "assembly": "gearbox",
+  "calibrated_radial_datums_mm": {
+    "physical_rail_center_radius": 76.9,
+    "rail_to_shoulder_offset": 4.900000000000006,
+    "shoulder_root_radius": 72.0
+  },
+  "coordinate_system": {
+    "gear_shafts": "+Z",
+    "tube_axis": "+Z",
+    "tube_centerline": [
+      0.0,
+      0.0
+    ]
+  },
+  "gearbox_assembly_operations": [
+    {
+      "action": "insert",
+      "part": "S1"
+    },
+    {
+      "action": "insert",
+      "part": "S2"
+    },
+    {
+      "action": "insert",
+      "part": "S3"
+    },
+    {
+      "action": "place_on_shaft",
+      "part": "G3"
+    },
+    {
+      "action": "place_on_shaft",
+      "part": "G2"
+    },
+    {
+      "action": "place_on_shaft",
+      "part": "G1"
+    },
+    {
+      "action": "close_two_latches",
+      "part": "cover"
+    }
+  ],
+  "gearbox_assembly_sequence": [
+    "S1",
+    "S2",
+    "S3",
+    "G3",
+    "G2",
+    "G1",
+    "cover"
+  ],
+  "geometry_facts_sha256": "44c1a7054ab49b4421c69557aab21dded9aa0543d378b13ec8a7ff79cf18632d",
+  "parameter_sha256": "23e1fbcbdb795ad262ae09f9da75272a0955566c41d4ed8d16d399cbdfeab40c",
+  "parameters": {
+    "arm": {
+      "actuator_axes": [
+        "shoulder_yaw",
+        "shoulder_pitch",
+        "elbow_pitch",
+        "wrist_roll"
+      ],
+      "actuator_count": 4,
+      "actuator_spacing": 10.0,
+      "default_joint_angles_deg": [
+        0.0,
+        -12.0,
+        22.0,
+        0.0
+      ],
+      "gearhead_diameter": 7.0,
+      "gearhead_length": 5.5,
+      "hinge_bore_clearance": 0.1,
+      "hinge_pin_diameter": 1.2,
+      "joint_radius": 3.4,
+      "link_count": 3,
+      "link_lengths": [
+        32.0,
+        30.0,
+        15.0
+      ],
+      "link_thickness": 2.4,
+      "link_width": 5.6,
+      "material": "tough_MSLA_resin",
+      "motor_diameter": 6.0,
+      "motor_length": 15.0,
+      "pitch_yoke_span": 7.2,
+      "pitch_yoke_thickness": 1.2,
+      "shoulder_root_radius": 72.0,
+      "shoulder_yaw_stage_height": 3.0,
+      "shoulder_yaw_stage_radius": 4.8,
+      "spool_radius": 3.0,
+      "spool_width": 4.2,
+      "tendon_channel_diameter": 0.9,
+      "tendon_diameter": 0.2,
+      "tendon_material": "0.20_mm_UHMWPE_line",
+      "tendon_offset": 1.65,
+      "usable_tendon_payout": 12.0,
+      "wrist_roll_length": 5.0,
+      "wrist_roll_outer_diameter": 4.8
+    },
+    "carriage": {
+      "axial_length": 42.0,
+      "deck_reach": 10.0,
+      "deck_thickness": 3.0,
+      "deck_width": 8.0,
+      "fastener_hole_diameter": 1.7,
+      "material": "tough_MSLA_resin",
+      "pivot_hole_diameter": 1.3,
+      "radial_depth": 5.0,
+      "tangential_width": 9.0
+    },
+    "gearbox": {
+      "backlash": 0.02,
+      "bore_diameter": 0.42,
+      "bore_entry_chamfer": 0.025,
+      "bore_entry_chamfer_angle_deg": 45.0,
+      "center_y": 2.0,
+      "datum_count": 3,
+      "datum_pad_diameter": 0.3,
+      "datum_pad_height": 0.03,
+      "gear_floor_clearance": 0.0,
+      "gear_side_clearance": 0.018,
+      "gear_thickness": 0.35,
+      "housing_floor": 0.25,
+      "housing_height": 1.6,
+      "housing_length": 6.0,
+      "housing_wall": 0.03,
+      "housing_width": 4.0,
+      "hub_diameter": 0.55,
+      "idler_teeth": 18,
+      "input_center_x": 0.75,
+      "input_drive_slot_width": 0.1,
+      "input_driver_window_diameter": 0.75,
+      "input_teeth": 12,
+      "latch_count": 2,
+      "lid_thickness": 0.2,
+      "material": "2PP_low_shrink_photopolymer",
+      "material_density_g_mm3": 0.0012,
+      "module": 0.1,
+      "output_observation_window_diameter": 1.0,
+      "output_phase_mark_depth": 0.03,
+      "output_phase_mark_long_length": 0.18,
+      "output_phase_mark_short_length": 0.1,
+      "output_phase_mark_width": 0.04,
+      "output_teeth": 24,
+      "pressure_angle_deg": 25.0,
+      "shaft_deburr_chamfer": 0.005,
+      "shaft_density_g_mm3": 0.00785,
+      "shaft_diameter": 0.35,
+      "shaft_length": 1.55,
+      "shaft_material": "0.35_mm_hardened_steel_or_tungsten_dowel",
+      "shaft_seat_cap_thickness": 0.01,
+      "shaft_seat_depth": 0.25,
+      "shaft_seat_diameter": 0.34,
+      "shaft_seat_split_width": 0.04,
+      "tolerance_perturbation": 0.01,
+      "total_gear_height": 1.3,
+      "two_photon_min_feature": 0.008,
+      "two_photon_running_clearance": 0.02
+    },
+    "gripper": {
+      "jaw_length": 8.0,
+      "jaw_opening": 2.8,
+      "jaw_thickness": 2.0,
+      "jaw_width": 1.4,
+      "material": "tough_MSLA_resin_with_silicone_tip_dip",
+      "palm_length": 6.0,
+      "palm_thickness": 2.4,
+      "palm_width": 6.0,
+      "pivot_diameter": 1.0,
+      "tendon_channel_diameter": 0.75,
+      "tip_width": 0.65
+    },
+    "manufacturing": {
+      "layer_height": 0.025,
+      "minimum_printed_gap": 0.08,
+      "minimum_supported_feature": 0.18,
+      "minimum_wall": 0.45,
+      "nominal_petg_density_g_mm3": 0.00127,
+      "nominal_resin_density_g_mm3": 0.00118,
+      "process": "405_nm_MSLA_resin",
+      "resin_shrink_scale": 1.006,
+      "stl_angular_tolerance_deg": 0.15,
+      "stl_linear_tolerance": 0.01,
+      "xy_pixel": 0.035
+    },
+    "rail": {
+      "carriage_clearance": 0.25,
+      "material": "3x6_mm_pultruded_carbon_or_printed_PETG",
+      "radial_depth": 3.0,
+      "tangential_width": 6.0,
+      "wall_standoff": 0.6
+    },
+    "schema_version": "pipe-cad/0.1",
+    "sensing": {
+      "camera_aperture_diameter": 6.6,
+      "camera_board_depth": 2.0,
+      "camera_board_height": 24.0,
+      "camera_board_width": 24.0,
+      "camera_lens_diameter": 8.0,
+      "camera_pod_depth": 8.0,
+      "camera_pod_height": 27.0,
+      "camera_pod_width": 27.0,
+      "case_wall": 1.0,
+      "depth_quantization": 0.00025,
+      "dropout_probability": 0.002,
+      "fiducial_cells": 6,
+      "fiducial_relief": 0.16,
+      "fiducial_size": 12.0,
+      "fiducial_thickness": 0.7,
+      "global_camera_count": 6,
+      "global_camera_end_offsets": [
+        -106.0,
+        106.0
+      ],
+      "global_camera_front_radius": 60.0,
+      "global_camera_triplet_azimuths": [
+        [
+          0.0,
+          120.0,
+          240.0
+        ],
+        [
+          60.0,
+          180.0,
+          300.0
+        ]
+      ],
+      "global_horizontal_fov_deg": 68.0,
+      "global_image_height_px": 800,
+      "global_image_width_px": 1280,
+      "macro_aperture_diameter": 2.6,
+      "macro_field_height": 3.0,
+      "macro_field_width": 4.0,
+      "macro_image_height_px": 1536,
+      "macro_image_width_px": 2048,
+      "macro_lens_diameter": 3.2,
+      "macro_mount_arm_index": 1,
+      "macro_mount_normal_offset": 11.0,
+      "macro_pixel_scale": 0.002,
+      "macro_pod_depth": 6.0,
+      "macro_pod_height": 10.0,
+      "macro_pod_width": 10.0,
+      "macro_stereo_baseline": 12.0,
+      "material": "black_MSLA_resin_with_matte_white_inlay",
+      "pixel_sigma_px": 0.18,
+      "projector_aperture_diameter": 5.2,
+      "projector_azimuth_deg": 90.0,
+      "projector_depth": 10.0,
+      "projector_front_radius": 60.0,
+      "projector_height": 12.0,
+      "projector_width": 16.0,
+      "projector_z_offset": 0.0,
+      "simultaneous_macro_view_count": 2,
+      "structured_light_projector_count": 1
+    },
+    "tooling": {
+      "nest_fastener_diameter": 2.2,
+      "nest_height": 2.5,
+      "nest_length": 12.0,
+      "nest_pocket_clearance": 0.06,
+      "nest_pocket_depth": 0.8,
+      "nest_width": 9.0,
+      "pointer_base_height": 2.0,
+      "pointer_base_length": 12.0,
+      "pointer_base_width": 10.0,
+      "pointer_rod_diameter": 1.2,
+      "pointer_rod_length": 20.0,
+      "pointer_tip_diameter": 0.01,
+      "pointer_tip_length": 4.0,
+      "printed_density_g_mm3": 0.0012,
+      "printed_material": "PETG_or_tough_MSLA_resin",
+      "probe_base_height": 2.0,
+      "probe_base_length": 8.0,
+      "probe_base_width": 6.0,
+      "probe_flexure_length": 9.0,
+      "probe_flexure_thickness": 0.45,
+      "probe_flexure_width": 0.6,
+      "probe_tip_diameter": 0.3,
+      "probe_tip_length": 4.0,
+      "rotary_blade_length": 0.45,
+      "rotary_blade_thickness": 0.08,
+      "rotary_blade_width": 0.08,
+      "rotary_shank_diameter": 3.175,
+      "rotary_shank_length": 18.0,
+      "tool_material": "stainless_steel_or_tungsten_with_printed_holder",
+      "tray_gear_clearance": 0.12,
+      "tray_height": 2.4,
+      "tray_length": 34.0,
+      "tray_pocket_depth": 1.0,
+      "tray_width": 24.0,
+      "vacuum_holder_diameter": 6.0,
+      "vacuum_holder_length": 18.0,
+      "vacuum_nozzle_inner_diameter": 0.45,
+      "vacuum_nozzle_length": 16.0,
+      "vacuum_nozzle_outer_diameter": 0.9,
+      "vacuum_tip_inner_diameter": 0.18,
+      "vacuum_tip_outer_diameter": 0.3
+    },
+    "tube": {
+      "end_margin": 5.0,
+      "inner_radius": 80.0,
+      "length": 330.0,
+      "material": "clear_acrylic_tube_or_printed_quadrants",
+      "rail_count": 4,
+      "wall": 3.0
+    }
+  },
+  "records": [
+    {
+      "bbox_mm": {
+        "max": [
+          6.0,
+          4.0,
+          1.6
+        ],
+        "min": [
+          0.0,
+          0.0,
+          -0.03
+        ],
+        "size": [
+          6.0,
+          4.0,
+          1.63
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        3.005069383,
+        1.999482098,
+        0.221654254
+      ],
+      "density_g_mm3": 0.0012,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.013193828935,
+          -3.3275836e-05,
+          3.292276e-06
+        ],
+        [
+          -3.3275836e-05,
+          0.027382181423,
+          -9.93649e-07
+        ],
+        [
+          3.292276e-06,
+          -9.93649e-07,
+          0.03908873269
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          10.994857446,
+          -0.027729863,
+          0.002743563
+        ],
+        [
+          -0.027729863,
+          22.818484519,
+          -0.000828041
+        ],
+        [
+          0.002743563,
+          -0.000828041,
+          32.573943908
+        ]
+      ],
+      "mass_g": 0.008107202584,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "2PP_low_shrink_photopolymer",
+      "name": "gearbox_housing",
+      "notes": [
+        "acceptance-article nominal geometry",
+        "three 0.340 x 0.250 mm blind split-compliant shaft seats",
+        "two cover-latch captures and external three-point datum"
+      ],
+      "printable": true,
+      "process": "two_photon_polymerization",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        3.005069383,
+        1.999482098,
+        0.221654254
+      ],
+      "volume_mm3": 6.756002153
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          0.925,
+          2.175,
+          1.55
+        ],
+        "min": [
+          0.575,
+          1.825,
+          0.0
+        ],
+        "size": [
+          0.35,
+          0.35,
+          1.55
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        0.75,
+        2.0,
+        0.775
+      ],
+      "density_g_mm3": 0.00785,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.000243205788,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.000243205788,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.7919164e-05
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.030981629,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.030981629,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.002282696
+        ]
+      ],
+      "mass_g": 0.001170436956,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "0.35_mm_hardened_steel_or_tungsten_dowel",
+      "name": "S1",
+      "notes": [
+        "acceptance_article_id=S1",
+        "insert into 0.340 x 0.250 mm blind split seat",
+        "end deburr chamfers are <=0.005 mm"
+      ],
+      "printable": false,
+      "process": "purchased_or_cut_to_length",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        0.75,
+        2.0,
+        0.775
+      ],
+      "volume_mm3": 0.149100249
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          2.425,
+          2.175,
+          1.55
+        ],
+        "min": [
+          2.075,
+          1.825,
+          0.0
+        ],
+        "size": [
+          0.35,
+          0.35,
+          1.55
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        2.25,
+        2.0,
+        0.775
+      ],
+      "density_g_mm3": 0.00785,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.000243205788,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.000243205788,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.7919164e-05
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.030981629,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.030981629,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.002282696
+        ]
+      ],
+      "mass_g": 0.001170436956,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "0.35_mm_hardened_steel_or_tungsten_dowel",
+      "name": "S2",
+      "notes": [
+        "acceptance_article_id=S2",
+        "insert into 0.340 x 0.250 mm blind split seat",
+        "end deburr chamfers are <=0.005 mm"
+      ],
+      "printable": false,
+      "process": "purchased_or_cut_to_length",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        2.25,
+        2.0,
+        0.775
+      ],
+      "volume_mm3": 0.149100249
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          4.525,
+          2.175,
+          1.55
+        ],
+        "min": [
+          4.175,
+          1.825,
+          0.0
+        ],
+        "size": [
+          0.35,
+          0.35,
+          1.55
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        4.35,
+        2.0,
+        0.775
+      ],
+      "density_g_mm3": 0.00785,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.000243205788,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.000243205788,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.7919164e-05
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.030981629,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.030981629,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.002282696
+        ]
+      ],
+      "mass_g": 0.001170436956,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "0.35_mm_hardened_steel_or_tungsten_dowel",
+      "name": "S3",
+      "notes": [
+        "acceptance_article_id=S3",
+        "insert into 0.340 x 0.250 mm blind split seat",
+        "end deburr chamfers are <=0.005 mm"
+      ],
+      "printable": false,
+      "process": "purchased_or_cut_to_length",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        4.35,
+        2.0,
+        0.775
+      ],
+      "volume_mm3": 0.149100249
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          5.649981,
+          3.299981,
+          1.55
+        ],
+        "min": [
+          3.050019,
+          0.700019,
+          0.25
+        ],
+        "size": [
+          2.599962,
+          2.599962,
+          1.3
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        4.349998278,
+        2.0,
+        0.463245015
+      ],
+      "density_g_mm3": 0.0012,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.000737534363,
+          0.0,
+          3.496e-09
+        ],
+        [
+          0.0,
+          0.000737533636,
+          0.0
+        ],
+        [
+          3.496e-09,
+          0.0,
+          0.001332980176
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.614611969,
+          0.0,
+          2.913e-06
+        ],
+        [
+          0.0,
+          0.614611363,
+          0.0
+        ],
+        [
+          2.913e-06,
+          0.0,
+          1.110816813
+        ]
+      ],
+      "mass_g": 0.001905677511,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "2PP_low_shrink_photopolymer",
+      "name": "G3",
+      "notes": [
+        "acceptance_article_id=G3",
+        "output_gear_z24",
+        "phase_deg=0.000000",
+        "unequal recessed optical phase marks",
+        "analytical involute, sampled flank",
+        "0.025 mm x 45 degree bore-entry chamfers at both ends"
+      ],
+      "printable": true,
+      "process": "two_photon_polymerization",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        4.349998278,
+        2.0,
+        0.463245015
+      ],
+      "volume_mm3": 1.588064592
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          3.237983,
+          2.999979,
+          1.55
+        ],
+        "min": [
+          1.262017,
+          1.000021,
+          0.25
+        ],
+        "size": [
+          1.975966,
+          1.999958,
+          1.3
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        2.25,
+        2.0,
+        0.492345024
+      ],
+      "density_g_mm3": 0.0012,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.000271791842,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.000271791842,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.000422511298
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.226493202,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.226493202,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.352092748
+        ]
+      ],
+      "mass_g": 0.001082470014,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "2PP_low_shrink_photopolymer",
+      "name": "G2",
+      "notes": [
+        "acceptance_article_id=G2",
+        "idler_gear_z18",
+        "phase_deg=170.000000",
+        "plain idler hub",
+        "analytical involute, sampled flank",
+        "0.025 mm x 45 degree bore-entry chamfers at both ends"
+      ],
+      "printable": true,
+      "process": "two_photon_polymerization",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        2.25,
+        2.0,
+        0.492345024
+      ],
+      "volume_mm3": 0.902058345
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          1.449979,
+          2.699979,
+          1.55
+        ],
+        "min": [
+          0.050021,
+          1.300021,
+          0.25
+        ],
+        "size": [
+          1.399958,
+          1.399958,
+          1.3
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        0.75,
+        2.0,
+        0.565678008
+      ],
+      "density_g_mm3": 0.0012,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          9.0327864e-05,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          9.0150716e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          8.7564988e-05
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          0.07527322,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.075125597,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.072970823
+        ]
+      ],
+      "mass_g": 0.000495897862,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "2PP_low_shrink_photopolymer",
+      "name": "G1",
+      "notes": [
+        "acceptance_article_id=G1",
+        "input_gear_z12",
+        "phase_deg=0.000000",
+        "0.10 mm input-driver slot",
+        "analytical involute, sampled flank",
+        "0.025 mm x 45 degree bore-entry chamfers at both ends"
+      ],
+      "printable": true,
+      "process": "two_photon_polymerization",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        0.75,
+        2.0,
+        0.565678008
+      ],
+      "volume_mm3": 0.413248219
+    },
+    {
+      "bbox_mm": {
+        "max": [
+          6.0,
+          4.0,
+          1.8
+        ],
+        "min": [
+          0.0,
+          0.0,
+          1.32
+        ],
+        "size": [
+          6.0,
+          4.0,
+          0.48
+        ]
+      },
+      "category": "gearbox",
+      "center_of_mass_mm": [
+        2.998569874,
+        2.0,
+        1.693044828
+      ],
+      "density_g_mm3": 0.0012,
+      "inertia_tensor_centroidal_g_mm2": [
+        [
+          0.008373407534,
+          -6.96864e-05,
+          5.21264e-07
+        ],
+        [
+          -6.96864e-05,
+          0.017629036945,
+          0.0
+        ],
+        [
+          5.21264e-07,
+          0.0,
+          0.025952587045
+        ]
+      ],
+      "inertia_tensor_centroidal_mm5": [
+        [
+          6.977839612,
+          -0.058072,
+          0.000434387
+        ],
+        [
+          -0.058072,
+          14.690864121,
+          0.0
+        ],
+        [
+          0.000434387,
+          0.0,
+          21.627155871
+        ]
+      ],
+      "mass_g": 0.005707748872,
+      "mass_properties_basis": "homogeneous_density_times_exact_brep",
+      "mass_properties_status": "homogeneous_nominal_density",
+      "material": "2PP_low_shrink_photopolymer",
+      "name": "cover",
+      "notes": [
+        "acceptance_article_id=cover",
+        "final vertical insertion and two-latch closure",
+        "0.75 mm driver and 1.0 mm observation windows"
+      ],
+      "printable": true,
+      "process": "two_photon_polymerization",
+      "quantity": 1,
+      "solid_count": 1,
+      "valid_brep": true,
+      "volume_centroid_mm": [
+        2.998569874,
+        2.0,
+        1.693044828
+      ],
+      "volume_mm3": 4.756457393
+    }
+  ],
+  "schema": "pipe-cad/0.1",
+  "tendon_loop_channels": [
+    {
+      "axis": "shoulder_yaw",
+      "line_sides_on_shared_differential_capstan": 2,
+      "motor_count": 1,
+      "spool_count": 1
+    },
+    {
+      "axis": "shoulder_pitch",
+      "line_sides_on_shared_differential_capstan": 2,
+      "motor_count": 1,
+      "spool_count": 1
+    },
+    {
+      "axis": "elbow_pitch",
+      "line_sides_on_shared_differential_capstan": 2,
+      "motor_count": 1,
+      "spool_count": 1
+    },
+    {
+      "axis": "wrist_roll",
+      "line_sides_on_shared_differential_capstan": 2,
+      "motor_count": 1,
+      "spool_count": 1
+    }
+  ],
+  "units": "mm"
+}

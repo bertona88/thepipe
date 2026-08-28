@@ -1,0 +1,7 @@
+[toolchain]
+# Keep the channel aligned with bootstrap.sh, which provisions the stable alias
+# and installs this target on that alias for clean local setups.
+channel = "stable"
+profile = "minimal"
+targets = ["wasm32-unknown-unknown"]
+components = ["clippy", "rustfmt"]
