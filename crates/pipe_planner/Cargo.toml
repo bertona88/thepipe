@@ -1,0 +1,13 @@
+[package]
+name = "pipe_planner"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Deterministic guarded task executive for micro-gearbox assembly"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+pipe_sim_core = { path = "../pipe_sim_core" }

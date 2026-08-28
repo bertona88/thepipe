@@ -1,0 +1,14 @@
+[package]
+name = "pipe_physics"
+version.workspace = true
+edition.workspace = true
+description = "Deterministic f64 Rapier backend for the Pipe microrobotic assembly simulator"
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+
+[dependencies]
+pipe_sim_core = { path = "../pipe_sim_core" }
+rapier3d-f64 = "0.35.3"

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipe-cell-cad"
+version = "0.1.0"
+description = "Parametric build123d hardware for the low-cost observed-volume assembly cell"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "build123d>=0.10,<0.12",
+]
+
+[project.scripts]
+pipe-cad-export = "pipe_cad.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pipe_cad*"]
