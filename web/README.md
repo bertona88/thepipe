@@ -8,6 +8,7 @@ From `web/`:
 
 ```bash
 npm run check
+npm test
 npm run build
 npm run preview
 ```
@@ -20,6 +21,7 @@ Generate it first with:
 ./scripts/build_wasm.sh
 ```
 
+The static build copies that wrapper into `web/dist/wasm/` when it is present.
 If the wrapper is absent, the console enters a clearly labelled deterministic
 UI-preview mode. That preview exercises controls and visualization only; it
 does not replace the Rust acceptance result.

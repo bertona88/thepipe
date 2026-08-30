@@ -1,3 +1,5 @@
+import { interpretSnapshot } from "./simulator-bridge.mjs";
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -20,7 +22,9 @@ const dom = {
   sequenceCount: $("#sequence-count"),
   activePart: $("#active-part-label"),
   activeAction: $("#active-action-label"),
+  inspectorPartId: $("#inspector-part-id"),
   inspectorPart: $("#inspector-part"),
+  inspectorPartMeta: $("#inspector-part-meta"),
   partState: $("#part-state-chip"),
   healthTitle: $("#health-title"),
   healthScore: $("#health-score"),
@@ -28,6 +32,7 @@ const dom = {
   sigma: $("#position-sigma"),
   force: $("#tool-force"),
   forceFill: $("#force-fill"),
+  forceGateLabel: $("#force-gate-label"),
   clearance: $("#clearance-value"),
   views: $("#visible-views"),
   poseX: $("#pose-x"),
@@ -36,6 +41,10 @@ const dom = {
   rotX: $("#rot-x"),
   rotY: $("#rot-y"),
   rotZ: $("#rot-z"),
+  poseHeading: $("#pose-heading"),
+  sigmaX: $("#sigma-x"),
+  sigmaY: $("#sigma-y"),
+  sigmaZ: $("#sigma-z"),
   guardCard: $("#guard-card"),
   guardLabel: $("#guard-label"),
   guardDetail: $("#guard-detail"),
@@ -66,6 +75,16 @@ const injectedFaults = {
   "fault-suite": { at: 0.39, message: "Fault suite injected recoverable pose dropout", type: "sensor" },
 };
 
+const componentCatalog = {
+  1: { name: "INPUT SHAFT", meta: "Ø 0.35 × 1.55 mm" },
+  2: { name: "IDLER SHAFT", meta: "Ø 0.35 × 1.55 mm" },
+  3: { name: "OUTPUT SHAFT", meta: "Ø 0.35 × 1.55 mm" },
+  4: { name: "OUTPUT GEAR", meta: "24 teeth · pitch Ø 2.40 mm" },
+  5: { name: "IDLER GEAR", meta: "18 teeth · pitch Ø 1.80 mm" },
+  6: { name: "INPUT GEAR", meta: "12 teeth · pitch Ø 1.20 mm" },
+  7: { name: "HOUSING COVER", meta: "6.00 × 4.00 × 0.20 mm" },
+};
+
 const state = {
   running: false,
   terminal: false,
@@ -75,6 +94,11 @@ const state = {
   simulator: null,
   wasmModule: null,
   rawSnapshot: null,
+  telemetry: null,
+  poseError: null,
+  componentId: 4,
+  componentName: null,
+  executivePhase: null,
   cycle: 3,
   time: 0.06,
   progress: 0.285,
@@ -149,43 +173,22 @@ function renderEvents() {
   }).join("");
 }
 
-function deepFind(object, names, depth = 0) {
-  if (!object || typeof object !== "object" || depth > 8) return undefined;
-  for (const name of names) {
-    if (Object.prototype.hasOwnProperty.call(object, name)) return object[name];
-  }
-  for (const value of Object.values(object)) {
-    const found = deepFind(value, names, depth + 1);
-    if (found !== undefined) return found;
-  }
-  return undefined;
-}
-
 function updateFromWasm(snapshot) {
   state.rawSnapshot = snapshot;
-  const cycle = Number(deepFind(snapshot, ["cycle", "executive_cycle", "step"]));
-  const simTime = Number(deepFind(snapshot, ["sim_time_s", "time_s", "elapsed_s"]));
-  const phaseName = String(deepFind(snapshot, ["phase", "task_phase", "active_phase", "state"]) ?? "").toLowerCase();
-  const terminal = Boolean(deepFind(snapshot, ["terminal", "is_terminal"]));
-  const completed = Boolean(deepFind(snapshot, ["completed", "is_completed", "accepted"]));
+  const interpreted = interpretSnapshot(snapshot, state.progress);
+  state.cycle = interpreted.cycle ?? state.cycle + 1;
+  state.time = interpreted.timeSeconds ?? state.time + 0.02;
+  state.progress = interpreted.progress;
+  state.telemetry = interpreted.telemetry;
+  state.poseError = interpreted.poseError;
+  state.componentId = interpreted.componentId;
+  state.componentName = interpreted.componentName;
+  state.executivePhase = interpreted.executivePhase;
+  state.terminal = interpreted.terminal || state.simulator?.terminal || false;
+  state.completed = interpreted.completed || state.simulator?.completed || false;
 
-  if (Number.isFinite(cycle)) state.cycle = cycle;
-  else state.cycle += 1;
-  if (Number.isFinite(simTime)) state.time = simTime;
-  else state.time += 0.02;
-
-  const matchingIndex = sequence.findIndex((phase) => phaseName.includes(phase.key) || phaseName.includes(phase.label.toLowerCase().replaceAll(" ", "_")));
-  if (matchingIndex >= 0) {
-    const next = sequence[Math.min(matchingIndex + 1, sequence.length - 1)];
-    const phaseProgress = Number(deepFind(snapshot, ["phase_progress", "progress"]));
-    const local = Number.isFinite(phaseProgress) ? clamp(phaseProgress, 0, 1) : 0.25;
-    state.progress = lerp(sequence[matchingIndex].progress, next.progress, local);
-  } else {
-    state.progress = clamp(state.progress + 0.0018, 0, 1);
-  }
-
-  state.terminal = terminal || state.simulator?.terminal || false;
-  state.completed = completed || state.simulator?.completed || false;
+  for (const event of interpreted.events) addEvent(event, event.includes("rejected") || event.includes("aborted") ? "error" : "info");
+  if (interpreted.injectedFault) addEvent(`Injected fault: ${interpreted.injectedFault}`, "sensor");
   if (state.terminal) stopRun();
 }
 
@@ -196,6 +199,11 @@ async function initializeSimulator({ preservePosition = false } = {}) {
   state.completed = false;
   state.faultRaised = false;
   state.rawSnapshot = null;
+  state.telemetry = null;
+  state.poseError = null;
+  state.componentId = null;
+  state.componentName = null;
+  state.executivePhase = null;
   state.events = [];
 
   if (!preservePosition) {
@@ -322,6 +330,24 @@ function toggleRun() {
 }
 
 function metricSnapshot() {
+  const phase = phaseForProgress(state.progress);
+  const gearInsertion = ["output_gear", "idler_gear", "input_gear"].includes(phase.key);
+  const forceLimitMn = gearInsertion ? 5 : 50;
+
+  if (state.mode === "wasm" && state.telemetry) {
+    const { sigmaUm: sigma, forceMn: force, clearanceMm: clearance, views } = state.telemetry;
+    const healthy = sigma <= 10 && force <= forceLimitMn && clearance >= 0.01 && views >= 2 && !state.terminal;
+    const accepted = state.completed;
+    const score = accepted ? 100 : clamp(Math.round(
+      100
+      - Math.max(0, sigma / 10 - 0.6) * 30
+      - Math.max(0, force / forceLimitMn - 0.6) * 25
+      - Math.max(0, 0.01 - clearance) * 2_000
+      - Math.max(0, 2 - views) * 24,
+    ), 0, 99);
+    return { sigma, force, clearance, views, healthy: accepted || healthy, score, forceLimitMn };
+  }
+
   const wave = Math.sin(state.time * 2.6 + state.activeIndex) * 0.7;
   const progressPulse = Math.sin(state.progress * Math.PI * 16) * 0.35;
   const fault = injectedFaults[state.scenario];
@@ -337,9 +363,9 @@ function metricSnapshot() {
   if (nearFault && state.scenario === "insertion-force") force = 54.2;
   if (state.terminal && !state.completed) sigma = Math.max(sigma, 11.4);
 
-  const healthy = sigma <= 10 && force <= 50 && clearance >= 0.05 && views >= 2;
+  const healthy = sigma <= 10 && force <= forceLimitMn && clearance >= 0.01 && views >= 2;
   const score = state.completed ? 100 : clamp(Math.round(97 - sigma / 5 - Math.max(0, force - 5) * 0.25 - Math.max(0, 2 - views) * 20), 18, 99);
-  return { sigma, force, clearance, views, healthy, score };
+  return { sigma, force, clearance, views, healthy, score, forceLimitMn };
 }
 
 function updateSequence(phase) {
@@ -353,7 +379,74 @@ function updateSequence(phase) {
     item.classList.toggle("complete", itemIndex < index || phase.key === "complete");
     item.classList.toggle("active", itemIndex === index && phase.key !== "complete");
   });
-  dom.sequenceCount.textContent = phase.key === "complete" ? "11 / 11" : `${String(Math.min(index + 1, 9)).padStart(2, "0")} / 11`;
+  dom.sequenceCount.textContent = phase.key === "complete" ? "09 / 09" : `${String(Math.min(index + 1, 9)).padStart(2, "0")} / 09`;
+}
+
+function signed(value, digits) {
+  const formatted = Number(value).toFixed(digits);
+  return Number(value) >= 0 ? `+${formatted}` : formatted.replace("-", "−");
+}
+
+function fallbackPoseError() {
+  const wobble = Math.sin(state.time * 1.5) * 0.006;
+  return {
+    translationMm: [wobble, -wobble * 0.6, 0.012 - state.progress * 0.01],
+    rotationDeg: [0.06 + wobble * 9, -0.11 - wobble * 8, 0.4 + Math.sin(state.time) * 0.25],
+  };
+}
+
+function inspectorComponent(phase) {
+  const fallbackByPhase = {
+    shafts: 3,
+    output_gear: 4,
+    idler_gear: 5,
+    input_gear: 6,
+    rotation_test: 6,
+    cover_handoff: 7,
+    cover_closure: 7,
+    post_test: 7,
+    complete: 7,
+  };
+  const id = state.componentId ?? fallbackByPhase[phase.key] ?? null;
+  return { id, ...(componentCatalog[id] ?? { name: phase.part.replace(/ ·.+$/, ""), meta: "Registered assembly feature" }) };
+}
+
+function updateInspector(phase, metrics) {
+  const component = inspectorComponent(phase);
+  const pose = state.poseError ?? fallbackPoseError();
+  const executiveState = {
+    locate: "LOCATING",
+    pick: "GRASPING",
+    handoff: "HANDOFF",
+    align: "ALIGNING",
+    insert: "INSERTING",
+    mesh: "MESHING",
+    verify: "VERIFYING",
+  }[state.executivePhase] ?? phase.state;
+
+  dom.inspectorPartId.textContent = component.id ? `PART ${String(component.id).padStart(2, "0")}` : "CELL DATUM";
+  dom.inspectorPart.textContent = component.name;
+  dom.inspectorPartMeta.textContent = component.meta;
+  dom.partState.textContent = executiveState;
+  dom.poseHeading.textContent = state.mode === "wasm" ? "POSE ERROR · RUST CORE" : "POSE ERROR · UI PREVIEW";
+  dom.poseX.textContent = signed(pose.translationMm[0], 3);
+  dom.poseY.textContent = signed(pose.translationMm[1], 3);
+  dom.poseZ.textContent = signed(pose.translationMm[2], 3);
+  dom.rotX.textContent = signed(pose.rotationDeg[0], 2);
+  dom.rotY.textContent = signed(pose.rotationDeg[1], 2);
+  dom.rotZ.textContent = signed(pose.rotationDeg[2], 2);
+  const sigmaMm = metrics.sigma / 1_000;
+  for (const cell of [dom.sigmaX, dom.sigmaY, dom.sigmaZ]) cell.textContent = `±${sigmaMm.toFixed(3)}`;
+
+  dom.guardLabel.textContent = phase.guard;
+  let guardValue = "Executive gate evaluated by Rust core";
+  if (state.mode !== "wasm") guardValue = "Preview threshold estimate";
+  if (phase.guard.includes("FORCE")) guardValue = `Current ${metrics.force.toFixed(1)} mN`;
+  else if (phase.guard.includes("CENTER") || phase.guard.includes("AXIS") || phase.guard.includes("DATUM")) {
+    guardValue = `Current σ ${metrics.sigma.toFixed(1)} µm`;
+  }
+  dom.guardDetail.textContent = `${guardValue} · ${metrics.healthy ? "PASS" : "HOLD"}`;
+  dom.guardCard.classList.toggle("warning", !metrics.healthy);
 }
 
 function updateUi() {
@@ -372,11 +465,7 @@ function updateUi() {
 
   dom.activePart.textContent = phase.part;
   dom.activeAction.textContent = phase.action;
-  dom.inspectorPart.textContent = phase.part.replace(/ ·.+$/, "");
-  dom.partState.textContent = phase.state;
-  dom.guardLabel.textContent = phase.guard;
-  dom.guardDetail.textContent = metrics.healthy ? `Current ${metrics.sigma.toFixed(1)} µm · PASS` : "Guard threshold reached · HOLD";
-  dom.guardCard.classList.toggle("warning", !metrics.healthy);
+  if (!state.inspectorPinned) updateInspector(phase, metrics);
 
   dom.healthTitle.textContent = metrics.healthy ? (state.completed ? "Accepted" : "Within guards") : "Guard hold";
   dom.healthScore.textContent = metrics.score;
@@ -384,17 +473,10 @@ function updateUi() {
   dom.sigma.innerHTML = `${metrics.sigma.toFixed(1)} <small>µm</small>`;
   dom.force.innerHTML = `${metrics.force.toFixed(1)} <small>mN</small>`;
   dom.forceFill.style.width = `${clamp(metrics.force / 50 * 100, 1, 100)}%`;
-  dom.forceFill.style.background = metrics.force > 50 ? "var(--red)" : metrics.force > 5 ? "var(--orange)" : "var(--lime)";
+  dom.forceFill.style.background = metrics.force > metrics.forceLimitMn ? "var(--red)" : metrics.force > metrics.forceLimitMn * 0.75 ? "var(--orange)" : "var(--lime)";
+  dom.forceGateLabel.textContent = `${metrics.forceLimitMn} mN gate`;
   dom.clearance.innerHTML = `${metrics.clearance.toFixed(3)} <small>mm</small>`;
   dom.views.innerHTML = `${metrics.views} <small>/ 6</small>`;
-
-  const wobble = Math.sin(state.time * 1.5) * 0.006;
-  dom.poseX.textContent = `${(4.351 + wobble).toFixed(3).padStart(6, "+")}`;
-  dom.poseY.textContent = `${(2.004 - wobble * 0.6).toFixed(3).padStart(6, "+")}`;
-  dom.poseZ.textContent = `${(1.324 - state.progress * 0.44).toFixed(3).padStart(6, "+")}`;
-  dom.rotX.textContent = `${(0.06 + wobble * 9).toFixed(2).padStart(5, "+")}`;
-  dom.rotY.textContent = `${(-0.11 - wobble * 8).toFixed(2)}`;
-  dom.rotZ.textContent = `${(14.8 + state.time * 7 % 360).toFixed(1).padStart(5, "+")}`;
 
   updateSequence(phase);
   state.sigmaHistory.push(metrics.sigma);
@@ -836,6 +918,8 @@ function bindInteractions() {
   dom.pin.addEventListener("click", () => {
     state.inspectorPinned = !state.inspectorPinned;
     dom.pin.textContent = state.inspectorPinned ? "PINNED" : "PIN";
+    dom.pin.setAttribute("aria-pressed", String(state.inspectorPinned));
+    if (!state.inspectorPinned) updateUi();
     toast(state.inspectorPinned ? "Inspector pinned to active component" : "Inspector follows task state");
   });
 

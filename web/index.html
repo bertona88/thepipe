@@ -109,7 +109,7 @@
           <section class="panel sequence-panel">
             <div class="section-title-row">
               <span class="eyebrow">ASSEMBLY SEQUENCE</span>
-              <span id="sequence-count">03 / 11</span>
+              <span id="sequence-count">03 / 09</span>
             </div>
             <ol class="sequence-list" id="sequence-list">
               <li class="complete" data-phase="housing"><span>01</span><div><strong>Fixture housing</strong><small>Datum lock verified</small></div></li>
@@ -208,13 +208,13 @@
               <div class="timeline-track">
                 <div class="timeline-fill" id="timeline-fill"></div>
                 <div class="timeline-cursor" id="timeline-cursor"></div>
-                <button class="event-tick event-tick--done" style="--x: 8%" title="Housing fixed" aria-label="Housing fixed"></button>
-                <button class="event-tick event-tick--done" style="--x: 18%" title="Shafts seated" aria-label="Shafts seated"></button>
-                <button class="event-tick event-tick--active" style="--x: 29%" title="Output gear alignment" aria-label="Output gear alignment"></button>
-                <button class="event-tick" style="--x: 44%" title="Idler mesh" aria-label="Idler mesh"></button>
-                <button class="event-tick" style="--x: 59%" title="Input mesh" aria-label="Input mesh"></button>
-                <button class="event-tick" style="--x: 74%" title="Cover closure" aria-label="Cover closure"></button>
-                <button class="event-tick" style="--x: 92%" title="Acceptance" aria-label="Acceptance"></button>
+                <span class="event-tick event-tick--done" style="--x: 8%" title="Housing fixed"></span>
+                <span class="event-tick event-tick--done" style="--x: 18%" title="Shafts seated"></span>
+                <span class="event-tick event-tick--active" style="--x: 29%" title="Output gear alignment"></span>
+                <span class="event-tick" style="--x: 44%" title="Idler mesh"></span>
+                <span class="event-tick" style="--x: 59%" title="Input mesh"></span>
+                <span class="event-tick" style="--x: 74%" title="Cover closure"></span>
+                <span class="event-tick" style="--x: 92%" title="Acceptance"></span>
               </div>
               <div class="timeline-labels"><span>LOCATE</span><span>INSERT</span><span>MESH</span><span>VERIFY</span></div>
             </div>
@@ -238,7 +238,7 @@
               <div class="metric-card">
                 <div class="metric-card__head"><span>TOOL FORCE</span><strong id="tool-force">3.1 <small>mN</small></strong></div>
                 <div class="force-bar"><span id="force-fill"></span><i></i></div>
-                <div class="bar-labels"><span>0</span><span>5 mN gate</span><span>50</span></div>
+                <div class="bar-labels"><span>0</span><span id="force-gate-label">5 mN gate</span><span>50</span></div>
               </div>
               <div class="metric-card metric-card--split">
                 <div><span>MIN CLEARANCE</span><strong id="clearance-value">0.187 <small>mm</small></strong></div>
@@ -250,21 +250,21 @@
           <section class="panel inspector-panel">
             <div class="section-title-row">
               <span class="eyebrow">ACTIVE INSPECTION</span>
-              <button class="text-button" id="pin-inspector" type="button">PIN</button>
+              <button class="text-button" id="pin-inspector" type="button" aria-pressed="false">PIN</button>
             </div>
             <div class="component-header">
               <span class="component-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="4"/><path d="M24 4v10m0 20v10M4 24h10m20 0h10M10 10l7 7m14 14 7 7m0-28-7 7M17 31l-7 7"/></svg>
               </span>
-              <div><small>PART 06</small><strong id="inspector-part">OUTPUT GEAR</strong><span>24 teeth · Ø 2.40 mm</span></div>
+              <div><small id="inspector-part-id">PART 04</small><strong id="inspector-part">OUTPUT GEAR</strong><span id="inspector-part-meta">24 teeth · pitch Ø 2.40 mm</span></div>
               <span class="state-chip" id="part-state-chip">HELD</span>
             </div>
 
             <div class="pose-table">
-              <div class="pose-row pose-row--head"><span>ESTIMATED POSE</span><span>X</span><span>Y</span><span>Z</span></div>
-              <div class="pose-row"><strong>POS <small>mm</small></strong><span id="pose-x">+4.351</span><span id="pose-y">+2.004</span><span id="pose-z">+1.324</span></div>
+              <div class="pose-row pose-row--head"><span id="pose-heading">POSE ERROR</span><span>X</span><span>Y</span><span>Z</span></div>
+              <div class="pose-row"><strong>POS <small>mm</small></strong><span id="pose-x">+0.001</span><span id="pose-y">+0.004</span><span id="pose-z">+0.004</span></div>
               <div class="pose-row"><strong>ROT <small>deg</small></strong><span id="rot-x">+0.06</span><span id="rot-y">−0.11</span><span id="rot-z">+14.8</span></div>
-              <div class="pose-row pose-row--sigma"><strong>σ</strong><span>±0.006</span><span>±0.007</span><span>±0.005</span></div>
+              <div class="pose-row pose-row--sigma"><strong>σ</strong><span id="sigma-x">±0.006</span><span id="sigma-y">±0.006</span><span id="sigma-z">±0.006</span></div>
             </div>
 
             <div class="guard-card" id="guard-card">

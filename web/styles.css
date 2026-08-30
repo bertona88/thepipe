@@ -457,7 +457,7 @@ kbd { border: 1px solid var(--line-strong); border-radius: 2px; background: var(
 .timeline-fill { position: absolute; top: -1px; left: 0; width: 29%; border-top: 1px solid var(--lime); box-shadow: 0 -1px 8px rgba(186,255,57,.2); }
 .timeline-cursor { position: absolute; z-index: 2; top: -4px; left: 29%; height: 18px; border-left: 1px solid var(--lime); }
 .timeline-cursor::before { content: ""; position: absolute; left: -3px; top: -1px; width: 5px; height: 5px; transform: rotate(45deg); background: var(--lime); }
-.event-tick { position: absolute; top: -4px; left: var(--x); width: 7px; height: 7px; margin-left: -3px; padding: 0; border: 1px solid var(--dim); border-radius: 50%; background: var(--surface); cursor: pointer; }
+.event-tick { position: absolute; top: -4px; left: var(--x); width: 7px; height: 7px; margin-left: -3px; padding: 0; border: 1px solid var(--dim); border-radius: 50%; background: var(--surface); }
 .event-tick--done { border-color: var(--lime); background: var(--lime); }
 .event-tick--active { border-color: var(--lime); box-shadow: 0 0 8px var(--lime); }
 .timeline-labels { display: flex; justify-content: space-between; color: var(--dim); font-family: var(--mono); font-size: 7px; letter-spacing: .08em; }

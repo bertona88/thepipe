@@ -46,6 +46,7 @@ The preview is for interaction and visualization testing only; it never claims a
 ./scripts/build_wasm.sh
 cd web
 npm run check
+npm test
 npm run build
 npm run preview
 ```

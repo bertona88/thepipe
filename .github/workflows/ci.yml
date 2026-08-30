@@ -8,6 +8,16 @@ permissions:
   contents: read
 
 jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: npm run verify
+        working-directory: web
+
   rust:
     runs-on: ubuntu-latest
     steps:
