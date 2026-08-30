@@ -4,6 +4,7 @@
 /.rustup/
 /.cargo/
 /dist/
+/web/dist/
 /out/
 /cad/out/
 /.venv/
