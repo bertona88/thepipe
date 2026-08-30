@@ -1,0 +1,33 @@
+name: chatgpt-site-bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/chatgpt-site-20260830
+
+permissions:
+  contents: read
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install matching wasm-bindgen CLI
+        run: cargo install wasm-bindgen-cli --version 0.2.127 --locked
+      - name: Build production site bundle
+        run: ./scripts/build_chatgpt_site.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: the-pipe-chatgpt-site
+          path: dist/chatgpt-site
+          if-no-files-found: error
+          retention-days: 14
