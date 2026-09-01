@@ -594,8 +594,10 @@ mod tests {
         let carriage_config = CarriageConfig::default();
         let arm_config = SerialArmConfig::default();
         let motion_config = ManipulatorMotionConfig::default();
-        let mut positions = SerialJointPositions::default();
-        positions.base_theta_rad = 179.0_f64.to_radians();
+        let positions = SerialJointPositions {
+            base_theta_rad: 179.0_f64.to_radians(),
+            ..SerialJointPositions::default()
+        };
         let mut state = ManipulatorMotionState::from_positions(positions);
         state.carriage_target.theta_rad = (-179.0_f64).to_radians();
         for _ in 0..1_000 {
