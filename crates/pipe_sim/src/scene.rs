@@ -29,19 +29,19 @@ pub struct WorldFrameDescription {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 pub struct PoseSnapshot {
     pub translation_m: [f64; 3],
-    /// Quaternion order is explicit at the serialization boundary.
-    pub rotation_wxyz: [f64; 4],
+    /// Persistent scene quaternions use the normative `[x, y, z, w]` order.
+    pub rotation_xyzw: [f64; 4],
 }
 
 impl From<Pose> for PoseSnapshot {
     fn from(value: Pose) -> Self {
         Self {
             translation_m: vec3(value.translation),
-            rotation_wxyz: [
-                value.rotation.w,
+            rotation_xyzw: [
                 value.rotation.x,
                 value.rotation.y,
                 value.rotation.z,
+                value.rotation.w,
             ],
         }
     }
@@ -513,8 +513,19 @@ fn optical_vec3(value: pipe_optics::Vec3) -> [f64; 3] {
 mod tests {
     use super::*;
     use pipe_sim_core::{
-        ArmId, GripperConfig, SerialArm, SerialArmConfig, SerialArmInstance, SimulationConfig,
+        ArmId, GripperConfig, Quat, SerialArm, SerialArmConfig, SerialArmInstance, SimulationConfig,
     };
+
+    #[test]
+    fn persistent_quaternion_order_is_xyzw() {
+        let pose = Pose::new(Vec3::new(1.0, 2.0, 3.0), Quat::new(0.5, 0.1, 0.2, 0.3));
+        let snapshot = PoseSnapshot::from(pose);
+        assert_eq!(snapshot.translation_m, [1.0, 2.0, 3.0]);
+        assert_eq!(snapshot.rotation_xyzw, [0.1, 0.2, 0.3, 0.5]);
+        let json = serde_json::to_value(snapshot).unwrap();
+        assert!(json.get("rotation_xyzw").is_some());
+        assert!(json.get("rotation_wxyz").is_none());
+    }
 
     #[test]
     fn frame_keeps_truth_estimate_and_commands_distinct() {

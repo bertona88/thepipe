@@ -3,9 +3,10 @@
 This repository is the engineering core for a tube-shaped robotic micro-assembly cell. It
 contains low-cost tendon-arm models, printable machine fixtures, idealized gearbox parts,
 reduced collision checks, structured-light/multi-camera primitives, and a deterministic guarded
-gearbox task. The current end-to-end run advances a reduced observed-part plant; it does not yet
-execute task-space trajectories with the four arms. A browser UI is deliberately deferred, and
-the same Rust reference core is exposed through WebAssembly for that later phase.
+gearbox task. Rust now also owns a canonical machine configuration, bounded carriage/arm command
+state, and a versioned physical scene consumed by the WebAssembly operator console. The current
+end-to-end gearbox run still advances a reduced observed-part plant; it does not yet execute
+task-space trajectories or couple parts to the four arms.
 
 This is an engineering simulator, not a photorealistic animation and not yet a validated
 predictor of a particular manufacturing process or actuator. Every pass/fail result declares its model
@@ -17,6 +18,7 @@ data before using it to release hardware.
 - [What is needed first](docs/NEEDS_FIRST.md)
 - [Engineering requirements](docs/REQUIREMENTS.md)
 - [Architecture and fidelity boundaries](docs/ARCHITECTURE.md)
+- [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -39,8 +41,9 @@ data before using it to release hardware.
 ## Browser operator console
 
 The dependency-free operator console lives in `web/`. It connects to the generated
-Rust/WASM wrapper when present and otherwise uses a clearly labelled deterministic UI preview.
-The preview is for interaction and visualization testing only; it never claims an acceptance result.
+Rust/WASM wrapper and renders the versioned Rust `SceneDescription`/`SceneFrame` contract.
+Without that wrapper it can preview controls and telemetry, but it marks the physical machine
+scene unavailable instead of synthesizing rail, arm, or part poses.
 
 ```bash
 ./scripts/build_wasm.sh

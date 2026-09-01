@@ -861,7 +861,7 @@ function scenePoint(translationM) {
 
 function quaternionRotateVector(rotation, vector) {
   if (!Array.isArray(rotation) || rotation.length !== 4) return vector;
-  const [w, x, y, z] = rotation.map(Number);
+  const [x, y, z, w] = rotation.map(Number);
   const [vx, vy, vz] = vector;
   const tx = 2 * (y * vz - z * vy);
   const ty = 2 * (z * vx - x * vz);
@@ -875,7 +875,7 @@ function quaternionRotateVector(rotation, vector) {
 
 function quaternionZAngle(rotation) {
   if (!Array.isArray(rotation) || rotation.length !== 4) return 0;
-  const [w, x, y, z] = rotation.map(Number);
+  const [x, y, z, w] = rotation.map(Number);
   return Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
 }
 
@@ -921,7 +921,7 @@ function drawCollider(ctx, collider) {
   if (!shape || !pose || shape.kind !== "capsule") return;
   const half = Number(shape.half_segment_m) || 0;
   const radius = Number(shape.radius_m) || 0;
-  const axis = quaternionRotateVector(pose.rotation_wxyz, [0, 0, half]);
+  const axis = quaternionRotateVector(pose.rotation_xyzw, [0, 0, half]);
   const center = pose.translation_m.map(Number);
   const a = scenePoint(center.map((value, index) => value - axis[index]));
   const b = scenePoint(center.map((value, index) => value + axis[index]));
@@ -946,14 +946,14 @@ function drawRigidBody3(ctx, body, description, active) {
       projected.y,
       Math.max(3, Number(shape.tip_radius_m) * pixelScale),
       Number(shape.teeth),
-      quaternionZAngle(body.pose?.rotation_wxyz),
+      quaternionZAngle(body.pose?.rotation_xyzw),
       active,
     );
     return;
   }
   if (shape?.kind === "capsule") {
     const half = Number(shape.half_segment_m) || 0;
-    const axis = quaternionRotateVector(body.pose?.rotation_wxyz, [0, 0, half]);
+    const axis = quaternionRotateVector(body.pose?.rotation_xyzw, [0, 0, half]);
     const center = body.pose.translation_m.map(Number);
     const a = scenePoint(center.map((value, index) => value - axis[index]));
     const b = scenePoint(center.map((value, index) => value + axis[index]));
@@ -966,7 +966,7 @@ function drawRigidBody3(ctx, body, description, active) {
   const radius = Math.max(2, shapeRadiusM(shape) * pixelScale);
   ctx.save();
   ctx.translate(projected.x, projected.y);
-  ctx.rotate(quaternionZAngle(body.pose?.rotation_wxyz));
+  ctx.rotate(quaternionZAngle(body.pose?.rotation_xyzw));
   ctx.fillStyle = active ? "rgba(186,255,57,.12)" : "rgba(121,139,130,.05)";
   ctx.strokeStyle = active ? "rgba(186,255,57,.9)" : "rgba(136,153,145,.52)";
   if (shape?.kind === "box") {
@@ -1142,14 +1142,14 @@ function drawMacroScene(ctx) {
         point.y,
         Math.max(4, Number(shape.tip_radius_m) * scale),
         Number(shape.teeth),
-        quaternionZAngle(body.pose.rotation_wxyz),
+        quaternionZAngle(body.pose.rotation_xyzw),
         active,
       );
       continue;
     }
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.rotate(-quaternionZAngle(body.pose.rotation_wxyz));
+    ctx.rotate(-quaternionZAngle(body.pose.rotation_xyzw));
     ctx.fillStyle = active ? "rgba(186,255,57,.10)" : "rgba(91,111,101,.05)";
     ctx.strokeStyle = active ? "rgba(186,255,57,.9)" : "rgba(115,136,126,.62)";
     if (shape?.kind === "box") {

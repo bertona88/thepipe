@@ -55,10 +55,10 @@ impl Default for CarriageConfig {
             topology: RailTopology::PairedBeltEndBogies,
             rail_radius_m: 72.0e-3,
             z_limits_m: [-150.0e-3, 150.0e-3],
-            max_z_speed_m_s: 40.0e-3,
-            max_theta_speed_rad_s: 0.60,
-            max_z_accel_m_s2: 0.20,
-            max_theta_accel_rad_s2: 2.0,
+            max_z_speed_m_s: 30.0e-3,
+            max_theta_speed_rad_s: core::f64::consts::PI / 6.0,
+            max_z_accel_m_s2: 0.10,
+            max_theta_accel_rad_s2: 2.0 * core::f64::consts::PI / 3.0,
         }
     }
 }
@@ -518,14 +518,24 @@ fn step_linear_axis(
     dt_s: f64,
 ) {
     let error = target - *position;
-    let stop_speed = (2.0 * max_acceleration * error.abs()).sqrt();
+    // Discrete stopping bound for the semi-implicit position update below.
+    // The continuous sqrt(2*a*d) bound can still arrive one sample too fast
+    // and would require an unbounded velocity snap at the target.
+    let acceleration_step = max_acceleration * dt_s;
+    let stop_speed =
+        (acceleration_step * acceleration_step + 2.0 * max_acceleration * error.abs()).sqrt()
+            - acceleration_step;
     let desired_velocity = error.signum() * max_speed.min(stop_speed);
+    let previous_velocity = *velocity;
     let velocity_delta =
-        (desired_velocity - *velocity).clamp(-max_acceleration * dt_s, max_acceleration * dt_s);
+        (desired_velocity - *velocity).clamp(-acceleration_step, acceleration_step);
     *velocity = (*velocity + velocity_delta).clamp(-max_speed, max_speed);
 
     let displacement = *velocity * dt_s;
-    if displacement.signum() == error.signum() && displacement.abs() >= error.abs() {
+    if displacement.signum() == error.signum()
+        && displacement.abs() >= error.abs()
+        && previous_velocity.abs() <= acceleration_step + f64::EPSILON
+    {
         *position = target;
         *velocity = 0.0;
     } else {
@@ -549,6 +559,12 @@ mod tests {
         assert_eq!(config.carriage.topology, RailTopology::PairedBeltEndBogies);
         assert_eq!(config.tube.inner_radius_m, 80.0e-3);
         assert_eq!(config.tube.working_length_m, 320.0e-3);
+        assert_eq!(config.carriage.max_z_speed_m_s, 30.0e-3);
+        assert_eq!(
+            config.carriage.max_theta_speed_rad_s,
+            core::f64::consts::PI / 6.0
+        );
+        assert_eq!(config.carriage.max_z_accel_m_s2, 0.10);
     }
 
     #[test]

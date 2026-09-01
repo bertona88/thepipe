@@ -12,10 +12,10 @@
     "topology": "paired_belt_end_bogies",
     "shoulder_datum_radius_m": 0.072,
     "z_limits_m": [-0.150, 0.150],
-    "max_z_speed_m_s": 0.040,
-    "max_theta_speed_rad_s": 0.60,
-    "max_z_accel_m_s2": 0.20,
-    "max_theta_accel_rad_s2": 2.0
+    "max_z_speed_m_s": 0.030,
+    "max_theta_speed_rad_s": 0.5235987755982988,
+    "max_z_accel_m_s2": 0.100,
+    "max_theta_accel_rad_s2": 2.0943951023931953
   },
   "arm": {
     "link_lengths_m": [0.032, 0.030, 0.015],
