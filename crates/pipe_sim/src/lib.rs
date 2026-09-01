@@ -741,10 +741,14 @@ impl ReferenceSimulator {
     }
 
     pub fn scene_frame(&self) -> SceneFrame {
-        self.last_snapshot.as_ref().map_or_else(
-            || scene::build_scene_frame(&self.mechanics, &[]),
-            |snapshot| snapshot.scene.clone(),
-        )
+        if let Some(snapshot) = &self.last_snapshot {
+            snapshot.scene.clone()
+        } else {
+            let collision = self
+                .mechanics
+                .query_collisions_with_arms(self.mechanics.config.collision);
+            scene::build_scene_frame(&self.mechanics, &collision.contacts)
+        }
     }
 
     pub fn scene_description_json(&self, pretty: bool) -> Result<String, SimError> {
@@ -789,7 +793,10 @@ impl ReferenceSimulator {
         let metrics = self.executive.metrics();
         let component_name = active.and_then(|id| self.component(id).map(|part| part.name.clone()));
         let pose_error = active.and_then(|id| self.component(id).map(|part| part.pose_error));
-        let scene = scene::build_scene_frame(&self.mechanics, &collision.report.contacts);
+        let scene_collision = self
+            .mechanics
+            .query_collisions_with_arms(self.mechanics.config.collision);
+        let scene = scene::build_scene_frame(&self.mechanics, &scene_collision.contacts);
         let snapshot = StepSnapshot {
             cycle: self.cycle,
             control_time_ms: self.control_time_ms,

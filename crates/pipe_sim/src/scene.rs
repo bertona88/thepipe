@@ -2,8 +2,8 @@
 
 use pipe_optics::StructuredLightRig;
 use pipe_sim_core::{
-    Contact, ContactKind, MotionType, PipeCellConfig, Pose, RigidBody, Shape, Simulation, Vec3,
-    TENDON_JOINT_COUNT,
+    serial_arm_link_body_id, Contact, ContactKind, MotionType, PipeCellConfig, Pose, RigidBody,
+    Shape, Simulation, Vec3, TENDON_JOINT_COUNT,
 };
 use serde::Serialize;
 
@@ -168,6 +168,7 @@ pub struct SceneDescription {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ColliderSnapshot {
+    pub body_id: u32,
     pub geometry_id: String,
     pub pose: PoseSnapshot,
     pub shape: ShapeSnapshot,
@@ -384,6 +385,9 @@ pub(crate) fn build_scene_frame(simulation: &Simulation, contacts: &[Contact]) -
                 .iter()
                 .enumerate()
                 .map(|(index, (pose, shape))| ColliderSnapshot {
+                    body_id: serial_arm_link_body_id(instance.id, index as u8)
+                        .expect("serial-arm FK exposes only reserved physical link indices")
+                        .0,
                     geometry_id: format!("manipulator/{}/link/{index}", instance.id.0),
                     pose: (*pose).into(),
                     shape: (*shape).into(),
@@ -540,6 +544,14 @@ mod tests {
         assert!(frame.truth.is_some());
         assert!(frame.estimate.is_none());
         assert_eq!(frame.commanded.manipulators.len(), 1);
-        assert_eq!(frame.truth.unwrap().manipulators.len(), 1);
+        let truth = frame.truth.unwrap();
+        assert_eq!(truth.manipulators.len(), 1);
+        let collider_ids = truth.manipulators[0]
+            .link_colliders
+            .iter()
+            .map(|collider| collider.body_id)
+            .collect::<Vec<_>>();
+        assert_eq!(collider_ids.len(), 3);
+        assert!(collider_ids.windows(2).all(|ids| ids[0] < ids[1]));
     }
 }
