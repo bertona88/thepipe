@@ -1,7 +1,7 @@
 use pipe_sim_core::{
-    CarriageConfig, GripperConfig, ManipulatorMotionConfig, PipeCellConfig,
-    QualificationTargets, RailTopology, SafetyConfig, SerialArmConfig, TendonJointConfig,
-    TubeGeometry, Vec3, MACHINE_CONFIG_SCHEMA_VERSION, TENDON_JOINT_COUNT,
+    CarriageConfig, GripperConfig, ManipulatorMotionConfig, PipeCellConfig, QualificationTargets,
+    RailTopology, SafetyConfig, SerialArmConfig, TendonJointConfig, TubeGeometry, Vec3,
+    MACHINE_CONFIG_SCHEMA_VERSION, TENDON_JOINT_COUNT,
 };
 use serde::Deserialize;
 
@@ -191,9 +191,7 @@ pub(crate) fn load_baseline_machine_config() -> Result<LoadedMachineConfig, SimE
             maximum_closed_loop_tcp_error_m: document
                 .qualification_targets
                 .maximum_closed_loop_tcp_error_m,
-            smallest_declared_feature_m: document
-                .qualification_targets
-                .smallest_declared_feature_m,
+            smallest_declared_feature_m: document.qualification_targets.smallest_declared_feature_m,
         },
     };
     if !cell.is_valid() {

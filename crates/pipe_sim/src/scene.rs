@@ -327,9 +327,7 @@ pub(crate) fn build_scene_description(
     sensors.push(SensorDescription {
         id: optics.projector.id,
         kind: "structured_light_projector",
-        nominal_translation_m: optical_vec3(
-            optics.projector.nominal.world_from_camera.translation,
-        ),
+        nominal_translation_m: optical_vec3(optics.projector.nominal.world_from_camera.translation),
         nominal_rotation_world_from_sensor: optics.projector.nominal.world_from_camera.rotation.m,
     });
     sensors.sort_by_key(|sensor| sensor.id);
@@ -371,10 +369,7 @@ pub(crate) fn build_scene_description(
     }
 }
 
-pub(crate) fn build_scene_frame(
-    simulation: &Simulation,
-    contacts: &[Contact],
-) -> SceneFrame {
+pub(crate) fn build_scene_frame(simulation: &Simulation, contacts: &[Contact]) -> SceneFrame {
     let manipulators = simulation
         .serial_arms
         .iter()
@@ -399,10 +394,7 @@ pub(crate) fn build_scene_frame(
                 carriage_z_m: instance.motion.carriage.z_m,
                 carriage_theta_rad: instance.motion.carriage.theta_rad,
                 carriage_z_velocity_m_s: instance.motion.carriage.z_velocity_m_s,
-                carriage_theta_velocity_rad_s: instance
-                    .motion
-                    .carriage
-                    .theta_velocity_rad_s,
+                carriage_theta_velocity_rad_s: instance.motion.carriage.theta_velocity_rad_s,
                 carriage_pose: kinematics.base_pose.into(),
                 shoulder_pose: kinematics.shoulder_pose.into(),
                 elbow_pose: kinematics.elbow_pose.into(),
@@ -437,9 +429,10 @@ pub(crate) fn build_scene_frame(
             pose: body.pose.into(),
             linear_velocity_m_s: vec3(body.linear_velocity_m_s),
             angular_velocity_rad_s: vec3(body.angular_velocity_rad_s),
-            held_by_manipulator_id: simulation.serial_arms.iter().find_map(|arm| {
-                (arm.gripper.held_body == Some(body.id)).then_some(arm.id.0)
-            }),
+            held_by_manipulator_id: simulation
+                .serial_arms
+                .iter()
+                .find_map(|arm| (arm.gripper.held_body == Some(body.id)).then_some(arm.id.0)),
         })
         .collect();
     let contacts = contacts.iter().copied().map(contact_snapshot).collect();
@@ -494,9 +487,7 @@ fn contact_kind_name(kind: ContactKind) -> &'static str {
         ContactKind::ExactAnalytic => "exact_analytic",
         ContactKind::CapsuleBoxApproximation => "capsule_box_approximation",
         ContactKind::OrientedBoxSatApproximation => "oriented_box_sat_approximation",
-        ContactKind::GearAnnularEnvelopeApproximation => {
-            "gear_annular_envelope_approximation"
-        }
+        ContactKind::GearAnnularEnvelopeApproximation => "gear_annular_envelope_approximation",
         ContactKind::GearMeshApproximation => "gear_mesh_approximation",
         ContactKind::GearBoxEnvelopeApproximation => "gear_box_envelope_approximation",
     }

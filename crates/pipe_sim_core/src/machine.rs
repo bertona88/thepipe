@@ -281,9 +281,7 @@ pub enum MachineCommand {
         target_opening_m: f64,
     },
     /// Controlled hold. `None` addresses every manipulator.
-    Stop {
-        manipulator: Option<ManipulatorId>,
-    },
+    Stop { manipulator: Option<ManipulatorId> },
 }
 
 impl MachineCommand {
@@ -373,9 +371,7 @@ impl ManipulatorMotionState {
             MachineCommand::MoveCarriageZ { target_z_m, .. } => {
                 if !target_z_m.is_finite() {
                     Err(MachineCommandError::NonFiniteTarget)
-                } else if !(carriage.z_limits_m[0]..=carriage.z_limits_m[1])
-                    .contains(&target_z_m)
-                {
+                } else if !(carriage.z_limits_m[0]..=carriage.z_limits_m[1]).contains(&target_z_m) {
                     Err(MachineCommandError::TargetOutOfRange)
                 } else {
                     Ok(())
@@ -394,9 +390,11 @@ impl ManipulatorMotionState {
                 if target_rad.iter().any(|value| !value.is_finite()) {
                     return Err(MachineCommandError::NonFiniteTarget);
                 }
-                if target_rad.iter().zip(arm.joint_limits_rad).any(
-                    |(value, limits)| !(limits[0]..=limits[1]).contains(value),
-                ) {
+                if target_rad
+                    .iter()
+                    .zip(arm.joint_limits_rad)
+                    .any(|(value, limits)| !(limits[0]..=limits[1]).contains(value))
+                {
                     Err(MachineCommandError::TargetOutOfRange)
                 } else {
                     Ok(())
@@ -522,8 +520,8 @@ fn step_linear_axis(
     let error = target - *position;
     let stop_speed = (2.0 * max_acceleration * error.abs()).sqrt();
     let desired_velocity = error.signum() * max_speed.min(stop_speed);
-    let velocity_delta = (desired_velocity - *velocity)
-        .clamp(-max_acceleration * dt_s, max_acceleration * dt_s);
+    let velocity_delta =
+        (desired_velocity - *velocity).clamp(-max_acceleration * dt_s, max_acceleration * dt_s);
     *velocity = (*velocity + velocity_delta).clamp(-max_speed, max_speed);
 
     let displacement = *velocity * dt_s;
@@ -587,7 +585,10 @@ mod tests {
         for _ in 0..1_000 {
             state.step(0.001, carriage_config, arm_config, motion_config);
         }
-        assert!(wrap_angle_pi(state.carriage.theta_rad - state.carriage_target.theta_rad).abs() < 1.0e-12);
+        assert!(
+            wrap_angle_pi(state.carriage.theta_rad - state.carriage_target.theta_rad).abs()
+                < 1.0e-12
+        );
     }
 
     #[test]

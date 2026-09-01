@@ -27,8 +27,8 @@ use pipe_planner::{
     TaskMetrics, VerificationObservation, VisionObservation,
 };
 use pipe_sim_core::{
-    ArmId, BodyId, CollisionFilter, CollisionReport, GearGeometry, GripperConfig, MotionType, Pose,
-    MachineCommand, ManipulatorId, PipeCellConfig, Quat, RigidBody, SerialArm, SerialArmInstance,
+    ArmId, BodyId, CollisionFilter, CollisionReport, GearGeometry, GripperConfig, MachineCommand,
+    ManipulatorId, MotionType, PipeCellConfig, Pose, Quat, RigidBody, SerialArm, SerialArmInstance,
     SerialJointPositions, Shape, Simulation, SimulationConfig, StepReport, Vec3,
     SERIAL_ARM_COLLISION_BODY_ID_BASE,
 };
@@ -727,10 +727,7 @@ impl ReferenceSimulator {
                 HOUSING_FRONT_WALL_BODY_ID.0,
                 "housing-front-wall".to_owned(),
             ),
-            (
-                HOUSING_BACK_WALL_BODY_ID.0,
-                "housing-back-wall".to_owned(),
-            ),
+            (HOUSING_BACK_WALL_BODY_ID.0, "housing-back-wall".to_owned()),
             (OBSTACLE_BODY_ID.0, "injected-obstacle".to_owned()),
         ]);
         scene::build_scene_description(
@@ -1852,8 +1849,8 @@ fn build_mechanics(
         .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
 
     for arm_index in 0..cell_config.manipulator_count {
-        let theta = f64::from(arm_index) * std::f64::consts::TAU
-            / f64::from(cell_config.manipulator_count);
+        let theta =
+            f64::from(arm_index) * std::f64::consts::TAU / f64::from(cell_config.manipulator_count);
         let mut arm = SerialArm::new(cell_config.arm)
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
         arm.set_positions(SerialJointPositions {
@@ -1867,12 +1864,9 @@ fn build_mechanics(
             wrist_roll_rad: 0.0,
         })
         .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-        let mut instance = SerialArmInstance::new(
-            ArmId(u32::from(arm_index) + 1),
-            arm,
-            cell_config.gripper,
-        )
-        .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        let mut instance =
+            SerialArmInstance::new(ArmId(u32::from(arm_index) + 1), arm, cell_config.gripper)
+                .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
         instance.carriage_config = cell_config.carriage;
         instance.motion_config = cell_config.motion;
         simulation
@@ -2392,16 +2386,20 @@ fn command_arm_motion(mechanics: &mut Simulation, command: &Command) -> Result<(
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
     }
     let gripper_target = match command {
-        Command::CloseTendonGripper { .. } | Command::CloseReceiverGripper { .. } => mechanics
-            .serial_arm(arm_id)
-            .expect("selected arm remains present")
-            .gripper_config
-            .min_opening_m,
-        Command::ReleaseDonorGripper { .. } => mechanics
-            .serial_arm(arm_id)
-            .expect("selected arm remains present")
-            .gripper_config
-            .max_opening_m,
+        Command::CloseTendonGripper { .. } | Command::CloseReceiverGripper { .. } => {
+            mechanics
+                .serial_arm(arm_id)
+                .expect("selected arm remains present")
+                .gripper_config
+                .min_opening_m
+        }
+        Command::ReleaseDonorGripper { .. } => {
+            mechanics
+                .serial_arm(arm_id)
+                .expect("selected arm remains present")
+                .gripper_config
+                .max_opening_m
+        }
         _ => return Ok(()),
     };
     mechanics
