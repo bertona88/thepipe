@@ -522,9 +522,9 @@ fn step_linear_axis(
     // The continuous sqrt(2*a*d) bound can still arrive one sample too fast
     // and would require an unbounded velocity snap at the target.
     let acceleration_step = max_acceleration * dt_s;
-    let stop_speed =
-        (acceleration_step * acceleration_step + 2.0 * max_acceleration * error.abs()).sqrt()
-            - acceleration_step;
+    let stop_speed = (acceleration_step * acceleration_step + 2.0 * max_acceleration * error.abs())
+        .sqrt()
+        - acceleration_step;
     let desired_velocity = error.signum() * max_speed.min(stop_speed);
     let previous_velocity = *velocity;
     let velocity_delta =

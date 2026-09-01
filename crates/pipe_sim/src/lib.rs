@@ -27,8 +27,8 @@ use pipe_planner::{
     TaskMetrics, VerificationObservation, VisionObservation,
 };
 use pipe_sim_core::{
-    ArmId, BodyId, CollisionFilter, CollisionReport, GearGeometry, GripperConfig, MachineCommand,
-    ManipulatorId, MotionType, PipeCellConfig, Pose, Quat, RigidBody, SerialArm, SerialArmInstance,
+    ArmId, BodyId, CollisionFilter, CollisionReport, GearGeometry, MachineCommand, ManipulatorId,
+    MotionType, PipeCellConfig, Pose, Quat, RigidBody, SerialArm, SerialArmInstance,
     SerialJointPositions, Shape, Simulation, SimulationConfig, StepReport, Vec3,
     SERIAL_ARM_COLLISION_BODY_ID_BASE,
 };
