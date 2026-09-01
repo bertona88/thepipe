@@ -7,6 +7,9 @@
 
 #![forbid(unsafe_code)]
 
+mod machine_config;
+pub mod scene;
+
 use std::collections::BTreeSet;
 use std::fmt;
 
@@ -25,11 +28,14 @@ use pipe_planner::{
 };
 use pipe_sim_core::{
     ArmId, BodyId, CollisionFilter, CollisionReport, GearGeometry, GripperConfig, MotionType, Pose,
-    Quat, RigidBody, SerialArm, SerialArmConfig, SerialArmInstance, SerialJointPositions, Shape,
-    Simulation, SimulationConfig, StepReport, Vec3, SERIAL_ARM_COLLISION_BODY_ID_BASE,
+    MachineCommand, ManipulatorId, PipeCellConfig, Quat, RigidBody, SerialArm, SerialArmInstance,
+    SerialJointPositions, Shape, Simulation, SimulationConfig, StepReport, Vec3,
+    SERIAL_ARM_COLLISION_BODY_ID_BASE,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
+
+pub use scene::{SceneDescription, SceneFrame, SCENE_SCHEMA_VERSION};
 
 pub const REPORT_SCHEMA_VERSION: u32 = 1;
 const CONTROL_PERIOD_MS: u64 = 20;
@@ -349,6 +355,7 @@ pub struct StepSnapshot {
     pub components_completed: u64,
     pub retries: u64,
     pub events: Vec<String>,
+    pub scene: SceneFrame,
 }
 
 impl StepSnapshot {
@@ -607,6 +614,9 @@ pub struct ReferenceSimulator {
     spec: ScenarioSpec,
     scenario: AssemblyScenario,
     executive: GearboxTaskExecutive,
+    machine_config_id: String,
+    machine_config_sha256: String,
+    cell_config: PipeCellConfig,
     mechanics: Simulation,
     optics: StructuredLightRig,
     components: Vec<ComponentState>,
@@ -631,6 +641,22 @@ impl ReferenceSimulator {
             .map_err(|error| SimError::InvalidScenario(error.to_string()))?;
         let executive = GearboxTaskExecutive::new(scenario.clone())
             .map_err(|error| SimError::InvalidScenario(error.to_string()))?;
+        let machine_config = machine_config::load_baseline_machine_config()?;
+        if machine_config.cell.manipulator_count != scenario.cell.mobile_arm_count {
+            return Err(SimError::InvalidScenario(format!(
+                "machine config has {} manipulators but scenario requests {}",
+                machine_config.cell.manipulator_count, scenario.cell.mobile_arm_count
+            )));
+        }
+        if (machine_config.cell.tube.working_length_m * 1_000.0
+            - scenario.cell.usable_tube_length_mm)
+            .abs()
+            > 1.0e-12
+        {
+            return Err(SimError::InvalidScenario(
+                "machine config and task scenario disagree on usable tube length".to_owned(),
+            ));
+        }
         let components = scenario
             .recipe
             .components
@@ -638,7 +664,7 @@ impl ReferenceSimulator {
             .enumerate()
             .map(|(index, part)| ComponentState::new(index, part))
             .collect::<Vec<_>>();
-        let mut mechanics = build_mechanics(&scenario)?;
+        let mut mechanics = build_mechanics(&scenario, machine_config.cell)?;
         let first = components.first().map(|part| part.id);
         sync_bodies(&mut mechanics, &components, first);
         Ok(Self {
@@ -646,6 +672,9 @@ impl ReferenceSimulator {
             spec,
             scenario,
             executive,
+            machine_config_id: machine_config.id,
+            machine_config_sha256: machine_config.source_sha256,
+            cell_config: machine_config.cell,
             mechanics,
             components,
             faults: FaultState::default(),
@@ -681,6 +710,54 @@ impl ReferenceSimulator {
         &self.snapshots
     }
 
+    pub fn scene_description(&self) -> SceneDescription {
+        let mut body_names = self
+            .components
+            .iter()
+            .map(|part| (part.body_id.0, part.name.clone()))
+            .collect::<Vec<_>>();
+        body_names.extend([
+            (HOUSING_FLOOR_BODY_ID.0, "housing-floor".to_owned()),
+            (HOUSING_LEFT_WALL_BODY_ID.0, "housing-left-wall".to_owned()),
+            (
+                HOUSING_RIGHT_WALL_BODY_ID.0,
+                "housing-right-wall".to_owned(),
+            ),
+            (
+                HOUSING_FRONT_WALL_BODY_ID.0,
+                "housing-front-wall".to_owned(),
+            ),
+            (
+                HOUSING_BACK_WALL_BODY_ID.0,
+                "housing-back-wall".to_owned(),
+            ),
+            (OBSTACLE_BODY_ID.0, "injected-obstacle".to_owned()),
+        ]);
+        scene::build_scene_description(
+            &self.machine_config_id,
+            &self.machine_config_sha256,
+            self.cell_config,
+            &self.mechanics,
+            &self.optics,
+            &body_names,
+        )
+    }
+
+    pub fn scene_frame(&self) -> SceneFrame {
+        self.last_snapshot.as_ref().map_or_else(
+            || scene::build_scene_frame(&self.mechanics, &[]),
+            |snapshot| snapshot.scene.clone(),
+        )
+    }
+
+    pub fn scene_description_json(&self, pretty: bool) -> Result<String, SimError> {
+        serialize_json(&self.scene_description(), pretty)
+    }
+
+    pub fn scene_frame_json(&self, pretty: bool) -> Result<String, SimError> {
+        serialize_json(&self.scene_frame(), pretty)
+    }
+
     pub fn step(&mut self) -> Result<&StepSnapshot, SimError> {
         if self.is_terminal() {
             return self.last_snapshot.as_ref().ok_or_else(|| {
@@ -703,7 +780,7 @@ impl ReferenceSimulator {
             self.make_sensor_frame(active, phase, fault, &optical, &physics, &collision);
         let decision = self.executive.tick(&frame);
         self.record_failures(&decision, fault);
-        self.apply_command(&decision.command, fault);
+        self.apply_command(&decision.command, fault)?;
         self.consume_fault(fault);
         self.mark_completed();
         let next_active = self
@@ -715,6 +792,7 @@ impl ReferenceSimulator {
         let metrics = self.executive.metrics();
         let component_name = active.and_then(|id| self.component(id).map(|part| part.name.clone()));
         let pose_error = active.and_then(|id| self.component(id).map(|part| part.pose_error));
+        let scene = scene::build_scene_frame(&self.mechanics, &collision.report.contacts);
         let snapshot = StepSnapshot {
             cycle: self.cycle,
             control_time_ms: self.control_time_ms,
@@ -730,6 +808,7 @@ impl ReferenceSimulator {
             components_completed: metrics.components_completed,
             retries: metrics.retries,
             events: decision.events.iter().map(event_summary).collect(),
+            scene,
         };
         self.snapshots.push(snapshot.clone());
         self.last_snapshot = Some(snapshot);
@@ -1402,8 +1481,12 @@ impl ReferenceSimulator {
         (frame, mechanics)
     }
 
-    fn apply_command(&mut self, command: &Command, fault: Option<InjectedFault>) {
-        excite_arm(&mut self.mechanics, command);
+    fn apply_command(
+        &mut self,
+        command: &Command,
+        fault: Option<InjectedFault>,
+    ) -> Result<(), SimError> {
+        command_arm_motion(&mut self.mechanics, command)?;
         let gain = plant_gain(&self.mechanics);
         match command {
             Command::SearchVolume { .. } | Command::HoldPosition | Command::AssemblyComplete => {}
@@ -1542,6 +1625,7 @@ impl ReferenceSimulator {
                 }
             }
         }
+        Ok(())
     }
 
     fn record_failures(&mut self, decision: &Decision, fault: Option<InjectedFault>) {
@@ -1717,7 +1801,10 @@ fn intended_collision_pairs(
     pairs
 }
 
-fn build_mechanics(scenario: &AssemblyScenario) -> Result<Simulation, SimError> {
+fn build_mechanics(
+    scenario: &AssemblyScenario,
+    cell_config: PipeCellConfig,
+) -> Result<Simulation, SimError> {
     let config = SimulationConfig {
         fixed_dt_s: 0.001,
         gravity_m_s2: Vec3::new(0.0, 0.0, -9.80665),
@@ -1764,10 +1851,10 @@ fn build_mechanics(scenario: &AssemblyScenario) -> Result<Simulation, SimError> 
         .add_body(obstacle)
         .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
 
-    for arm_index in 0..scenario.cell.mobile_arm_count {
+    for arm_index in 0..cell_config.manipulator_count {
         let theta = f64::from(arm_index) * std::f64::consts::TAU
-            / f64::from(scenario.cell.mobile_arm_count);
-        let mut arm = SerialArm::new(SerialArmConfig::default())
+            / f64::from(cell_config.manipulator_count);
+        let mut arm = SerialArm::new(cell_config.arm)
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
         arm.set_positions(SerialJointPositions {
             base_z_m: 0.0,
@@ -1780,12 +1867,14 @@ fn build_mechanics(scenario: &AssemblyScenario) -> Result<Simulation, SimError> 
             wrist_roll_rad: 0.0,
         })
         .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-        let instance = SerialArmInstance::new(
+        let mut instance = SerialArmInstance::new(
             ArmId(u32::from(arm_index) + 1),
             arm,
-            GripperConfig::default(),
+            cell_config.gripper,
         )
         .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        instance.carriage_config = cell_config.carriage;
+        instance.motion_config = cell_config.motion;
         simulation
             .add_serial_arm(instance)
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
@@ -2252,9 +2341,15 @@ fn verification_torque(part: &ComponentState) -> f64 {
     }
 }
 
-fn excite_arm(mechanics: &mut Simulation, command: &Command) {
+fn command_arm_motion(mechanics: &mut Simulation, command: &Command) -> Result<(), SimError> {
     if mechanics.serial_arms.is_empty() {
-        return;
+        return Ok(());
+    }
+    if matches!(command, Command::HoldPosition | Command::AssemblyComplete) {
+        mechanics
+            .submit_machine_command(MachineCommand::Stop { manipulator: None })
+            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        return Ok(());
     }
     let component = command_component(command).map_or(0, |id| id.0);
     let amplitude_rad = match command {
@@ -2266,7 +2361,8 @@ fn excite_arm(mechanics: &mut Simulation, command: &Command) {
     };
     let arm_count = mechanics.serial_arms.len();
     let arm_index = usize::from(component) % arm_count;
-    let arm = &mut mechanics.serial_arms[arm_index];
+    let arm_id = mechanics.serial_arms[arm_index].id;
+    let manipulator = ManipulatorId(arm_id.0);
     let sign = if component % 2 == 0 { 1.0 } else { -1.0 };
     let desired_angles = [
         sign * amplitude_rad,
@@ -2274,14 +2370,47 @@ fn excite_arm(mechanics: &mut Simulation, command: &Command) {
         sign * amplitude_rad * 0.55,
         sign * amplitude_rad * 0.25,
     ];
-    let tendon_offsets = std::array::from_fn(|index| {
-        arm.arm.config.tendon_joints[index].offsets_for_angle(desired_angles[index])
-    });
     let base_theta_rad =
         f64::from(arm_index as u32) * std::f64::consts::TAU / f64::from(arm_count as u32);
-    let _ = arm
-        .arm
-        .set_tendon_state(0.0, base_theta_rad, tendon_offsets, [0.0; 4]);
+    let base_z_m = (f64::from(component) - 4.0) * 8.0e-3;
+    for machine_command in [
+        MachineCommand::MoveCarriageTheta {
+            manipulator,
+            target_theta_rad: base_theta_rad,
+        },
+        MachineCommand::MoveCarriageZ {
+            manipulator,
+            target_z_m: base_z_m,
+        },
+        MachineCommand::SetJointTargets {
+            manipulator,
+            target_rad: desired_angles,
+        },
+    ] {
+        mechanics
+            .submit_machine_command(machine_command)
+            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+    }
+    let gripper_target = match command {
+        Command::CloseTendonGripper { .. } | Command::CloseReceiverGripper { .. } => mechanics
+            .serial_arm(arm_id)
+            .expect("selected arm remains present")
+            .gripper_config
+            .min_opening_m,
+        Command::ReleaseDonorGripper { .. } => mechanics
+            .serial_arm(arm_id)
+            .expect("selected arm remains present")
+            .gripper_config
+            .max_opening_m,
+        _ => return Ok(()),
+    };
+    mechanics
+        .submit_machine_command(MachineCommand::SetGripperOpening {
+            manipulator,
+            target_opening_m: gripper_target,
+        })
+        .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+    Ok(())
 }
 
 fn actuator_rms_error_m(mechanics: &Simulation) -> f64 {

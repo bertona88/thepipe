@@ -1,6 +1,9 @@
 #![forbid(unsafe_code)]
 
-use pipe_sim::{ReferenceSimulator as NativeSimulator, ScenarioSpec, REPORT_SCHEMA_VERSION};
+use pipe_sim::{
+    ReferenceSimulator as NativeSimulator, ScenarioSpec, REPORT_SCHEMA_VERSION,
+    SCENE_SCHEMA_VERSION,
+};
 use wasm_bindgen::prelude::*;
 
 pub const WASM_API_SCHEMA_VERSION: u32 = REPORT_SCHEMA_VERSION;
@@ -57,6 +60,18 @@ impl WasmReferenceSimulator {
         self.inner.report_json(pretty).map_err(js_error)
     }
 
+    /// Static geometry/topology/configuration. Fetch once per simulator reset.
+    #[wasm_bindgen(js_name = sceneDescriptionJson)]
+    pub fn scene_description_json(&self) -> Result<String, JsValue> {
+        self.inner.scene_description_json(false).map_err(js_error)
+    }
+
+    /// Current physical/estimated/commanded layers without advancing time.
+    #[wasm_bindgen(js_name = sceneFrameJson)]
+    pub fn scene_frame_json(&self) -> Result<String, JsValue> {
+        self.inner.scene_frame_json(false).map_err(js_error)
+    }
+
     #[wasm_bindgen(getter, js_name = terminal)]
     pub fn terminal(&self) -> bool {
         self.inner.is_terminal()
@@ -103,6 +118,11 @@ pub fn report_schema_version() -> u32 {
     REPORT_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = sceneSchemaVersion)]
+pub fn scene_schema_version() -> u32 {
+    SCENE_SCHEMA_VERSION
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,5 +138,6 @@ mod tests {
     #[test]
     fn schema_versions_match() {
         assert_eq!(report_schema_version(), pipe_sim::REPORT_SCHEMA_VERSION);
+        assert_eq!(scene_schema_version(), pipe_sim::SCENE_SCHEMA_VERSION);
     }
 }

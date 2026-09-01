@@ -94,6 +94,8 @@ const state = {
   simulator: null,
   wasmModule: null,
   rawSnapshot: null,
+  sceneDescription: null,
+  sceneFrame: null,
   telemetry: null,
   poseError: null,
   componentId: 4,
@@ -184,6 +186,7 @@ function updateFromWasm(snapshot) {
   state.componentId = interpreted.componentId;
   state.componentName = interpreted.componentName;
   state.executivePhase = interpreted.executivePhase;
+  state.sceneFrame = interpreted.sceneFrame;
   state.terminal = interpreted.terminal || state.simulator?.terminal || false;
   state.completed = interpreted.completed || state.simulator?.completed || false;
 
@@ -199,6 +202,8 @@ async function initializeSimulator({ preservePosition = false } = {}) {
   state.completed = false;
   state.faultRaised = false;
   state.rawSnapshot = null;
+  state.sceneDescription = null;
+  state.sceneFrame = null;
   state.telemetry = null;
   state.poseError = null;
   state.componentId = null;
@@ -216,8 +221,10 @@ async function initializeSimulator({ preservePosition = false } = {}) {
   if (state.wasmModule) {
     try {
       state.simulator = new state.wasmModule.ReferenceSimulator(state.scenario);
+      state.sceneDescription = JSON.parse(state.simulator.sceneDescriptionJson());
+      state.sceneFrame = JSON.parse(state.simulator.sceneFrameJson());
       state.mode = "wasm";
-      setModelBadge("RUST / WASM", "Same deterministic reference core used by the native CLI.");
+      setModelBadge("RUST / WASM", "Renderer is driven by the versioned Rust machine scene.");
       addEvent(`Loaded compiled scenario ${state.scenario}`, "pass", 0);
       updateUi();
       return;
@@ -655,7 +662,7 @@ function activeTargetPosition() {
   return { x: .2, y: 0, z: .08 };
 }
 
-function drawTubeScene(ctx) {
+function drawLegacyTubeScene(ctx) {
   const phase = phaseForProgress(state.progress);
   const radius = 2.1;
   const end = 3.25;
@@ -781,7 +788,7 @@ function drawTubeScene(ctx) {
   return housingScreen;
 }
 
-function drawMacroScene(ctx) {
+function drawLegacyMacroScene(ctx) {
   const { width, height } = state.dimensions;
   const centerX = width * .5;
   const centerY = height * .52;
@@ -830,6 +837,334 @@ function drawMacroScene(ctx) {
   ctx.fillText("24T · OUTPUT", scale * 1.75, scale * 1.55);
   ctx.restore();
 
+  dom.callout.style.opacity = "0";
+}
+
+function currentPhysicalScene() {
+  return state.sceneFrame?.truth ?? state.sceneFrame?.estimate ?? null;
+}
+
+function sceneDisplayScale() {
+  const radius = Number(state.sceneDescription?.tube?.inner_radius_m);
+  return Number.isFinite(radius) && radius > 0 ? 2.1 / radius : 1;
+}
+
+function scenePoint(translationM) {
+  const values = Array.isArray(translationM) ? translationM.map(Number) : [];
+  if (values.length !== 3 || values.some((value) => !Number.isFinite(value))) {
+    return { x: 0, y: 0, z: 0 };
+  }
+  const scale = sceneDisplayScale();
+  // Rust pipe_world uses +Z along the tube. The renderer uses +X along it.
+  return { x: values[2] * scale, y: values[0] * scale, z: values[1] * scale };
+}
+
+function quaternionRotateVector(rotation, vector) {
+  if (!Array.isArray(rotation) || rotation.length !== 4) return vector;
+  const [w, x, y, z] = rotation.map(Number);
+  const [vx, vy, vz] = vector;
+  const tx = 2 * (y * vz - z * vy);
+  const ty = 2 * (z * vx - x * vz);
+  const tz = 2 * (x * vy - y * vx);
+  return [
+    vx + w * tx + (y * tz - z * ty),
+    vy + w * ty + (z * tx - x * tz),
+    vz + w * tz + (x * ty - y * tx),
+  ];
+}
+
+function quaternionZAngle(rotation) {
+  if (!Array.isArray(rotation) || rotation.length !== 4) return 0;
+  const [w, x, y, z] = rotation.map(Number);
+  return Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+}
+
+function bodyDescriptions() {
+  return new Map((state.sceneDescription?.rigid_bodies ?? []).map((body) => [Number(body.id), body]));
+}
+
+function shapeRadiusM(shape) {
+  if (!shape) return 0.0001;
+  if (shape.kind === "sphere") return Number(shape.radius_m) || 0.0001;
+  if (shape.kind === "capsule") {
+    return (Number(shape.radius_m) || 0) + (Number(shape.half_segment_m) || 0);
+  }
+  if (shape.kind === "gear") return Number(shape.tip_radius_m) || 0.0001;
+  if (shape.kind === "box") {
+    return Math.hypot(...(shape.half_extents_m ?? [0.0001, 0.0001, 0.0001]).map(Number));
+  }
+  return 0.0001;
+}
+
+function activeSceneBody(scene) {
+  return scene.rigid_bodies.find((body) => Number(body.id) === Number(state.componentId))
+    ?? scene.rigid_bodies.find((body) => body.enabled)
+    ?? null;
+}
+
+function drawUnavailableScene(ctx) {
+  const { width, height } = state.dimensions;
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(135,153,144,.8)";
+  ctx.font = `10px ${getComputedStyle(document.documentElement).getPropertyValue("--mono")}`;
+  ctx.fillText("RUST MACHINE SCENE UNAVAILABLE", width * .5, height * .49);
+  ctx.fillStyle = "rgba(100,117,109,.62)";
+  ctx.fillText("BUILD THE WASM CORE TO RENDER PHYSICAL STATE", width * .5, height * .54);
+  ctx.restore();
+  dom.callout.style.opacity = "0";
+}
+
+function drawCollider(ctx, collider) {
+  const shape = collider?.shape;
+  const pose = collider?.pose;
+  if (!shape || !pose || shape.kind !== "capsule") return;
+  const half = Number(shape.half_segment_m) || 0;
+  const radius = Number(shape.radius_m) || 0;
+  const axis = quaternionRotateVector(pose.rotation_wxyz, [0, 0, half]);
+  const center = pose.translation_m.map(Number);
+  const a = scenePoint(center.map((value, index) => value - axis[index]));
+  const b = scenePoint(center.map((value, index) => value + axis[index]));
+  const projected = cameraProject(scenePoint(center));
+  drawLine3(ctx, a, b, {
+    stroke: "rgba(255,154,71,.24)",
+    width: Math.max(1, radius * sceneDisplayScale() * projected.scale * 2),
+    dash: [3, 3],
+  });
+}
+
+function drawRigidBody3(ctx, body, description, active) {
+  if (!body.enabled && !active) return;
+  const shape = description?.shape;
+  const point = scenePoint(body.pose?.translation_m);
+  const projected = cameraProject(point);
+  const pixelScale = sceneDisplayScale() * projected.scale;
+  if (shape?.kind === "gear") {
+    drawGear2d(
+      ctx,
+      projected.x,
+      projected.y,
+      Math.max(3, Number(shape.tip_radius_m) * pixelScale),
+      Number(shape.teeth),
+      quaternionZAngle(body.pose?.rotation_wxyz),
+      active,
+    );
+    return;
+  }
+  if (shape?.kind === "capsule") {
+    const half = Number(shape.half_segment_m) || 0;
+    const axis = quaternionRotateVector(body.pose?.rotation_wxyz, [0, 0, half]);
+    const center = body.pose.translation_m.map(Number);
+    const a = scenePoint(center.map((value, index) => value - axis[index]));
+    const b = scenePoint(center.map((value, index) => value + axis[index]));
+    drawLine3(ctx, a, b, {
+      stroke: active ? "#baff39" : "rgba(173,190,181,.7)",
+      width: Math.max(1, Number(shape.radius_m) * pixelScale * 2),
+    });
+    return;
+  }
+  const radius = Math.max(2, shapeRadiusM(shape) * pixelScale);
+  ctx.save();
+  ctx.translate(projected.x, projected.y);
+  ctx.rotate(quaternionZAngle(body.pose?.rotation_wxyz));
+  ctx.fillStyle = active ? "rgba(186,255,57,.12)" : "rgba(121,139,130,.05)";
+  ctx.strokeStyle = active ? "rgba(186,255,57,.9)" : "rgba(136,153,145,.52)";
+  if (shape?.kind === "box") {
+    const extents = shape.half_extents_m.map((value) => Number(value) * pixelScale);
+    ctx.fillRect(-extents[0], -extents[1], extents[0] * 2, extents[1] * 2);
+    ctx.strokeRect(-extents[0], -extents[1], extents[0] * 2, extents[1] * 2);
+  } else {
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTubeScene(ctx) {
+  const scene = currentPhysicalScene();
+  const description = state.sceneDescription;
+  if (!scene || !description) {
+    drawUnavailableScene(ctx);
+    return;
+  }
+
+  const scale = sceneDisplayScale();
+  const radius = description.tube.inner_radius_m * scale;
+  const end = description.tube.working_length_m * scale * .5;
+  const ringXs = Array.from({ length: 7 }, (_, index) => -end + index * end / 3);
+  for (const x of ringXs) {
+    const boundary = Math.abs(Math.abs(x) - end) < 1e-9;
+    drawPolyline3(ctx, ringPoints(x, radius), {
+      stroke: boundary ? "rgba(124,143,134,.56)" : "rgba(91,109,100,.16)",
+      width: boundary ? 1.3 : .7,
+    });
+  }
+  drawPolyline3(ctx, ringPoints(0, description.tube.central_work_radius_m * scale), {
+    stroke: "rgba(186,255,57,.22)", width: 1, dash: [3, 4],
+  });
+
+  for (const arm of scene.manipulators) {
+    const angle = Number(arm.carriage_theta_rad);
+    const railRadius = description.rail_system.shoulder_datum_radius_m * scale;
+    const a = { x: -end, y: Math.cos(angle) * railRadius, z: Math.sin(angle) * railRadius };
+    const b = { x: end, y: Math.cos(angle) * railRadius, z: Math.sin(angle) * railRadius };
+    drawLine3(ctx, a, b, { stroke: "rgba(150,169,159,.52)", width: 2.5 });
+  }
+
+  const targetBody = activeSceneBody(scene);
+  const target = targetBody ? scenePoint(targetBody.pose.translation_m) : { x: 0, y: 0, z: 0 };
+  if (state.layers.sensors) {
+    for (const sensor of description.sensors.filter((item) => item.kind.includes("camera"))) {
+      const camera = scenePoint(sensor.nominal_translation_m);
+      drawPoint3(ctx, camera, 3.2, "#48d9ff", "rgba(72,217,255,.55)");
+      drawLine3(ctx, camera, target, {
+        stroke: "rgba(72,217,255,.11)", width: .7, dash: [2, 5],
+      });
+    }
+  }
+
+  const motionScore = (arm) => Math.abs(Number(arm.carriage_z_velocity_m_s))
+    + Math.abs(Number(arm.carriage_theta_velocity_rad_s)) * .01
+    + (arm.joint_velocities_rad_s ?? [])
+      .reduce((sum, value) => sum + Math.abs(Number(value)), 0) * .01;
+  const activeArm = scene.manipulators.reduce(
+    (best, arm) => motionScore(arm) > motionScore(best) ? arm : best,
+    scene.manipulators[0],
+  );
+  for (const arm of scene.manipulators) {
+    const active = activeArm && arm.id === activeArm.id && motionScore(arm) > 1e-8;
+    const color = active ? "rgba(186,255,57,.9)" : "rgba(133,151,142,.62)";
+    const points = [arm.shoulder_pose, arm.elbow_pose, arm.wrist_pose, arm.tool_pose]
+      .map((pose) => scenePoint(pose.translation_m));
+    if (active) {
+      for (let index = 0; index < points.length - 1; index++) {
+        drawLine3(ctx, points[index], points[index + 1], {
+          stroke: "rgba(186,255,57,.18)", width: 8,
+        });
+      }
+    }
+    for (let index = 0; index < points.length - 1; index++) {
+      drawLine3(ctx, points[index], points[index + 1], {
+        stroke: color, width: index === 2 ? 2.5 : 3.2,
+      });
+    }
+    drawPoint3(ctx, scenePoint(arm.carriage_pose.translation_m), 5, "#101714", color);
+    points.forEach((point, index) => drawPoint3(
+      ctx,
+      point,
+      index === points.length - 1 ? 2.8 : 3.5,
+      "#0b100e",
+      color,
+    ));
+    for (const jaw of arm.gripper?.jaw_poses ?? []) {
+      drawPoint3(ctx, scenePoint(jaw.translation_m), 2, "#baff39");
+    }
+    if (state.layers.collision) {
+      for (const collider of arm.link_colliders ?? []) drawCollider(ctx, collider);
+    }
+  }
+
+  const descriptions = bodyDescriptions();
+  for (const body of scene.rigid_bodies) {
+    drawRigidBody3(
+      ctx,
+      body,
+      descriptions.get(Number(body.id)),
+      Number(body.id) === Number(state.componentId),
+    );
+  }
+
+  if (state.layers.uncertainty) {
+    const p = cameraProject(target);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y, 20, 11, -.2, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(185,140,255,.07)";
+    ctx.strokeStyle = "rgba(185,140,255,.7)";
+    ctx.setLineDash([3, 3]);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const calloutPoint = cameraProject(target);
+  dom.callout.style.left = `${clamp(calloutPoint.x / state.dimensions.width * 100, 12, 72)}%`;
+  dom.callout.style.top = `${clamp(calloutPoint.y / state.dimensions.height * 100, 18, 76)}%`;
+  dom.callout.style.opacity = "1";
+}
+
+function drawMacroScene(ctx) {
+  const scene = currentPhysicalScene();
+  const descriptions = bodyDescriptions();
+  if (!scene || !state.sceneDescription) {
+    drawUnavailableScene(ctx);
+    return;
+  }
+  const bodies = scene.rigid_bodies
+    .filter((body) => body.enabled || Number(body.id) === Number(state.componentId));
+  if (!bodies.length) {
+    drawUnavailableScene(ctx);
+    return;
+  }
+  const bounds = bodies.reduce((result, body) => {
+    const shape = descriptions.get(Number(body.id))?.shape;
+    const radius = shapeRadiusM(shape);
+    const [x, y] = body.pose.translation_m.map(Number);
+    return {
+      minX: Math.min(result.minX, x - radius),
+      maxX: Math.max(result.maxX, x + radius),
+      minY: Math.min(result.minY, y - radius),
+      maxY: Math.max(result.maxY, y + radius),
+    };
+  }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+  const { width, height } = state.dimensions;
+  const centerX = (bounds.minX + bounds.maxX) * .5;
+  const centerY = (bounds.minY + bounds.maxY) * .5;
+  const spanX = Math.max(bounds.maxX - bounds.minX, 7e-3);
+  const spanY = Math.max(bounds.maxY - bounds.minY, 5e-3);
+  const scale = Math.min(width * .82 / spanX, height * .78 / spanY) * state.camera.zoom;
+  const project = (translation) => ({
+    x: width * .5 + (Number(translation[0]) - centerX) * scale,
+    y: height * .52 - (Number(translation[1]) - centerY) * scale,
+  });
+
+  for (const body of bodies) {
+    const description = descriptions.get(Number(body.id));
+    const shape = description?.shape;
+    const point = project(body.pose.translation_m);
+    const active = Number(body.id) === Number(state.componentId);
+    if (shape?.kind === "gear") {
+      drawGear2d(
+        ctx,
+        point.x,
+        point.y,
+        Math.max(4, Number(shape.tip_radius_m) * scale),
+        Number(shape.teeth),
+        quaternionZAngle(body.pose.rotation_wxyz),
+        active,
+      );
+      continue;
+    }
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(-quaternionZAngle(body.pose.rotation_wxyz));
+    ctx.fillStyle = active ? "rgba(186,255,57,.10)" : "rgba(91,111,101,.05)";
+    ctx.strokeStyle = active ? "rgba(186,255,57,.9)" : "rgba(115,136,126,.62)";
+    if (shape?.kind === "box") {
+      const [hx, hy] = shape.half_extents_m.map((value) => Number(value) * scale);
+      ctx.fillRect(-hx, -hy, hx * 2, hy * 2);
+      ctx.strokeRect(-hx, -hy, hx * 2, hy * 2);
+    } else {
+      const radius = Math.max(2, shapeRadiusM(shape) * scale);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   dom.callout.style.opacity = "0";
 }
 

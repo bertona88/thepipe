@@ -214,6 +214,44 @@ class ParameterTests(unittest.TestCase):
         self.assertEqual(canonical_sha256(parameters), expected)
         self.assertRegex(expected, r"^[0-9a-f]{64}$")
 
+    def test_runtime_machine_contract_matches_cad_datums(self) -> None:
+        contract_path = (
+            Path(__file__).resolve().parents[2]
+            / "scenarios"
+            / "machine_baseline_v1.json"
+        )
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        self.assertEqual(contract["schema_version"], 1)
+        self.assertEqual(
+            contract["status"],
+            "simulation_baseline_not_hardware_qualified",
+        )
+        self.assertEqual(contract["manipulator_count"], self.config.tube.rail_count)
+        self.assertAlmostEqual(
+            contract["tube"]["inner_radius_m"] * 1_000,
+            self.config.tube.inner_radius,
+        )
+        self.assertAlmostEqual(
+            contract["tube"]["working_length_m"] * 1_000,
+            self.config.tube.usable_length,
+        )
+        self.assertAlmostEqual(
+            contract["carriage"]["shoulder_datum_radius_m"] * 1_000,
+            self.config.arm.shoulder_root_radius,
+        )
+        self.assertEqual(
+            tuple(value * 1_000 for value in contract["arm"]["link_lengths_m"]),
+            self.config.arm.link_lengths,
+        )
+        self.assertAlmostEqual(
+            contract["arm"]["tendon"]["routing_radius_m"] * 1_000,
+            self.config.arm.tendon_offset,
+        )
+        self.assertAlmostEqual(
+            contract["gripper"]["max_opening_m"] * 1_000,
+            self.config.gripper.jaw_opening,
+        )
+
     def test_bad_qualified_target_is_rejected(self) -> None:
         bad = DesignConfig()
         # Frozen nested dataclasses prevent accidental mutation during export.
