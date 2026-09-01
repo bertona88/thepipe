@@ -391,6 +391,7 @@ impl Simulation {
         if let MachineCommand::Stop { manipulator: None } = command {
             for arm in &mut self.serial_arms {
                 arm.motion.stop();
+                arm.gripper.stop();
             }
         } else {
             let manipulator = command
@@ -408,12 +409,14 @@ impl Simulation {
             )
             .map_err(SimulationError::InvalidMachineCommand)?;
             arm.motion.apply_command(command);
-            if let MachineCommand::SetGripperOpening {
-                target_opening_m, ..
-            } = command
-            {
-                arm.gripper
-                    .set_command(target_opening_m, arm.gripper_config);
+            match command {
+                MachineCommand::SetGripperOpening {
+                    target_opening_m, ..
+                } => arm
+                    .gripper
+                    .set_command(target_opening_m, arm.gripper_config),
+                MachineCommand::Stop { .. } => arm.gripper.stop(),
+                _ => {}
             }
         }
 

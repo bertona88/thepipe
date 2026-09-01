@@ -136,7 +136,8 @@ Targets are validated before mutation. Out-of-range and non-finite values are
 rejected rather than silently clamped. Accepted commands receive a monotonic
 sequence number and issue tick. Motion is deterministic, velocity-limited, and
 acceleration-limited; circumferential motion follows the shortest wrapped path.
-`Stop` captures current positions and zeros velocities.
+`Stop` captures current axis and jaw positions, zeros velocities, and preserves
+an existing grasp instead of opening the tool.
 
 `SetToolPoseTarget` is intentionally not faked in this landing. It belongs to
 M1b, where the carriage-first IK policy, limit checks, collision result, and
