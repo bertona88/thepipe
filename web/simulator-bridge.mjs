@@ -80,6 +80,13 @@ function poseErrorFromSnapshot(snapshot) {
   return { translationMm, rotationDeg };
 }
 
+function sceneFrameFromSnapshot(snapshot) {
+  const scene = snapshot?.scene;
+  if (!scene || finiteNumber(scene.schema_version) !== 1) return null;
+  if (!scene.truth && !scene.estimate) return null;
+  return scene;
+}
+
 export function interpretSnapshot(snapshot, previousProgress = 0) {
   const status = String(snapshot?.status ?? "running").toLowerCase();
   const terminal = status === "completed" || status === "aborted";
@@ -100,6 +107,7 @@ export function interpretSnapshot(snapshot, previousProgress = 0) {
     progress: clamp(Math.max(previousProgress, derivedProgress), 0, 1),
     telemetry: telemetryFromSnapshot(snapshot),
     poseError: poseErrorFromSnapshot(snapshot),
+    sceneFrame: sceneFrameFromSnapshot(snapshot),
     events: Array.isArray(snapshot?.events) ? snapshot.events.map(String) : [],
     injectedFault: snapshot?.injected_fault ?? null,
   };

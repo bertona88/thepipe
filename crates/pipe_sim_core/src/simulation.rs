@@ -4,8 +4,12 @@ use crate::arm::{ArmError, ArmKinematics, ContinuumArm};
 use crate::collision::{query_pair, Clearance, CollisionReport, CollisionSettings, Contact};
 use crate::geometry::{BodyId, MotionType, RigidBody};
 use crate::gripper::{GripperConfig, GripperState};
+use crate::machine::{
+    CarriageConfig, MachineBackend, MachineCommand, MachineCommandError, MachineCommandEvent,
+    ManipulatorMotionConfig, ManipulatorMotionState,
+};
 use crate::math::{Pose, Quat, Vec3};
-use crate::serial_arm::{SerialArm, SerialArmKinematics};
+use crate::serial_arm::{SerialArm, SerialArmError, SerialArmKinematics};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArmId(pub u32);
@@ -98,6 +102,11 @@ pub struct SerialArmInstance {
     pub gripper: GripperState,
     pub kinematics: SerialArmKinematics,
     pub held_body_local_pose: Option<Pose>,
+    /// Authoritative carriage and bounded joint motion. `arm.positions` is the
+    /// FK/tendon projection of this state, retained for the local arm model.
+    pub motion: ManipulatorMotionState,
+    pub carriage_config: CarriageConfig,
+    pub motion_config: ManipulatorMotionConfig,
 }
 
 impl SerialArmInstance {
@@ -110,6 +119,8 @@ impl SerialArmInstance {
             return Err(SimulationError::InvalidGripperConfig);
         }
         let kinematics = arm.forward_kinematics();
+        let motion = ManipulatorMotionState::from_positions(arm.positions);
+        let carriage_config = CarriageConfig::from_serial_arm(arm.config);
         Ok(Self {
             id,
             arm,
@@ -117,6 +128,9 @@ impl SerialArmInstance {
             gripper: GripperState::new(gripper_config.max_opening_m, gripper_config),
             kinematics,
             held_body_local_pose: None,
+            motion,
+            carriage_config,
+            motion_config: ManipulatorMotionConfig::default(),
         })
     }
 
@@ -124,9 +138,17 @@ impl SerialArmInstance {
         self.kinematics.tool_pose
     }
 
-    fn step(&mut self, dt_s: f64) {
+    fn step(&mut self, dt_s: f64) -> Result<(), SerialArmError> {
+        self.motion.step(
+            dt_s,
+            self.carriage_config,
+            self.arm.config,
+            self.motion_config,
+        );
+        self.arm.set_positions(self.motion.positions())?;
         self.gripper.step(dt_s, self.gripper_config);
         self.kinematics = self.arm.forward_kinematics();
+        Ok(())
     }
 }
 
@@ -183,6 +205,8 @@ pub enum SimulationError {
     ArmNotFound,
     InvalidGripperConfig,
     Arm(ArmError),
+    SerialArm(SerialArmError),
+    InvalidMachineCommand(MachineCommandError),
     BodyAlreadyHeld,
     GraspRejected,
     InvalidElapsedTime,
@@ -191,6 +215,12 @@ pub enum SimulationError {
 impl From<ArmError> for SimulationError {
     fn from(value: ArmError) -> Self {
         Self::Arm(value)
+    }
+}
+
+impl From<SerialArmError> for SimulationError {
+    fn from(value: SerialArmError) -> Self {
+        Self::SerialArm(value)
     }
 }
 
@@ -214,6 +244,8 @@ pub struct Simulation {
     /// Reference rigid-link arms. `arms` above contains only the optional
     /// reduced-order continuum model for backward-compatible adapters.
     pub serial_arms: Vec<SerialArmInstance>,
+    pub machine_command_sequence: u64,
+    pub machine_command_log: Vec<MachineCommandEvent>,
     /// Remainder used only by [`Simulation::advance_by`]. Calling `step`
     /// directly leaves this unchanged.
     pub accumulator_s: f64,
@@ -231,6 +263,8 @@ impl Simulation {
             bodies: Vec::new(),
             arms: Vec::new(),
             serial_arms: Vec::new(),
+            machine_command_sequence: 0,
+            machine_command_log: Vec::new(),
             accumulator_s: 0.0,
         })
     }
@@ -346,6 +380,53 @@ impl Simulation {
             .binary_search_by_key(&id, |arm| arm.id)
             .ok()
             .map(|index| &mut self.serial_arms[index])
+    }
+
+    /// Validate and record a plant command before changing any target state.
+    /// A controlled stop addressed to `None` atomically holds every arm.
+    pub fn submit_machine_command(
+        &mut self,
+        command: MachineCommand,
+    ) -> Result<u64, SimulationError> {
+        if let MachineCommand::Stop { manipulator: None } = command {
+            for arm in &mut self.serial_arms {
+                arm.motion.stop();
+                arm.gripper.stop();
+            }
+        } else {
+            let manipulator = command
+                .manipulator()
+                .expect("only the all-arm stop omits a manipulator");
+            let arm_id = ArmId(manipulator.0);
+            let arm = self
+                .serial_arm_mut(arm_id)
+                .ok_or(SimulationError::ArmNotFound)?;
+            ManipulatorMotionState::validate_command(
+                command,
+                arm.carriage_config,
+                arm.arm.config,
+                arm.gripper_config,
+            )
+            .map_err(SimulationError::InvalidMachineCommand)?;
+            arm.motion.apply_command(command);
+            match command {
+                MachineCommand::SetGripperOpening {
+                    target_opening_m, ..
+                } => arm
+                    .gripper
+                    .set_command(target_opening_m, arm.gripper_config),
+                MachineCommand::Stop { .. } => arm.gripper.stop(),
+                _ => {}
+            }
+        }
+
+        self.machine_command_sequence += 1;
+        self.machine_command_log.push(MachineCommandEvent {
+            sequence: self.machine_command_sequence,
+            issued_at_tick: self.step_index,
+            command,
+        });
+        Ok(self.machine_command_sequence)
     }
 
     /// Materialize current serial-arm link capsules as kinematic rigid bodies.
@@ -519,7 +600,7 @@ impl Simulation {
             arm.step(dt_s)?;
         }
         for arm in &mut self.serial_arms {
-            arm.step(dt_s);
+            arm.step(dt_s)?;
         }
 
         // Kinematically attach grasped parts after arm motion.
@@ -695,6 +776,18 @@ impl Simulation {
     }
 }
 
+impl MachineBackend for Simulation {
+    type Error = SimulationError;
+
+    fn submit_command(&mut self, command: MachineCommand) -> Result<u64, Self::Error> {
+        self.submit_machine_command(command)
+    }
+
+    fn advance_fixed_step(&mut self) -> Result<(), Self::Error> {
+        self.step().map(|_| ())
+    }
+}
+
 fn two_mut<T>(slice: &mut [T], a: usize, b: usize) -> (&mut T, &mut T) {
     assert_ne!(a, b);
     if a < b {
@@ -710,6 +803,7 @@ fn two_mut<T>(slice: &mut [T], a: usize, b: usize) -> (&mut T, &mut T) {
 mod tests {
     use super::*;
     use crate::geometry::{Material, Shape};
+    use crate::machine::ManipulatorId;
 
     #[test]
     fn fixed_step_clock_does_not_accumulate_addition_drift() {
@@ -866,6 +960,38 @@ mod tests {
             MotionType::Static,
         ));
         assert_eq!(result, Err(SimulationError::ReservedBodyId));
+    }
+
+    #[test]
+    fn machine_commands_drive_bounded_authoritative_arm_state() {
+        let mut simulation = Simulation::new(SimulationConfig {
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        simulation
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        simulation
+            .submit_machine_command(MachineCommand::MoveCarriageZ {
+                manipulator: ManipulatorId(1),
+                target_z_m: 25.0e-3,
+            })
+            .unwrap();
+        simulation
+            .submit_machine_command(MachineCommand::SetJointTargets {
+                manipulator: ManipulatorId(1),
+                target_rad: [0.20, -0.15, 0.30, 0.10],
+            })
+            .unwrap();
+        for _ in 0..4_000 {
+            simulation.step().unwrap();
+        }
+        let arm = simulation.serial_arm(ArmId(1)).unwrap();
+        assert!((arm.motion.carriage.z_m - 25.0e-3).abs() < 1.0e-12);
+        assert_eq!(arm.arm.positions, arm.motion.positions());
+        assert_eq!(simulation.machine_command_sequence, 2);
+        assert_eq!(simulation.machine_command_log.len(), 2);
     }
 
     #[test]

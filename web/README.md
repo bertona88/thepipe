@@ -23,8 +23,13 @@ Generate it first with:
 
 The static build copies that wrapper into `web/dist/wasm/` when it is present.
 If the wrapper is absent, the console enters a clearly labelled deterministic
-UI-preview mode. That preview exercises controls and visualization only; it
-does not replace the Rust acceptance result.
+UI-preview mode. That preview exercises controls and telemetry only; the
+physical viewport remains unavailable rather than inventing machine poses.
+
+The wrapper supplies a static `SceneDescription` after reset and a dynamic
+`SceneFrame` on each step. The renderer consumes the supplied carriage,
+shoulder, elbow, wrist, tool, jaw, body, and contact state; JavaScript does not
+run machine forward kinematics.
 
 ## Keyboard controls
 

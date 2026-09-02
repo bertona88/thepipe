@@ -81,3 +81,17 @@ test("preserves simulator events and injected-fault identity", () => {
   assert.deepEqual(result.events, ["gate-rejected:vision-confidence-low"]);
   assert.equal(result.injectedFault, "occlusion");
 });
+
+test("passes through only versioned physical scene frames", () => {
+  const scene = {
+    schema_version: 1,
+    truth: { manipulators: [], rigid_bodies: [], contacts: [] },
+    estimate: null,
+    commanded: { command_sequence: 2, manipulators: [] },
+  };
+  assert.deepEqual(interpretSnapshot(snapshot({ scene })).sceneFrame, scene);
+  assert.equal(
+    interpretSnapshot(snapshot({ scene: { ...scene, schema_version: 99 } })).sceneFrame,
+    null,
+  );
+});

@@ -82,6 +82,12 @@ impl GripperState {
         self.command_opening_m = opening_m.clamp(config.min_opening_m, config.max_opening_m);
     }
 
+    /// Hold the current jaw opening without dropping an attached body.
+    pub fn stop(&mut self) {
+        self.command_opening_m = self.opening_m;
+        self.opening_velocity_m_s = 0.0;
+    }
+
     pub fn step(&mut self, dt_s: f64, config: GripperConfig) {
         if dt_s <= 0.0 || !dt_s.is_finite() || !config.is_valid() {
             return;
@@ -179,6 +185,22 @@ mod tests {
         let state = GripperState::new(1.0e-3, config);
         let poses = state.jaw_poses(Pose::IDENTITY, config);
         assert!((poses[0].translation.x + poses[1].translation.x).abs() < 1e-15);
+    }
+
+    #[test]
+    fn stop_holds_current_opening_and_preserves_grasp_state() {
+        let config = GripperConfig::default();
+        let mut state = GripperState::new(config.max_opening_m, config);
+        state.set_command(config.min_opening_m, config);
+        state.step(0.1, config);
+        state.held_body = Some(BodyId(9));
+        let opening = state.opening_m;
+        state.stop();
+        state.step(0.1, config);
+        assert_eq!(state.opening_m, opening);
+        assert_eq!(state.command_opening_m, opening);
+        assert_eq!(state.opening_velocity_m_s, 0.0);
+        assert_eq!(state.held_body, Some(BodyId(9)));
     }
 
     #[test]

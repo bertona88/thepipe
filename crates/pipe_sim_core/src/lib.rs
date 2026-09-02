@@ -13,6 +13,7 @@ pub mod arm;
 pub mod collision;
 pub mod geometry;
 pub mod gripper;
+pub mod machine;
 pub mod math;
 pub mod serial_arm;
 pub mod simulation;
@@ -31,6 +32,12 @@ pub use geometry::{
     Aabb, BodyId, CollisionFilter, GearGeometry, Material, MotionType, RigidBody, Shape,
 };
 pub use gripper::{GraspCandidate, GripperConfig, GripperState};
+pub use machine::{
+    wrap_angle_pi, CarriageConfig, CarriageState, CarriageTarget, MachineBackend, MachineCommand,
+    MachineCommandError, MachineCommandEvent, ManipulatorId, ManipulatorMotionConfig,
+    ManipulatorMotionState, PipeCellConfig, QualificationTargets, RailTopology, SafetyConfig,
+    TubeGeometry, MACHINE_CONFIG_SCHEMA_VERSION,
+};
 pub use math::{Mat3, Pose, Quat, Vec3};
 pub use serial_arm::{
     SerialArm, SerialArmConfig, SerialArmError, SerialArmKinematics, SerialJointPositions,

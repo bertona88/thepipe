@@ -16,7 +16,7 @@ not the normative F1 milestone specified below.
 4. **Precision is closed-loop.** The target tendon mechanisms are compliant and hysteretic; optics and local force evidence correct them near the work. The current reduced plant does not yet close this loop through executed arm trajectories.
 5. **Determinism is designed in.** Fixed steps, stable iteration order, seeded streams, hashed assets, and replay logs are first-class requirements.
 6. **Fidelity is selectable and declared.** Fast kinematic studies, default engineering runs, and slow tooth/contact validation share scene data but never masquerade as each other.
-7. **The core is headless.** Rendering for a later site is an adapter, not the owner of simulation state.
+7. **The core is headless.** The operator console is an adapter over a versioned Rust scene contract, not the owner of simulation state.
 
 ## 2. Proposed repository boundaries
 
@@ -114,6 +114,15 @@ build123d is an Open Cascade-based parametric Python CAD library; its official d
 - named random streams and event sequence numbers.
 
 Each entity has a stable typed ID. Entity iteration shall be by stable ID, never hash-map insertion order.
+
+The implemented machine-runtime foundation is specified in `MACHINE_RUNTIME_M1.md`.
+`pipe-sim-core` now owns cell-level tube, carriage, manipulator-motion, gripper,
+safety-target, and qualification-target types plus a sequenced `MachineCommand`
+boundary. `scenarios/machine_baseline_v1.json` is parsed and hashed once, and
+native/WASM adapters project the same state into a static `SceneDescription`
+and dynamic `SceneFrame`. The dynamic schema keeps truth, estimate, and
+commanded targets separate. The estimator is not implemented yet, so its field
+is absent rather than being populated from truth.
 
 ### 4.2 Multi-rate deterministic loop
 
@@ -350,7 +359,9 @@ fitting, richer CAD asset validation, and run-directory artifacts.
 ### 11.2 WebAssembly adapter
 
 The current `pipe_sim_wasm` adapter constructs a compiled scenario by name, advances one or many
-bounded cycles, and returns JSON snapshots/reports. It does not load the file-backed CAD manifest.
+bounded cycles, and returns JSON snapshots/reports. It also exposes the versioned static machine
+description and current truth/estimate/commanded scene frame used by the browser renderer. It does
+not load the file-backed CAD manifest.
 The target adapter shall additionally expose:
 
 - load validated asset/scenario bytes;
@@ -362,7 +373,8 @@ The target adapter shall additionally expose:
 
 The adapter shall avoid blocking loops, filesystem assumptions, native threads, and nondeterministic browser clocks. JavaScript never mutates Rust world state directly. Large geometry is loaded once; snapshots use typed arrays or a compact binary representation.
 
-The future website may interpolate display transforms and render pretty meshes, but it cannot determine contacts, task gates, or success.
+The website may interpolate display transforms and render pretty meshes, but it cannot determine
+rail or arm kinematics, contacts, grasp ownership, task gates, or success.
 
 ## 12. Verification strategy
 
