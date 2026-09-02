@@ -339,8 +339,15 @@ pub struct MechanicsTelemetry {
     pub active_lateral_force_n: f64,
 }
 
+/// Compact control-cycle record retained in acceptance reports.
+///
+/// The renderer-facing [`SceneFrame`] is deliberately excluded. Scene frames
+/// are available on live [`StepSnapshot`] values and through
+/// [`ReferenceSimulator::scene_frame`], but duplicating them across thousands
+/// of report records makes the machine-readable acceptance artifact needlessly
+/// large and changes the version-1 report schema.
 #[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct StepSnapshot {
+pub struct ReportSnapshot {
     pub cycle: u64,
     pub control_time_ms: u64,
     pub component_id: Option<u16>,
@@ -355,12 +362,28 @@ pub struct StepSnapshot {
     pub components_completed: u64,
     pub retries: u64,
     pub events: Vec<String>,
+}
+
+/// One live executive step, including the current renderer-neutral machine
+/// scene. The compact report fields remain flattened for the WASM JSON API.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct StepSnapshot {
+    #[serde(flatten)]
+    pub report: ReportSnapshot,
     pub scene: SceneFrame,
 }
 
 impl StepSnapshot {
     pub fn to_json(&self, pretty: bool) -> Result<String, SimError> {
         serialize_json(self, pretty)
+    }
+}
+
+impl std::ops::Deref for StepSnapshot {
+    type Target = ReportSnapshot;
+
+    fn deref(&self) -> &Self::Target {
+        &self.report
     }
 }
 
@@ -584,7 +607,7 @@ pub struct SimulationReport {
     pub components: Vec<ComponentReport>,
     pub gear_train_acceptance: GearTrainAcceptance,
     pub fidelity: FidelityReport,
-    pub snapshots: Vec<StepSnapshot>,
+    pub snapshots: Vec<ReportSnapshot>,
 }
 
 impl SimulationReport {
@@ -624,7 +647,7 @@ pub struct ReferenceSimulator {
     cycle: u64,
     control_time_ms: u64,
     last_snapshot: Option<StepSnapshot>,
-    snapshots: Vec<StepSnapshot>,
+    snapshots: Vec<ReportSnapshot>,
     failures: Vec<String>,
 }
 
@@ -706,7 +729,7 @@ impl ReferenceSimulator {
         self.last_snapshot.as_ref()
     }
 
-    pub fn snapshots(&self) -> &[StepSnapshot] {
+    pub fn snapshots(&self) -> &[ReportSnapshot] {
         &self.snapshots
     }
 
@@ -797,7 +820,7 @@ impl ReferenceSimulator {
             .mechanics
             .query_collisions_with_arms(self.mechanics.config.collision);
         let scene = scene::build_scene_frame(&self.mechanics, &scene_collision.contacts);
-        let snapshot = StepSnapshot {
+        let report_snapshot = ReportSnapshot {
             cycle: self.cycle,
             control_time_ms: self.control_time_ms,
             component_id: active.map(|id| id.0),
@@ -812,9 +835,12 @@ impl ReferenceSimulator {
             components_completed: metrics.components_completed,
             retries: metrics.retries,
             events: decision.events.iter().map(event_summary).collect(),
+        };
+        let snapshot = StepSnapshot {
+            report: report_snapshot.clone(),
             scene,
         };
-        self.snapshots.push(snapshot.clone());
+        self.snapshots.push(report_snapshot);
         self.last_snapshot = Some(snapshot);
         Ok(self.last_snapshot.as_ref().expect("snapshot just set"))
     }
@@ -2648,6 +2674,20 @@ mod tests {
                 .unwrap()
                 .configuration_sha256
         );
+    }
+
+    #[test]
+    fn live_step_has_scene_but_acceptance_report_keeps_compact_trace() {
+        let mut simulator = ReferenceSimulator::from_scenario_name("nominal").unwrap();
+        let live_json = simulator.step().unwrap().to_json(false).unwrap();
+        assert!(live_json.contains("\"scene\":"));
+        assert!(live_json.contains("\"schema_version\":1"));
+
+        let report = simulator.report();
+        assert_eq!(report.snapshots.len(), 1);
+        let report_json = report.to_json(false).unwrap();
+        assert!(!report_json.contains("\"scene\":"));
+        assert!(report_json.contains("\"snapshots\":[{\"cycle\":1"));
     }
 
     #[test]

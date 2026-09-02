@@ -118,6 +118,11 @@ Simulation/debug builds may expose truth. Hardware and closed-loop acceptance
 must populate estimates from timestamped observations and must not silently
 copy truth into the estimate field.
 
+Live step responses carry the current `SceneFrame`; the version-1 acceptance
+report keeps its compact control/telemetry trace and does not duplicate a full
+scene into every stored record. A dedicated compact replay stream remains a
+later interface milestone.
+
 The JSON schema is versioned independently from the existing report schema.
 Breaking field, unit, quaternion-order, or semantic changes require a scene
 schema increment.
