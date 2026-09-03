@@ -155,8 +155,9 @@ carriage and joint coordinates. Duration is derived from every configured
 velocity and acceleration limit and uses the baseline commissioning speed
 scale. A preflight samples the complete configuration-space path at no more
 than 1 degree or 0.25 mm between checks and rejects arm/body, inter-arm, and
-non-adjacent self collisions before target state is mutated. This is bounded
-sampled collision checking, not yet a continuous swept-volume proof.
+non-adjacent self collisions before target state is mutated. Plans requiring
+more than 4,096 samples are rejected instead of weakening those bounds. This
+is bounded sampled collision checking, not yet a continuous swept-volume proof.
 
 `PointMotionRuntime` isolates this acceptance path from the legacy gearbox
 executive. Its default calibration point is `[0.020, 0.000, 0.000]` m. Native

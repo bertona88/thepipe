@@ -22,6 +22,10 @@ pub struct ArmId(pub u32);
 pub const SERIAL_ARM_COLLISION_BODY_ID_BASE: u32 = 0xC000_0000;
 const MAX_SERIAL_ARM_COLLISION_ID: u32 = 0x0FFF_FFFF;
 const SERIAL_ARM_LINK_COUNT: u8 = 3;
+const TOOL_PATH_MAX_ANGULAR_STEP_RAD: f64 = core::f64::consts::PI / 180.0;
+const TOOL_PATH_MAX_LINEAR_STEP_M: f64 = 0.25e-3;
+const TOOL_PATH_MAX_SAMPLE_COUNT: usize = 4_096;
+const SMOOTHSTEP_MAX_SLOPE: f64 = 1.5;
 
 /// Stable mapping from a serial arm and physical link index to its reserved
 /// collision ID. Link indices 0, 1, and 2 identify upper arm, forearm, and
@@ -529,21 +533,9 @@ impl Simulation {
                     }),
             )
             .collect::<Vec<_>>();
-        let joint_delta = plan
-            .start
-            .tendon_joint_angles()
-            .iter()
-            .zip(plan.goal.tendon_joint_angles())
-            .map(|(start, goal)| (goal - start).abs())
-            .fold(0.0, f64::max);
-        let theta_delta = wrap_angle_pi(plan.goal.base_theta_rad - plan.start.base_theta_rad).abs();
-        let z_delta = (plan.goal.base_z_m - plan.start.base_z_m).abs();
-        let sample_count = ((joint_delta.max(theta_delta) / 1.0_f64.to_radians())
-            .max(z_delta / 0.25e-3)
-            .ceil() as usize)
-            .clamp(2, 512);
+        let sample_count = tool_path_sample_count(plan)?;
         let mut candidate = moving_arm.arm.clone();
-        for sample in 1..=sample_count {
+        for sample in 0..=sample_count {
             let progress = sample as f64 / sample_count as f64;
             candidate
                 .set_positions(plan.sample(progress))
@@ -977,6 +969,32 @@ impl Simulation {
     }
 }
 
+fn tool_path_sample_count(plan: ToolMotionPlan) -> Result<usize, SimulationError> {
+    let joint_delta = plan
+        .start
+        .tendon_joint_angles()
+        .iter()
+        .zip(plan.goal.tendon_joint_angles())
+        .map(|(start, goal)| (goal - start).abs())
+        .fold(0.0, f64::max);
+    let theta_delta = wrap_angle_pi(plan.goal.base_theta_rad - plan.start.base_theta_rad).abs();
+    let z_delta = (plan.goal.base_z_m - plan.start.base_z_m).abs();
+    // ToolMotionPlan uses cubic smoothstep, whose maximum slope is 1.5.
+    // Account for that slope so consecutive configuration samples honor the
+    // advertised angular and linear bounds over the complete path.
+    let required = (SMOOTHSTEP_MAX_SLOPE * joint_delta.max(theta_delta)
+        / TOOL_PATH_MAX_ANGULAR_STEP_RAD)
+        .max(SMOOTHSTEP_MAX_SLOPE * z_delta / TOOL_PATH_MAX_LINEAR_STEP_M)
+        .ceil()
+        .max(2.0);
+    if !required.is_finite() || required > TOOL_PATH_MAX_SAMPLE_COUNT as f64 {
+        return Err(SimulationError::InvalidMachineCommand(
+            MachineCommandError::ToolPathSamplingLimit,
+        ));
+    }
+    Ok(required as usize)
+}
+
 impl MachineBackend for Simulation {
     type Error = SimulationError;
 
@@ -1276,6 +1294,54 @@ mod tests {
         );
         assert_eq!(colliding.machine_command_sequence, 0);
         assert!(colliding.tool_motion_trace.is_empty());
+    }
+
+    #[test]
+    fn tool_path_sampling_honors_documented_configuration_step_bounds() {
+        let start = crate::serial_arm::SerialJointPositions {
+            base_z_m: -150.0e-3,
+            ..crate::serial_arm::SerialJointPositions::default()
+        };
+        let goal = crate::serial_arm::SerialJointPositions {
+            base_z_m: 150.0e-3,
+            base_theta_rad: core::f64::consts::PI,
+            shoulder_yaw_rad: 100.0_f64.to_radians(),
+            shoulder_pitch_rad: 120.0_f64.to_radians(),
+            elbow_pitch_rad: 155.0_f64.to_radians(),
+            wrist_roll_rad: core::f64::consts::PI,
+        };
+        let plan = ToolMotionPlan::new(
+            Vec3::ZERO,
+            start,
+            goal,
+            CarriageConfig::default(),
+            ManipulatorMotionConfig::default(),
+            1.0,
+        );
+        let sample_count = tool_path_sample_count(plan).unwrap();
+        let mut previous = plan.sample(0.0);
+        for sample in 1..=sample_count {
+            let current = plan.sample(sample as f64 / sample_count as f64);
+            assert!(
+                (current.base_z_m - previous.base_z_m).abs()
+                    <= TOOL_PATH_MAX_LINEAR_STEP_M + f64::EPSILON
+            );
+            assert!(
+                wrap_angle_pi(current.base_theta_rad - previous.base_theta_rad).abs()
+                    <= TOOL_PATH_MAX_ANGULAR_STEP_RAD + f64::EPSILON
+            );
+            for (current, previous) in current
+                .tendon_joint_angles()
+                .iter()
+                .zip(previous.tendon_joint_angles())
+            {
+                assert!(
+                    (current - previous).abs()
+                        <= TOOL_PATH_MAX_ANGULAR_STEP_RAD + f64::EPSILON
+                );
+            }
+            previous = current;
+        }
     }
 
     #[test]

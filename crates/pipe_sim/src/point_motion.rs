@@ -7,7 +7,9 @@ use pipe_sim_core::{
 };
 use serde::Serialize;
 
-use crate::{build_optics, machine_config, scene, serialize_json, SceneDescription, SceneFrame, SimError};
+use crate::{
+    build_optics, machine_config, scene, serialize_json, SceneDescription, SceneFrame, SimError,
+};
 
 pub const POINT_MOTION_REPORT_SCHEMA_VERSION: u32 = 1;
 pub const CALIBRATION_TARGET_WORLD_M: [f64; 3] = [20.0e-3, 0.0, 0.0];
@@ -131,7 +133,6 @@ impl PointMotionRuntime {
         manipulator: ManipulatorId,
         target_position_world_m: Vec3,
     ) -> Result<u64, SimError> {
-        self.mechanics.tool_motion_trace.clear();
         let sequence = self
             .mechanics
             .submit_machine_command(MachineCommand::SetToolPoseTarget {
@@ -139,6 +140,7 @@ impl PointMotionRuntime {
                 target_position_world_m,
             })
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        self.mechanics.tool_motion_trace.clear();
         self.active_manipulator = manipulator;
         Ok(sequence)
     }
@@ -348,5 +350,18 @@ mod tests {
             report.legs[2].target_position_world_m,
             Some(CALIBRATION_APPROACH_WORLD_M)
         );
+    }
+
+    #[test]
+    fn rejected_target_preserves_the_previous_replay_trace() {
+        let mut runtime = PointMotionRuntime::new().unwrap();
+        runtime.submit_calibration_target().unwrap();
+        runtime.run_until_settled(20_000).unwrap();
+        let trace = runtime.mechanics.tool_motion_trace.clone();
+
+        let result = runtime.submit_tool_target(ManipulatorId(1), Vec3::new(0.090, 0.0, 0.0));
+
+        assert!(result.is_err());
+        assert_eq!(runtime.mechanics.tool_motion_trace, trace);
     }
 }

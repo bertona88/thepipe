@@ -311,6 +311,7 @@ pub enum MachineCommandError {
     ToolTargetUnreachable,
     ToolTargetJointLimits,
     ToolPathCollision,
+    ToolPathSamplingLimit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -559,7 +560,8 @@ impl ManipulatorMotionState {
                 self.joint_targets_rad = target_rad;
                 self.stopped = false;
             }
-            MachineCommand::SetToolPoseTarget { .. } | MachineCommand::SetGripperOpening { .. } => {}
+            MachineCommand::SetToolPoseTarget { .. }
+            | MachineCommand::SetGripperOpening { .. } => {}
             MachineCommand::Stop { .. } => self.stop(),
         }
     }
