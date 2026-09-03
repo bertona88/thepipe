@@ -681,7 +681,7 @@ mod tests {
         let mut runtime = SimpleManipulationRuntime::new().unwrap();
         let report = runtime.run_cycle(20_000).unwrap();
 
-        assert_eq!(report.status, "complete");
+        assert_eq!(report.status, "complete", "{report:#?}");
         assert_eq!(report.phase, "complete");
         assert_eq!(report.failure_reason, None);
         assert!(report.grasp_observed);

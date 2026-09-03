@@ -28,6 +28,7 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
+      - run: cargo test --locked -p pipe_sim simple_manipulation::tests::m1c_cycle_grasps_carries_inserts_releases_and_retreats -- --exact --nocapture
       - run: cargo test --locked --workspace
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - run: cargo build --locked --release --target wasm32-unknown-unknown -p pipe_sim_wasm
