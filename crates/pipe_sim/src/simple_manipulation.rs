@@ -765,8 +765,6 @@ mod tests {
 
         assert!(local_approach.x.abs() < 1.0e-12);
         assert!(local_approach.y.abs() < 1.0e-12);
-        assert!(
-            (local_approach.z + CALIBRATION_INSERT_APPROACH_DISTANCE_M).abs() < 1.0e-12
-        );
+        assert!((local_approach.z + CALIBRATION_INSERT_APPROACH_DISTANCE_M).abs() < 1.0e-12);
     }
 }
