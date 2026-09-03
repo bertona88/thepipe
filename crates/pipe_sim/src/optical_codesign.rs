@@ -7,8 +7,8 @@
 use core::fmt;
 
 use pipe_optics::{
-    remaining_independent_rms_budget, symmetric_triangulation_angle_rad,
-    PrecisionModelInput, PrecisionPrediction,
+    remaining_independent_rms_budget, symmetric_triangulation_angle_rad, PrecisionModelInput,
+    PrecisionPrediction,
 };
 use serde::{Deserialize, Serialize};
 
@@ -247,10 +247,16 @@ impl fmt::Display for OpticalCodesignError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidConfiguration(message) => {
-                write!(formatter, "invalid optical co-design configuration: {message}")
+                write!(
+                    formatter,
+                    "invalid optical co-design configuration: {message}"
+                )
             }
             Self::Serialization(message) => {
-                write!(formatter, "optical co-design serialization failed: {message}")
+                write!(
+                    formatter,
+                    "optical co-design serialization failed: {message}"
+                )
             }
         }
     }
@@ -259,8 +265,8 @@ impl fmt::Display for OpticalCodesignError {
 impl std::error::Error for OpticalCodesignError {}
 
 pub fn optical_codesign_report() -> Result<OpticalCodesignReport, OpticalCodesignError> {
-    let configuration: OpticalCodesignConfig =
-        serde_json::from_str(BASELINE_OPTICAL_CODESIGN_JSON).map_err(|error| {
+    let configuration: OpticalCodesignConfig = serde_json::from_str(BASELINE_OPTICAL_CODESIGN_JSON)
+        .map_err(|error| {
             OpticalCodesignError::InvalidConfiguration(format!("JSON parse: {error}"))
         })?;
     validate_configuration(&configuration)?;
@@ -268,11 +274,7 @@ pub fn optical_codesign_report() -> Result<OpticalCodesignReport, OpticalCodesig
     let global_prediction = predict_profile(&configuration.global_profile)?;
     let macro_prediction = predict_profile(&configuration.macro_profile)?;
     let macro_sweep = build_macro_sweep(&configuration)?;
-    let phase_budgets = build_phase_budgets(
-        &configuration,
-        &global_prediction,
-        &macro_prediction,
-    );
+    let phase_budgets = build_phase_budgets(&configuration, &global_prediction, &macro_prediction);
 
     let mut model_gates = vec![
         upper_bound_gate(
@@ -378,17 +380,25 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
         .global_layout
         .mount_radius_m
         .hypot(config.global_layout.axial_offsets_m[0].abs());
-    let global_baseline_m = 2.0
-        * config.global_layout.mount_radius_m
-        * (0.5 * 120.0_f64.to_radians()).sin();
+    let global_baseline_m =
+        2.0 * config.global_layout.mount_radius_m * (0.5 * 120.0_f64.to_radians()).sin();
     let global_angle_rad = 2.0
         * (global_baseline_m / (2.0 * global_range_m))
             .clamp(-1.0, 1.0)
             .asin();
     let global_field_width_m = 2.0
         * global_range_m
-        * (0.5 * config.global_layout.horizontal_field_of_view_deg.to_radians()).tan();
-    require_close("global range", global_range_m, config.global_profile.range_m)?;
+        * (0.5
+            * config
+                .global_layout
+                .horizontal_field_of_view_deg
+                .to_radians())
+        .tan();
+    require_close(
+        "global range",
+        global_range_m,
+        config.global_profile.range_m,
+    )?;
     require_close(
         "global baseline",
         global_baseline_m,
@@ -447,7 +457,9 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
             .iter()
             .any(|phase| phase.minimum_independent_views < 2)
     {
-        return invalid("stationary macro capture and at least two independent views are mandatory");
+        return invalid(
+            "stationary macro capture and at least two independent views are mandatory",
+        );
     }
     for phase in &config.phases {
         if phase.optical_profile != "global" && phase.optical_profile != "macro" {
@@ -472,7 +484,10 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
             || phase.target_lateral_sigma_m == 0.0
             || phase.target_axial_sigma_m == 0.0
         {
-            return invalid(format!("phase '{}' has an invalid RMS allocation", phase.id));
+            return invalid(format!(
+                "phase '{}' has an invalid RMS allocation",
+                phase.id
+            ));
         }
     }
     if config.macro_sweep.field_widths_m.is_empty()
@@ -500,7 +515,10 @@ fn validate_profile(profile: &OpticalProfileConfig) -> Result<(), OpticalCodesig
         || !profile.processing_latency_s.is_finite()
         || profile.processing_latency_s < 0.0
     {
-        return invalid(format!("profile '{}' has invalid timing or baseline", profile.id));
+        return invalid(format!(
+            "profile '{}' has invalid timing or baseline",
+            profile.id
+        ));
     }
     Ok(())
 }
@@ -670,8 +688,7 @@ fn build_phase_budgets(
 }
 
 fn speed_limit(motion_allocation_m: f64, latency_s: f64) -> Option<f64> {
-    (motion_allocation_m > 0.0 && latency_s > 0.0)
-        .then_some(motion_allocation_m / latency_s)
+    (motion_allocation_m > 0.0 && latency_s > 0.0).then_some(motion_allocation_m / latency_s)
 }
 
 fn upper_bound_gate(id: &str, value: f64, limit: f64, units: &str) -> ModelGateResult {
@@ -723,7 +740,9 @@ mod tests {
         let report = optical_codesign_report().unwrap();
         assert!((report.global_prediction.lateral_total_sigma_m - 24.452_417e-6).abs() < 1.0e-12);
         assert!((report.global_prediction.axial_total_sigma_m - 43.832_315e-6).abs() < 1.0e-12);
-        assert!((report.macro_prediction.object_space_sampling_m_px - 1.953_125e-6).abs() < 1.0e-15);
+        assert!(
+            (report.macro_prediction.object_space_sampling_m_px - 1.953_125e-6).abs() < 1.0e-15
+        );
         assert!((report.macro_prediction.lateral_total_sigma_m - 3.020_529e-6).abs() < 1.0e-12);
         assert!((report.macro_prediction.axial_total_sigma_m - 3.433_738e-6).abs() < 1.0e-12);
         assert!(report.claim_boundary.contains("No value"));
@@ -738,9 +757,7 @@ mod tests {
             .filter(|row| (row.field_width_m - 0.004).abs() < 1.0e-12)
             .collect();
         assert_eq!(rows.len(), 3);
-        assert!(rows
-            .iter()
-            .all(|row| !row.meets_worst_sampling_target));
+        assert!(rows.iter().all(|row| !row.meets_worst_sampling_target));
     }
 
     #[test]

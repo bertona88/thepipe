@@ -41,8 +41,8 @@ pub fn random_triangulation_precision(
         return None;
     }
     let lateral_sigma_m = range_m * camera_localization_sigma_px / focal_length_px;
-    let disparity_sigma_px = camera_localization_sigma_px
-        .hypot(correspondence_localization_sigma_px);
+    let disparity_sigma_px =
+        camera_localization_sigma_px.hypot(correspondence_localization_sigma_px);
     let axial_sigma_m = range_m * disparity_sigma_px / (focal_length_px * sine);
     Some(RandomTriangulationPrecision {
         lateral_sigma_m,
@@ -181,10 +181,7 @@ pub fn remaining_independent_rms_budget(
 
 /// Included angle for two entrance pupils separated by `baseline_m`, symmetric
 /// about a datum at perpendicular working distance `working_distance_m`.
-pub fn symmetric_triangulation_angle_rad(
-    baseline_m: f64,
-    working_distance_m: f64,
-) -> Option<f64> {
+pub fn symmetric_triangulation_angle_rad(baseline_m: f64, working_distance_m: f64) -> Option<f64> {
     if !baseline_m.is_finite()
         || !working_distance_m.is_finite()
         || baseline_m <= 0.0
