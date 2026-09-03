@@ -32,10 +32,13 @@ jobs:
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - run: cargo build --locked --release --target wasm32-unknown-unknown -p pipe_sim_wasm
       - run: cargo run --locked -p pipe_sim_cli -- --scenario scenarios/gearbox_acceptance.json --report out/gearbox_acceptance.json
+      - run: cargo run --locked -p pipe_sim_cli --bin pipe-manipulation -- --compact > out/m1c_manipulation.json
       - uses: actions/upload-artifact@v7
         with:
           name: acceptance-report
-          path: out/gearbox_acceptance.json
+          path: |
+            out/gearbox_acceptance.json
+            out/m1c_manipulation.json
 
   cad:
     runs-on: ubuntu-latest

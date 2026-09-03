@@ -1,7 +1,8 @@
 use pipe_sim_core::{
-    CarriageConfig, GripperConfig, ManipulatorMotionConfig, PipeCellConfig, QualificationTargets,
-    RailTopology, SafetyConfig, SerialArmConfig, TendonJointConfig, TubeGeometry, Vec3,
-    MACHINE_CONFIG_SCHEMA_VERSION, TENDON_JOINT_COUNT,
+    ArmId, CarriageConfig, GripperConfig, ManipulatorMotionConfig, PipeCellConfig,
+    QualificationTargets, RailTopology, SafetyConfig, SerialArm, SerialArmConfig,
+    SerialArmInstance, SerialJointPositions, Simulation, SimulationConfig, TendonJointConfig,
+    TubeGeometry, Vec3, MACHINE_CONFIG_SCHEMA_VERSION, TENDON_JOINT_COUNT,
 };
 use serde::Deserialize;
 
@@ -204,6 +205,52 @@ pub(crate) fn load_baseline_machine_config() -> Result<LoadedMachineConfig, SimE
         source_sha256: sha256_hex(BASELINE_MACHINE_CONFIG_JSON.as_bytes()),
         cell,
     })
+}
+
+/// Construct the shared deterministic M1 machine plant. Manipulator 1 starts
+/// at the commissioning datum; the remaining manipulators are parked at
+/// separated axial datums so standalone single-arm milestones cannot obtain
+/// clearance by silently removing them from the machine.
+pub(crate) fn build_baseline_machine(
+    loaded: &LoadedMachineConfig,
+) -> Result<Simulation, SimError> {
+    let mut mechanics = Simulation::new(SimulationConfig {
+        fixed_dt_s: 0.001,
+        gravity_m_s2: Vec3::ZERO,
+        ..SimulationConfig::default()
+    })
+    .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+    for arm_index in 0..loaded.cell.manipulator_count {
+        let mut arm = SerialArm::new(loaded.cell.arm)
+            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        let theta_rad = f64::from(arm_index) * core::f64::consts::TAU
+            / f64::from(loaded.cell.manipulator_count);
+        let (base_z_m, shoulder_pitch_rad) = if arm_index == 0 {
+            (0.0, 0.0)
+        } else {
+            let parked_z = [-120.0e-3, 120.0e-3, -80.0e-3][usize::from(arm_index - 1) % 3];
+            (parked_z, core::f64::consts::FRAC_PI_2)
+        };
+        arm.set_positions(SerialJointPositions {
+            base_z_m,
+            base_theta_rad: theta_rad,
+            shoulder_yaw_rad: 0.0,
+            shoulder_pitch_rad,
+            elbow_pitch_rad: 0.0,
+            wrist_roll_rad: 0.0,
+        })
+        .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        let mut instance =
+            SerialArmInstance::new(ArmId(u32::from(arm_index) + 1), arm, loaded.cell.gripper)
+                .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+        instance.carriage_config = loaded.cell.carriage;
+        instance.motion_config = loaded.cell.motion;
+        instance.tool_motion_speed_scale = loaded.cell.safety.commissioning_speed_scale;
+        mechanics
+            .add_serial_arm(instance)
+            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+    }
+    Ok(mechanics)
 }
 
 #[cfg(test)]

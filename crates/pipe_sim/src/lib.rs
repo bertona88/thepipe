@@ -10,6 +10,7 @@
 mod machine_config;
 pub mod point_motion;
 pub mod scene;
+pub mod simple_manipulation;
 
 use std::collections::BTreeSet;
 use std::fmt;
@@ -41,6 +42,12 @@ pub use point_motion::{
     CALIBRATION_APPROACH_WORLD_M, CALIBRATION_TARGET_WORLD_M, POINT_MOTION_REPORT_SCHEMA_VERSION,
 };
 pub use scene::{SceneDescription, SceneFrame, SCENE_SCHEMA_VERSION};
+pub use simple_manipulation::{
+    ManipulationTraceRecord, SimpleManipulationReport, SimpleManipulationRuntime,
+    CALIBRATION_INSERT_APPROACH_WORLD_M, CALIBRATION_INSERT_WORLD_M, CALIBRATION_PEG_BODY_ID,
+    CALIBRATION_PICK_APPROACH_WORLD_M, CALIBRATION_PICK_WORLD_M,
+    SIMPLE_MANIPULATION_REPORT_SCHEMA_VERSION,
+};
 
 pub const REPORT_SCHEMA_VERSION: u32 = 1;
 const CONTROL_PERIOD_MS: u64 = 20;

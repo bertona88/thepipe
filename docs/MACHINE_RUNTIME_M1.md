@@ -1,6 +1,6 @@
 # Machine runtime M1 — architecture decision and implementation contract
 
-Status: M1a and M1b implemented; simulation baseline, not hardware-qualified
+Status: M1a, M1b, and M1c implemented; simulation baseline, not hardware-qualified
 
 This note records the machine-architecture reset and the amendments made while
 turning it into an executable milestone. It is subordinate to the safety and
@@ -39,7 +39,7 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 | --- | --- | --- |
 | M1a — authoritative machine state | Canonical configuration, bounded direct-axis commands, named FK poses, collision capsules, versioned scene export, snapshot-driven browser | Implemented |
 | M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Implemented |
-| M1c — simple manipulation | Pick and place a calibration peg; grasp ownership and held-part pose come from the plant | Planned |
+| M1c — simple manipulation | Pick, carry, insert, release, and retreat with a calibration peg; grasp ownership and held-part pose come from the plant | Implemented |
 | M2 — two-arm handoff | Collision-aware dual grasp, transfer, release, and retreat | Planned |
 | M3 — observed-state control | Timestamped estimates and uncertainty drive the controller; truth is evaluation-only | Planned |
 | M4 — gearbox integration | Gearbox executive issues real machine goals after the preceding gates pass | Deferred |
@@ -198,6 +198,10 @@ M1a is accepted when all of the following pass:
 
 - The task executive still maps logical gearbox commands to diagnostic arm
   targets; parts do not yet follow executed gripper trajectories.
+- M1c executes a separate compiled calibration coupon with plant-owned grasp
+  state and carried-part collision preflight. Its deliberately loose socket,
+  zero-gravity plant, and reduced compliant pads are not a gearbox insertion or
+  hardware-force claim.
 - M1b has analytic tool-position IK and a sampled collision-aware joint path,
   but no constrained orientation IK, singularity metric, continuous collision
   checking, obstacle-avoiding planner, or multi-arm carriage optimizer.

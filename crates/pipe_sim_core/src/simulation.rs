@@ -506,10 +506,21 @@ impl Simulation {
         let moving_arm = self
             .serial_arm(arm_id)
             .ok_or(SimulationError::ArmNotFound)?;
+        let held_body_id = moving_arm.gripper.held_body;
+        let held_attachment = match (held_body_id, moving_arm.held_body_local_pose) {
+            (Some(body_id), Some(local_pose)) => Some((
+                self.body(body_id)
+                    .ok_or(SimulationError::BodyNotFound)?
+                    .clone(),
+                local_pose,
+            )),
+            (None, None) => None,
+            _ => return Err(SimulationError::GraspRejected),
+        };
         let obstacle_bodies = self
             .bodies
             .iter()
-            .filter(|body| body.enabled)
+            .filter(|body| body.enabled && Some(body.id) != held_body_id)
             .cloned()
             .chain(
                 self.serial_arms
@@ -538,7 +549,8 @@ impl Simulation {
             candidate
                 .set_positions(plan.sample(progress))
                 .map_err(SimulationError::SerialArm)?;
-            let candidate_links = candidate.forward_kinematics().collision_capsules;
+            let candidate_kinematics = candidate.forward_kinematics();
+            let candidate_links = &candidate_kinematics.collision_capsules;
             for (link_index, (pose, shape)) in candidate_links.iter().enumerate() {
                 let moving_body = RigidBody::new(
                     serial_arm_link_body_id(arm_id, link_index as u8)
@@ -556,6 +568,46 @@ impl Simulation {
                                 <= self.config.collision.clearance_threshold_m
                         })
                 }) {
+                    return Err(SimulationError::InvalidMachineCommand(
+                        MachineCommandError::ToolPathCollision,
+                    ));
+                }
+            }
+            if let Some((held_body, held_local_pose)) = &held_attachment {
+                let mut carried_body = held_body.clone();
+                carried_body.pose = candidate_kinematics.tool_pose * *held_local_pose;
+                let collides_with_obstacle = obstacle_bodies.iter().any(|obstacle| {
+                    carried_body
+                        .collision_filter
+                        .allows(obstacle.collision_filter)
+                        && query_pair(&carried_body, obstacle).is_some_and(|proximity| {
+                            proximity.signed_distance_m
+                                <= self.config.collision.clearance_threshold_m
+                        })
+                });
+                // The held object necessarily occupies the terminal tool
+                // envelope. It must still remain clear of the upstream links.
+                let collides_with_own_arm = candidate_links
+                    .iter()
+                    .take(candidate_links.len().saturating_sub(1))
+                    .enumerate()
+                    .any(|(link_index, (pose, shape))| {
+                        let link_body = RigidBody::new(
+                            serial_arm_link_body_id(arm_id, link_index as u8)
+                                .expect("serial arm has three physical links"),
+                            *shape,
+                            *pose,
+                            MotionType::Kinematic,
+                        );
+                        carried_body
+                            .collision_filter
+                            .allows(link_body.collision_filter)
+                            && query_pair(&carried_body, &link_body).is_some_and(|proximity| {
+                                proximity.signed_distance_m
+                                    <= self.config.collision.clearance_threshold_m
+                            })
+                    });
+                if collides_with_obstacle || collides_with_own_arm {
                     return Err(SimulationError::InvalidMachineCommand(
                         MachineCommandError::ToolPathCollision,
                     ));
@@ -678,6 +730,9 @@ impl Simulation {
             .body(body_id)
             .ok_or(SimulationError::BodyNotFound)?
             .clone();
+        if !body.enabled || body.motion == MotionType::Static {
+            return Err(SimulationError::GraspRejected);
+        }
         let arm_index = self
             .arms
             .binary_search_by_key(&arm_id, |arm| arm.id)
@@ -714,6 +769,9 @@ impl Simulation {
             .body(body_id)
             .ok_or(SimulationError::BodyNotFound)?
             .clone();
+        if !body.enabled || body.motion == MotionType::Static {
+            return Err(SimulationError::GraspRejected);
+        }
         let arm_index = self
             .serial_arms
             .binary_search_by_key(&arm_id, |arm| arm.id)
@@ -747,6 +805,67 @@ impl Simulation {
         Ok(arm.gripper.release())
     }
 
+    fn refresh_grasp_contacts(&mut self) {
+        for arm in &mut self.arms {
+            let Some(body_id) = arm.gripper.held_body else {
+                continue;
+            };
+            let mut body = self
+                .bodies
+                .binary_search_by_key(&body_id, |body| body.id)
+                .ok()
+                .map(|index| self.bodies[index].clone());
+            let retained = if let (Some(body), Some(local_pose)) =
+                (body.as_mut(), arm.held_body_local_pose)
+            {
+                body.pose = arm.tool_pose() * local_pose;
+                let candidate =
+                    arm.gripper
+                        .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
+                body.enabled
+                    && body.motion != MotionType::Static
+                    && arm
+                        .gripper
+                        .update_held_contact(candidate, arm.gripper_config)
+            } else {
+                false
+            };
+            if !retained {
+                arm.gripper.release();
+                arm.held_body_local_pose = None;
+            }
+        }
+        for arm in &mut self.serial_arms {
+            let Some(body_id) = arm.gripper.held_body else {
+                continue;
+            };
+            let mut body = self
+                .bodies
+                .binary_search_by_key(&body_id, |body| body.id)
+                .ok()
+                .map(|index| self.bodies[index].clone());
+            let retained = if let (Some(body), Some(local_pose)) =
+                (body.as_mut(), arm.held_body_local_pose)
+            {
+                body.pose = arm.tool_pose() * local_pose;
+                let candidate =
+                    arm.gripper
+                        .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
+                body.enabled
+                    && body.motion != MotionType::Static
+                    && arm
+                        .gripper
+                        .update_held_contact(candidate, arm.gripper_config)
+            } else {
+                false
+            };
+            if !retained {
+                arm.gripper.release();
+                arm.held_body_local_pose = None;
+            }
+        }
+    }
+
     pub fn step(&mut self) -> Result<StepReport, SimulationError> {
         if !self.config.is_valid() {
             return Err(SimulationError::InvalidConfig);
@@ -770,6 +889,7 @@ impl Simulation {
         for arm in &mut self.serial_arms {
             arm.step(dt_s)?;
         }
+        self.refresh_grasp_contacts();
 
         for arm_id in active_tool_motions {
             let sample = {
@@ -1021,7 +1141,7 @@ fn two_mut<T>(slice: &mut [T], a: usize, b: usize) -> (&mut T, &mut T) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geometry::{Material, Shape};
+    use crate::geometry::{CollisionFilter, Material, Shape};
     use crate::machine::ManipulatorId;
 
     #[test]
@@ -1301,6 +1421,99 @@ mod tests {
         );
         assert_eq!(colliding.machine_command_sequence, 0);
         assert!(colliding.tool_motion_trace.is_empty());
+    }
+
+    #[test]
+    fn cartesian_preflight_sweeps_the_attached_body() {
+        const HELD_GROUP: u32 = 0b0010;
+        const OBSTACLE_GROUP: u32 = 0b0100;
+
+        let mut simulation = Simulation::new(SimulationConfig {
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        simulation
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        let tool_pose = simulation.serial_arm(ArmId(1)).unwrap().tool_pose();
+        let mut held = RigidBody::new(
+            BodyId(7),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            tool_pose,
+            MotionType::Dynamic,
+        );
+        held.collision_filter = CollisionFilter {
+            group: HELD_GROUP,
+            mask: OBSTACLE_GROUP,
+        };
+        simulation.add_body(held).unwrap();
+        simulation.serial_arm_mut(ArmId(1)).unwrap().gripper.opening_m = 0.39e-3;
+        simulation.grasp_body_serial(ArmId(1), BodyId(7)).unwrap();
+
+        let target = Vec3::new(20.0e-3, 0.0, 0.0);
+        let mut obstacle = RigidBody::new(
+            BodyId(8),
+            Shape::Sphere { radius_m: 0.3e-3 },
+            Pose::from_translation(target),
+            MotionType::Static,
+        );
+        obstacle.collision_filter = CollisionFilter {
+            group: OBSTACLE_GROUP,
+            mask: HELD_GROUP,
+        };
+        simulation.add_body(obstacle).unwrap();
+
+        let result = simulation.submit_machine_command(MachineCommand::SetToolPoseTarget {
+            manipulator: ManipulatorId(1),
+            target_position_world_m: target,
+        });
+        assert_eq!(
+            result,
+            Err(SimulationError::InvalidMachineCommand(
+                MachineCommandError::ToolPathCollision
+            ))
+        );
+        assert_eq!(simulation.machine_command_sequence, 0);
+        assert_eq!(
+            simulation.serial_arm(ArmId(1)).unwrap().gripper.held_body,
+            Some(BodyId(7))
+        );
+    }
+
+    #[test]
+    fn static_and_disabled_bodies_cannot_be_grasped() {
+        let mut simulation = Simulation::new(SimulationConfig::default()).unwrap();
+        simulation
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        let tool_pose = simulation.serial_arm(ArmId(1)).unwrap().tool_pose();
+        simulation
+            .add_body(RigidBody::new(
+                BodyId(7),
+                Shape::Sphere { radius_m: 0.2e-3 },
+                tool_pose,
+                MotionType::Static,
+            ))
+            .unwrap();
+        let mut disabled = RigidBody::new(
+            BodyId(8),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            tool_pose,
+            MotionType::Dynamic,
+        );
+        disabled.enabled = false;
+        simulation.add_body(disabled).unwrap();
+        simulation.serial_arm_mut(ArmId(1)).unwrap().gripper.opening_m = 0.4e-3;
+
+        assert_eq!(
+            simulation.grasp_body_serial(ArmId(1), BodyId(7)),
+            Err(SimulationError::GraspRejected)
+        );
+        assert_eq!(
+            simulation.grasp_body_serial(ArmId(1), BodyId(8)),
+            Err(SimulationError::GraspRejected)
+        );
     }
 
     #[test]
