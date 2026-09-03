@@ -1,6 +1,7 @@
 use crate::camera::{CalibratedCamera, DriftRandomWalk};
 use crate::math::{Vec2, Vec3};
 use crate::noise::{keyed_seed, DeterministicRng};
+use crate::precision::random_triangulation_precision;
 use crate::reconstruction::{triangulate_rays, Covariance3, QualityMetrics};
 use crate::scene::{Hit, Scene};
 
@@ -372,10 +373,17 @@ impl StructuredLightRig {
             .abs()
             .sqrt()
             .max(1.0);
-        let lateral_sigma_m = measured_range_m * camera_sigma_px / focal_px;
-        let disparity_sigma_px = camera_sigma_px.hypot(projector_sigma_px);
-        let geometric_axial_sigma_m = measured_range_m * disparity_sigma_px
-            / (focal_px * triangulation.intersection_angle_rad.sin().max(1.0e-6));
+        let Some(random_precision) = random_triangulation_precision(
+            measured_range_m,
+            focal_px,
+            triangulation.intersection_angle_rad,
+            camera_sigma_px,
+            projector_sigma_px,
+        ) else {
+            return missing(camera.id, detector_pixel, MissingReturn::DegenerateGeometry);
+        };
+        let lateral_sigma_m = random_precision.lateral_sigma_m;
+        let geometric_axial_sigma_m = random_precision.axial_sigma_m;
         let quantization_sigma_m = self.config.depth_quantization_m.max(0.0) / 12.0_f64.sqrt();
         let axial_sigma_m = geometric_axial_sigma_m
             .hypot(speckle_sigma)

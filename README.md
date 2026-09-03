@@ -22,6 +22,7 @@ data before using it to release hardware.
 - [Architecture and fidelity boundaries](docs/ARCHITECTURE.md)
 - [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
 - [M1c simple-manipulation acceptance contract](docs/MACHINE_RUNTIME_M1C.md)
+- [M1d optical/robot co-design and precision budget](docs/OPTICAL_CODESIGN_M1D.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -67,6 +68,7 @@ With stable Rust, Python 3.11+ and build123d installed:
 cargo test --locked --workspace
 cargo run --locked -p pipe_sim_cli -- --scenario scenarios/gearbox_acceptance.json --report out/run.json
 cargo run --locked -p pipe_sim_cli --bin pipe-manipulation -- --compact
+cargo run --locked -p pipe_sim_cli --bin pipe-optical-codesign -- --compact
 python -m pytest cad/tests
 PYTHONPATH=cad python -m pipe_cad.cli gearbox --output cad/out --stl-tolerance 0.01
 ./scripts/build_wasm.sh
@@ -126,6 +128,16 @@ The runtime has zero gravity, rigid attachment, no gripper/tool collision mesh, 
 insertion force, and no estimator. Its scene therefore exposes simulation truth while keeping
 `estimate` empty. It proves software ownership and sequencing, not micrometre insertion or
 hardware performance.
+
+## M1d optical/robot co-design
+
+`scenarios/optical_codesign_m1d.json` freezes a reviewable two-scale optical candidate and its
+uncertainty assumptions. The native CLI and WASM static export use one analytic implementation to
+predict global/macro precision, sweep macro field width versus baseline, and solve the residual
+loaded arm-control allocation for every manipulation phase. A feasible report is explicitly
+`model_feasible_hardware_qualification_required`; it is not measured accuracy. See the M1d note
+for the proposed camera/projector layout, current 7.9 µm tightest lateral residual allocation, and
+the coupon sequence required before camera replication or arm architecture freeze.
 
 ## Safety boundary
 

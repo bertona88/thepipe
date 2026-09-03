@@ -168,10 +168,12 @@ The baseline cell shall simulate and provide mounts for:
 - diffuse white/near-IR illumination with independently controlled banks; and
 - at least two tool-local macro cameras shared among the four arms or mounted on designated observer arms; the acceptance move shall have a simultaneous stereo pair or one macro camera plus a calibrated projector view, 4 × 3 mm or smaller field of view, 10–25 mm working distance, and 6–20 mm effective triangulation baseline.
 
-The locked reference packaging uses two clocked three-camera triplets at a 60 mm front-face
-radius and `z = -106/+106 mm` from the work datum, plus a rigid 12 mm stereo macro head on one
-wrist. The current F1-reduced runtime uses those numbers in an active-component-local sensing
-frame rather than executing the CAD wrist or fixed tube-world camera transforms.
+The locked global geometry uses two clocked three-camera triplets at a 60 mm front-face radius and
+`z = -106/+106 mm` from the work datum. The M1d package candidate uses one macro camera plus a
+calibrated projector on a rigid observer head with a 12 mm effective entrance-pupil baseline; the
+existing two-camera CAD envelope is retained only as a packaging study until the coupon downselect.
+The current F1-reduced runtime uses the global numbers in an active-component-local sensing frame
+rather than executing the CAD wrist or fixed tube-world camera transforms.
 
 Rolling-shutter cameras may be simulated as a cost-down option but shall not satisfy the dynamic acceptance test unless their row timing is included in estimation. Transparent tube reflections shall be present in the high-fidelity optical scene or represented by a measured false-detection/contrast-loss model.
 

@@ -1,6 +1,6 @@
 # Machine runtime M1 — architecture decision and implementation contract
 
-Status: M1a, M1b, and M1c implemented; simulation baseline, not hardware-qualified
+Status: M1a, M1b, M1c, and the M1d analytic trade study implemented; not hardware-qualified
 
 This note records the machine-architecture reset and the amendments made while
 turning it into an executable milestone. It is subordinate to the safety and
@@ -40,6 +40,7 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 | M1a — authoritative machine state | Canonical configuration, bounded direct-axis commands, named FK poses, collision capsules, versioned scene export, snapshot-driven browser | Implemented |
 | M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Implemented |
 | M1c — simple manipulation | Pick, carry, insert, release, and retreat with a calibration peg; grasp ownership and held-part pose come from the plant | Implemented |
+| M1d — optical/robot co-design | Versioned two-scale layout, analytic precision sweep, and phase-by-phase arm residual budgets with an explicit hardware-evidence boundary | Implemented as a model; bench qualification not started |
 | M2 — two-arm handoff | Collision-aware dual grasp, transfer, release, and retreat | Planned |
 | M3 — observed-state control | Timestamped estimates and uncertainty drive the controller; truth is evaluation-only | Planned |
 | M4 — gearbox integration | Gearbox executive issues real machine goals after the preceding gates pass | Deferred |

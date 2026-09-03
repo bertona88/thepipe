@@ -40,12 +40,14 @@ model accepts tendon offsets directly and therefore does not prove motor travel 
 
 Do not use two independent compliant arms as an assumed micrometre stereo baseline. Put the two
 macro cameras on one characterized rigid head, or continuously estimate their relative transform.
-The reference optical contract is:
+The executable M1d optical candidate is documented in `OPTICAL_CODESIGN_M1D.md`. Its reference
+contract is:
 
 - six 1280 x 800 global views on two clocked triplets, front-face radius 60 mm, Z offsets
   -106/+106 mm, and 68 degree horizontal field of view;
-- a rigid two-camera macro head with 12 mm baseline;
-- 2048 x 1536 macro sampling over a nominal 4 x 3 mm field at 10–25 mm working distance;
+- a rigid one-camera-plus-projector macro head with 12 mm effective entrance-pupil baseline;
+- 1280 x 800 macro sampling over a nominal 2.5 x 1.5625 mm field at 15 mm perpendicular working
+  distance, with registered tiles for the complete housing;
 - one coded projector or scanned-line source with an explicit camera/projector baseline;
 - hardware trigger, common clock, exposure control, dark frames, and independently switched light;
 - at least six surveyed cell fiducials plus rail, tool, nest, and tray fiducials; and
@@ -58,8 +60,10 @@ and false returns through the clear tube. The acceptance controller must pause o
 independent views cannot support its uncertainty gate.
 
 The optics crate already ray-traces projector visibility, triangulation, quantization, photon/read
-noise, and covariance. The end-to-end reference run currently uses those rays to gate a synthetic
-active-feature pose sensor over sphere proxies; it is not yet a full image-to-CAD pose pipeline.
+noise, and covariance. M1d now propagates the same first-order geometry into a deterministic
+precision sweep and per-phase arm residual budget. The end-to-end reference run currently uses
+those rays to gate a synthetic active-feature pose sensor over sphere proxies; it is not yet a full
+image-to-CAD pose pipeline, and M1d values remain modeled until the listed coupon tests pass.
 
 ## 3. Build functional tools and a repeatable coupling
 
