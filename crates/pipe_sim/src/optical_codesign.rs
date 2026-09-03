@@ -832,9 +832,7 @@ fn triangulation_angle_at_target_rad(
     }
     let cosine =
         (ray_a[0] * ray_b[0] + ray_a[1] * ray_b[1] + ray_a[2] * ray_b[2]) / (norm_a * norm_b);
-    cosine
-        .is_finite()
-        .then_some(cosine.clamp(-1.0, 1.0).acos())
+    cosine.is_finite().then_some(cosine.clamp(-1.0, 1.0).acos())
 }
 
 fn require_close(label: &str, derived: f64, declared: f64) -> Result<(), OpticalCodesignError> {
