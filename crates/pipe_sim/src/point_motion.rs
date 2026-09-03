@@ -2,8 +2,7 @@
 
 use pipe_optics::StructuredLightRig;
 use pipe_sim_core::{
-    ArmId, MachineCommand, ManipulatorId, PipeCellConfig, SerialArm, SerialArmInstance,
-    SerialJointPositions, Simulation, SimulationConfig, ToolMotionStatus, Vec3,
+    ArmId, MachineCommand, ManipulatorId, PipeCellConfig, Simulation, ToolMotionStatus, Vec3,
 };
 use serde::Serialize;
 
@@ -78,42 +77,7 @@ pub struct PointMotionRuntime {
 impl PointMotionRuntime {
     pub fn new() -> Result<Self, SimError> {
         let loaded = machine_config::load_baseline_machine_config()?;
-        let mut mechanics = Simulation::new(SimulationConfig {
-            fixed_dt_s: 0.001,
-            gravity_m_s2: Vec3::ZERO,
-            ..SimulationConfig::default()
-        })
-        .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-        for arm_index in 0..loaded.cell.manipulator_count {
-            let mut arm = SerialArm::new(loaded.cell.arm)
-                .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-            let theta_rad = f64::from(arm_index) * core::f64::consts::TAU
-                / f64::from(loaded.cell.manipulator_count);
-            let (base_z_m, shoulder_pitch_rad) = if arm_index == 0 {
-                (0.0, 0.0)
-            } else {
-                let parked_z = [-120.0e-3, 120.0e-3, -80.0e-3][usize::from(arm_index - 1) % 3];
-                (parked_z, core::f64::consts::FRAC_PI_2)
-            };
-            arm.set_positions(SerialJointPositions {
-                base_z_m,
-                base_theta_rad: theta_rad,
-                shoulder_yaw_rad: 0.0,
-                shoulder_pitch_rad,
-                elbow_pitch_rad: 0.0,
-                wrist_roll_rad: 0.0,
-            })
-            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-            let mut instance =
-                SerialArmInstance::new(ArmId(u32::from(arm_index) + 1), arm, loaded.cell.gripper)
-                    .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-            instance.carriage_config = loaded.cell.carriage;
-            instance.motion_config = loaded.cell.motion;
-            instance.tool_motion_speed_scale = loaded.cell.safety.commissioning_speed_scale;
-            mechanics
-                .add_serial_arm(instance)
-                .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-        }
+        let mechanics = machine_config::build_baseline_machine(&loaded)?;
         Ok(Self {
             machine_config_id: loaded.id,
             machine_config_sha256: loaded.source_sha256,

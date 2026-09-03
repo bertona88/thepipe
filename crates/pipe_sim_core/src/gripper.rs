@@ -3,6 +3,8 @@
 use crate::geometry::{BodyId, RigidBody, Shape};
 use crate::math::{Pose, Vec3};
 
+const CONTACT_EPSILON_M: f64 = 1.0e-12;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GripperConfig {
     pub min_opening_m: f64,
@@ -116,26 +118,19 @@ impl GripperState {
         [shape, shape]
     }
 
-    /// Conservative candidate test using the body's world AABB transformed at
-    /// all eight corners into the tool frame.
+    /// Candidate test using an AABB evaluated directly in the tool frame.
+    /// Computing a world AABB first and rotating its corners back would apply
+    /// the orientation envelope twice and can reject slender, correctly
+    /// aligned parts.
     pub fn evaluate_candidate(
         self,
         tool_pose: Pose,
         body: &RigidBody,
         config: GripperConfig,
     ) -> GraspCandidate {
-        let aabb = body.aabb();
-        let mut local_min = Vec3::splat(f64::INFINITY);
-        let mut local_max = Vec3::splat(f64::NEG_INFINITY);
-        for x in [aabb.min.x, aabb.max.x] {
-            for y in [aabb.min.y, aabb.max.y] {
-                for z in [aabb.min.z, aabb.max.z] {
-                    let local = tool_pose.inverse_transform_point(Vec3::new(x, y, z));
-                    local_min = local_min.min(local);
-                    local_max = local_max.max(local);
-                }
-            }
-        }
+        let local_aabb = body.shape.aabb(tool_pose.inverse() * body.pose);
+        let local_min = local_aabb.min;
+        let local_max = local_aabb.max;
         let size = local_max - local_min;
         let center = (local_min + local_max) * 0.5;
         let depth = config.jaw_half_extents_m;
@@ -152,25 +147,54 @@ impl GripperState {
 
     pub fn try_grasp(&mut self, candidate: GraspCandidate, config: GripperConfig) -> bool {
         if !candidate.is_reachable(config)
-            || candidate.jaw_clearance_m.abs() > config.pad_compliance_m * 2.0
+            // Positive clearance is still free space. Compliance bounds how
+            // far the pads may compress; it must never create a grasp across
+            // an air gap.
+            || candidate.jaw_clearance_m > CONTACT_EPSILON_M
+            || candidate.jaw_clearance_m < -config.pad_compliance_m * 2.0
+            || candidate.center_error_m.x.abs() > config.pad_compliance_m
             || self.held_body.is_some()
         {
             return false;
         }
         self.held_body = Some(candidate.body_id);
-        let compression = (-candidate.jaw_clearance_m).max(0.0);
-        let fraction = if config.pad_compliance_m > 0.0 {
-            (compression / (2.0 * config.pad_compliance_m)).clamp(0.0, 1.0)
-        } else {
-            1.0
-        };
-        self.estimated_grip_force_n = config.max_grip_force_n * fraction;
+        self.estimated_grip_force_n = grip_force(candidate.jaw_clearance_m, config);
+        true
+    }
+
+    /// Refresh the reduced pad-compression force for an attached body.
+    /// Returns `false` after the jaws have opened past geometric contact and
+    /// the body has consequently been released.
+    pub fn update_held_contact(
+        &mut self,
+        candidate: GraspCandidate,
+        config: GripperConfig,
+    ) -> bool {
+        if self.held_body != Some(candidate.body_id) {
+            return false;
+        }
+        if candidate.jaw_clearance_m > CONTACT_EPSILON_M || !candidate.within_finger_depth {
+            self.release();
+            return false;
+        }
+        self.estimated_grip_force_n = grip_force(candidate.jaw_clearance_m, config);
         true
     }
 
     pub fn release(&mut self) -> Option<BodyId> {
         self.estimated_grip_force_n = 0.0;
         self.held_body.take()
+    }
+}
+
+fn grip_force(jaw_clearance_m: f64, config: GripperConfig) -> f64 {
+    let compression_m = (-jaw_clearance_m).max(0.0);
+    if config.pad_compliance_m > 0.0 {
+        config.max_grip_force_n * (compression_m / (2.0 * config.pad_compliance_m)).clamp(0.0, 1.0)
+    } else if compression_m > 0.0 {
+        config.max_grip_force_n
+    } else {
+        0.0
     }
 }
 
@@ -226,6 +250,58 @@ mod tests {
         assert!(state.try_grasp(candidate, config));
         assert_eq!(state.held_body, Some(BodyId(7)));
         assert_eq!(state.release(), Some(BodyId(7)));
+    }
+
+    #[test]
+    fn positive_jaw_clearance_cannot_grasp_across_air() {
+        let config = GripperConfig::default();
+        let mut state = GripperState::new(0.41e-3, config);
+        let body = RigidBody::new(
+            BodyId(7),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::IDENTITY,
+            MotionType::Dynamic,
+        );
+        let candidate = state.evaluate_candidate(Pose::IDENTITY, &body, config);
+        assert!(candidate.jaw_clearance_m > 0.0);
+        assert!(!state.try_grasp(candidate, config));
+        assert_eq!(state.held_body, None);
+    }
+
+    #[test]
+    fn off_center_body_cannot_claim_symmetric_pad_contact() {
+        let config = GripperConfig::default();
+        let mut state = GripperState::new(0.39e-3, config);
+        let body = RigidBody::new(
+            BodyId(7),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::from_translation(Vec3::X * 30.0e-6),
+            MotionType::Dynamic,
+        );
+        let candidate = state.evaluate_candidate(Pose::IDENTITY, &body, config);
+        assert!(candidate.center_error_m.x.abs() > config.pad_compliance_m);
+        assert!(!state.try_grasp(candidate, config));
+    }
+
+    #[test]
+    fn opening_past_contact_releases_a_held_body() {
+        let config = GripperConfig::default();
+        let mut state = GripperState::new(0.39e-3, config);
+        let body = RigidBody::new(
+            BodyId(7),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::IDENTITY,
+            MotionType::Dynamic,
+        );
+        let candidate = state.evaluate_candidate(Pose::IDENTITY, &body, config);
+        assert!(state.try_grasp(candidate, config));
+        assert!(state.estimated_grip_force_n > 0.0);
+
+        state.opening_m = 0.41e-3;
+        let candidate = state.evaluate_candidate(Pose::IDENTITY, &body, config);
+        assert!(!state.update_held_contact(candidate, config));
+        assert_eq!(state.held_body, None);
+        assert_eq!(state.estimated_grip_force_n, 0.0);
     }
 
     #[test]

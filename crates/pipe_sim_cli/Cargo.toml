@@ -4,10 +4,19 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+default-run = "pipe-sim"
 
 [[bin]]
 name = "pipe-sim"
 path = "src/main.rs"
+
+[[bin]]
+name = "pipe-manipulation"
+path = "src/bin/pipe-manipulation.rs"
+
+[[bin]]
+name = "pipe-optical-codesign"
+path = "src/bin/pipe-optical-codesign.rs"
 
 [dependencies]
 pipe_sim = { path = "../pipe_sim" }

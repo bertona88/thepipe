@@ -6,7 +6,9 @@ reduced collision checks, structured-light/multi-camera primitives, and a determ
 gearbox task. Rust now also owns a canonical machine configuration, bounded carriage/arm command
 state, and a versioned physical scene consumed by the WebAssembly operator console. The current
 end-to-end gearbox run still advances a reduced observed-part plant; it does not yet execute
-task-space trajectories or couple parts to the four arms.
+task-space trajectories or couple parts to the four arms. A separate M1c calibration runtime now
+executes one plant-owned peg grasp, carry, socket insertion, release, and retreat; that bounded
+coupon cycle is not yet wired into the gearbox executive.
 
 This is an engineering simulator, not a photorealistic animation and not yet a validated
 predictor of a particular manufacturing process or actuator. Every pass/fail result declares its model
@@ -19,6 +21,8 @@ data before using it to release hardware.
 - [Engineering requirements](docs/REQUIREMENTS.md)
 - [Architecture and fidelity boundaries](docs/ARCHITECTURE.md)
 - [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
+- [M1c simple-manipulation acceptance contract](docs/MACHINE_RUNTIME_M1C.md)
+- [M1d optical/robot co-design and precision budget](docs/OPTICAL_CODESIGN_M1D.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -63,6 +67,8 @@ With stable Rust, Python 3.11+ and build123d installed:
 ```bash
 cargo test --locked --workspace
 cargo run --locked -p pipe_sim_cli -- --scenario scenarios/gearbox_acceptance.json --report out/run.json
+cargo run --locked -p pipe_sim_cli --bin pipe-manipulation -- --compact
+cargo run --locked -p pipe_sim_cli --bin pipe-optical-codesign -- --compact
 python -m pytest cad/tests
 PYTHONPATH=cad python -m pipe_cad.cli gearbox --output cad/out --stl-tolerance 0.01
 ./scripts/build_wasm.sh
@@ -105,6 +111,33 @@ pose error; a nominal feature-size lever arm converts position uncertainty to or
 pose estimate. The final ratio/backlash result is a post-run analytic check rather than a modeled
 rotary-tool measurement. It does not claim fluid, thermal, photometric wave-optics, polymer cure,
 tooth-contact FEA, physical yield, or normative F1 fidelity.
+
+## M1c calibration manipulation
+
+`SimpleManipulationRuntime` is isolated from the legacy gearbox executive. Manipulator 1 opens,
+approaches a 0.40 mm-diameter calibration peg, closes until the reduced compliant-pad model
+reports bilateral contact, acquires plant-owned grasp state, retracts, transfers, enters a
+four-wall calibration socket, opens until geometric contact is lost, and retreats. Cartesian
+preflight sweeps the attached peg as well as the arm links. The native `pipe-manipulation` binary
+and the WASM `SimpleManipulationSimulator` expose the same Rust runtime and structured report.
+
+This is an F0 geometry/M1c simulation baseline. The socket has deliberate 0.125 mm radial
+clearance so the current unqualified point-motion planner can safety-gate the complete path.
+Insertion and retreat follow the tilted socket's local axis rather than a world-coordinate axis.
+The runtime has zero gravity, rigid attachment, no gripper/tool collision mesh, no contact-derived
+insertion force, and no estimator. Its scene therefore exposes simulation truth while keeping
+`estimate` empty. It proves software ownership and sequencing, not micrometre insertion or
+hardware performance.
+
+## M1d optical/robot co-design
+
+`scenarios/optical_codesign_m1d.json` freezes a reviewable two-scale optical candidate and its
+uncertainty assumptions. The native CLI and WASM static export use one analytic implementation to
+predict global/macro precision, sweep macro field width versus baseline, and solve the residual
+loaded arm-control allocation for every manipulation phase. A feasible report is explicitly
+`model_feasible_hardware_qualification_required`; it is not measured accuracy. See the M1d note
+for the proposed camera/projector layout, current 7.9 µm tightest lateral residual allocation, and
+the coupon sequence required before camera replication or arm architecture freeze.
 
 ## Safety boundary
 

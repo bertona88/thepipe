@@ -9,6 +9,7 @@
 mod camera;
 mod math;
 mod noise;
+mod precision;
 mod reconstruction;
 mod scene;
 mod sensing;
@@ -18,6 +19,11 @@ pub use camera::{
     PinholeCamera, ProjectedPoint,
 };
 pub use math::{Mat3, Ray, RigidTransform, Vec2, Vec3};
+pub use precision::{
+    random_triangulation_precision, remaining_independent_rms_budget,
+    symmetric_triangulation_angle_rad, PrecisionModelError, PrecisionModelInput,
+    PrecisionPrediction, RandomTriangulationPrecision,
+};
 pub use reconstruction::{
     fuse_points, triangulate_rays, Covariance3, FusedPoint, PointEstimate, QualityMetrics,
     Triangulation,
