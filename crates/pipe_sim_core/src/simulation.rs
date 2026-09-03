@@ -55,9 +55,7 @@ fn serial_arm_link_key(body_id: BodyId) -> Option<(ArmId, u8)> {
 /// inter-arm collision preflight.
 fn carried_body_collision_enabled(carried: &RigidBody, obstacle: &RigidBody) -> bool {
     serial_arm_link_key(obstacle.id).is_some()
-        || carried
-            .collision_filter
-            .allows(obstacle.collision_filter)
+        || carried.collision_filter.allows(obstacle.collision_filter)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1518,9 +1516,7 @@ mod tests {
             MotionType::Static,
         );
 
-        assert!(!carried
-            .collision_filter
-            .allows(link.collision_filter));
+        assert!(!carried.collision_filter.allows(link.collision_filter));
         assert!(carried_body_collision_enabled(&carried, &link));
         assert!(!carried_body_collision_enabled(&carried, &ordinary_body));
     }

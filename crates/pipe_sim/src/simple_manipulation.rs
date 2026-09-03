@@ -235,11 +235,9 @@ impl SimpleManipulationRuntime {
             self.execute_cycle(max_steps_per_action)
         };
         if let Err(reason) = outcome {
-            let failure_reason = match self
-                .mechanics
-                .submit_machine_command(MachineCommand::Stop {
-                    manipulator: Some(ACTIVE_MANIPULATOR_ID),
-                }) {
+            let failure_reason = match self.mechanics.submit_machine_command(MachineCommand::Stop {
+                manipulator: Some(ACTIVE_MANIPULATOR_ID),
+            }) {
                 Ok(_) => reason,
                 Err(error) => format!("{reason}; controlled_stop_rejected:{error:?}"),
             };

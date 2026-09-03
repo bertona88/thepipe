@@ -388,7 +388,10 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
         config.targets.sensor_to_estimate_worst_s,
         config.targets.coarse_tcp_sigma_m,
     ];
-    if targets.iter().any(|value| !value.is_finite() || *value <= 0.0) {
+    if targets
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+    {
         return invalid("all optical and robot targets must be finite and positive");
     }
 
@@ -425,8 +428,7 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
     for (end_index, azimuths) in global.azimuths_by_end_deg.iter().enumerate() {
         for camera_index in 0..3 {
             let next_index = (camera_index + 1) % 3;
-            let spacing_deg =
-                (azimuths[next_index] - azimuths[camera_index]).rem_euclid(360.0);
+            let spacing_deg = (azimuths[next_index] - azimuths[camera_index]).rem_euclid(360.0);
             require_close(
                 &format!("global end {end_index} azimuth spacing {camera_index}"),
                 spacing_deg,
@@ -458,9 +460,8 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
                 range_m,
                 config.global_profile.range_m,
             )?;
-            let field_width_m = 2.0
-                * range_m
-                * (0.5 * global.horizontal_field_of_view_deg.to_radians()).tan();
+            let field_width_m =
+                2.0 * range_m * (0.5 * global.horizontal_field_of_view_deg.to_radians()).tan();
             require_close(
                 &format!("global field width end {end_index} camera {camera_index}"),
                 field_width_m,
@@ -829,9 +830,11 @@ fn triangulation_angle_at_target_rad(
     if !norm_a.is_finite() || !norm_b.is_finite() || norm_a <= 0.0 || norm_b <= 0.0 {
         return None;
     }
-    let cosine = (ray_a[0] * ray_b[0] + ray_a[1] * ray_b[1] + ray_a[2] * ray_b[2])
-        / (norm_a * norm_b);
-    cosine.is_finite().then(|| cosine.clamp(-1.0, 1.0).acos())
+    let cosine =
+        (ray_a[0] * ray_b[0] + ray_a[1] * ray_b[1] + ray_a[2] * ray_b[2]) / (norm_a * norm_b);
+    cosine
+        .is_finite()
+        .then_some(cosine.clamp(-1.0, 1.0).acos())
 }
 
 fn require_close(label: &str, derived: f64, declared: f64) -> Result<(), OpticalCodesignError> {
