@@ -36,17 +36,18 @@ pub use machine::{
     wrap_angle_pi, CarriageConfig, CarriageState, CarriageTarget, MachineBackend, MachineCommand,
     MachineCommandError, MachineCommandEvent, ManipulatorId, ManipulatorMotionConfig,
     ManipulatorMotionState, PipeCellConfig, QualificationTargets, RailTopology, SafetyConfig,
-    TubeGeometry, MACHINE_CONFIG_SCHEMA_VERSION,
+    ToolMotionPlan, ToolMotionStatus, TubeGeometry, MACHINE_CONFIG_SCHEMA_VERSION,
 };
 pub use math::{Mat3, Pose, Quat, Vec3};
 pub use serial_arm::{
     SerialArm, SerialArmConfig, SerialArmError, SerialArmKinematics, SerialJointPositions,
-    TendonJointConfig, TendonJointTelemetry, TENDON_JOINT_COUNT,
+    TendonJointConfig, TendonJointTelemetry, ToolPositionIkError, ToolPositionSolution,
+    TENDON_JOINT_COUNT,
 };
 pub use simulation::{serial_arm_link_body_id, SERIAL_ARM_COLLISION_BODY_ID_BASE};
 pub use simulation::{
     ArmId, ArmInstance, SerialArmInstance, Simulation, SimulationConfig, SimulationError,
-    StepReport,
+    StepReport, ToolMotionTraceSample,
 };
 pub use units::{Angle, Force, Length, Mass, Time, Torque};
 

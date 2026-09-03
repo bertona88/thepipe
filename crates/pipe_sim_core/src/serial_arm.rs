@@ -261,6 +261,20 @@ pub enum SerialArmError {
     NonFiniteState,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolPositionIkError {
+    NonFiniteTarget,
+    Unreachable,
+    JointLimits,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolPositionSolution {
+    pub positions: SerialJointPositions,
+    pub target_position_world_m: Vec3,
+    pub position_error_m: f64,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SerialArmKinematics {
     /// Frame fixed to the mobile base, +Z pointing radially inward.
@@ -424,6 +438,101 @@ impl SerialArm {
             collision_capsules,
         }
     }
+
+    /// Solve a world-space tool point with a deterministic carriage-first
+    /// policy. The rail first aligns its azimuth with the target and places Z
+    /// as close to the target as its limits allow. The remaining radial/Z
+    /// displacement is solved by the shoulder/elbow pair; yaw is kept at zero
+    /// and wrist roll is preserved because M1b controls position, not tool
+    /// orientation.
+    pub fn solve_tool_position(
+        &self,
+        target_position_world_m: Vec3,
+        seed: SerialJointPositions,
+    ) -> Result<ToolPositionSolution, ToolPositionIkError> {
+        if !target_position_world_m.is_finite() || !seed.is_finite() {
+            return Err(ToolPositionIkError::NonFiniteTarget);
+        }
+
+        let radial_m = target_position_world_m
+            .x
+            .hypot(target_position_world_m.y);
+        if radial_m > self.config.rail_radius_m + 1.0e-12 {
+            return Err(ToolPositionIkError::Unreachable);
+        }
+        let base_theta_rad = if radial_m > 1.0e-12 {
+            target_position_world_m
+                .y
+                .atan2(target_position_world_m.x)
+        } else {
+            wrap_pi(seed.base_theta_rad)
+        };
+        let base_z_m = target_position_world_m.z.clamp(
+            self.config.base_z_limits_m[0],
+            self.config.base_z_limits_m[1],
+        );
+        let axial_m = target_position_world_m.z - base_z_m;
+        let inward_m = self.config.rail_radius_m - radial_m;
+        let upper_m = self.config.upper_arm_length_m;
+        // There is no wrist-pitch actuator, so the forearm and wrist are one
+        // collinear second link for point-position IK.
+        let distal_m = self.config.forearm_length_m + self.config.wrist_length_m;
+        let reach_squared_m2 = axial_m * axial_m + inward_m * inward_m;
+        let minimum_reach_m = (upper_m - distal_m).abs();
+        let maximum_reach_m = upper_m + distal_m;
+        let reach_m = reach_squared_m2.sqrt();
+        if reach_m < minimum_reach_m - 1.0e-12 || reach_m > maximum_reach_m + 1.0e-12 {
+            return Err(ToolPositionIkError::Unreachable);
+        }
+
+        let elbow_cos = ((reach_squared_m2 - upper_m * upper_m - distal_m * distal_m)
+            / (2.0 * upper_m * distal_m))
+            .clamp(-1.0, 1.0);
+        let elbow_magnitude = elbow_cos.acos();
+        let direction_rad = (-axial_m).atan2(inward_m);
+        let mut limit_failure = false;
+        for elbow_pitch_rad in [elbow_magnitude, -elbow_magnitude] {
+            let shoulder_pitch_rad = direction_rad
+                - (distal_m * elbow_pitch_rad.sin())
+                    .atan2(upper_m + distal_m * elbow_pitch_rad.cos());
+            let joint_angles = [0.0, shoulder_pitch_rad, elbow_pitch_rad, seed.wrist_roll_rad];
+            if joint_angles
+                .iter()
+                .zip(self.config.joint_limits_rad)
+                .any(|(angle, limits)| !(limits[0]..=limits[1]).contains(angle))
+            {
+                limit_failure = true;
+                continue;
+            }
+            let positions = SerialJointPositions {
+                base_z_m,
+                base_theta_rad,
+                shoulder_yaw_rad: joint_angles[0],
+                shoulder_pitch_rad: joint_angles[1],
+                elbow_pitch_rad: joint_angles[2],
+                wrist_roll_rad: joint_angles[3],
+            };
+            let mut candidate = self.clone();
+            candidate
+                .set_positions(positions)
+                .map_err(|_| ToolPositionIkError::NonFiniteTarget)?;
+            let error_m = (candidate.forward_kinematics().tool_pose.translation
+                - target_position_world_m)
+                .length();
+            if error_m <= 1.0e-9 {
+                return Ok(ToolPositionSolution {
+                    positions,
+                    target_position_world_m,
+                    position_error_m: error_m,
+                });
+            }
+        }
+        if limit_failure {
+            Err(ToolPositionIkError::JointLimits)
+        } else {
+            Err(ToolPositionIkError::Unreachable)
+        }
+    }
 }
 
 fn wrap_pi(angle_rad: f64) -> f64 {
@@ -458,6 +567,32 @@ mod tests {
     fn baseline_link_stack_has_77_mm_reach() {
         let config = SerialArmConfig::default();
         assert!((config.maximum_reach_m() - 77.0e-3).abs() < 1.0e-15);
+    }
+
+    #[test]
+    fn carriage_first_ik_reaches_a_central_calibration_point() {
+        let arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        let target = Vec3::new(20.0e-3, 0.0, 12.0e-3);
+        let solution = arm
+            .solve_tool_position(target, arm.positions)
+            .expect("central point must be reachable");
+        assert_eq!(solution.positions.base_z_m, target.z);
+        assert_eq!(solution.positions.base_theta_rad, 0.0);
+        assert!(solution.position_error_m < 1.0e-10);
+        assert!(solution.positions.elbow_pitch_rad > 0.0);
+    }
+
+    #[test]
+    fn carriage_first_ik_rejects_non_finite_and_outward_targets() {
+        let arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        assert_eq!(
+            arm.solve_tool_position(Vec3::new(f64::NAN, 0.0, 0.0), arm.positions),
+            Err(ToolPositionIkError::NonFiniteTarget)
+        );
+        assert_eq!(
+            arm.solve_tool_position(Vec3::new(90.0e-3, 0.0, 0.0), arm.positions),
+            Err(ToolPositionIkError::Unreachable)
+        );
     }
 
     #[test]

@@ -1,13 +1,15 @@
 #![forbid(unsafe_code)]
 
 use pipe_sim::{
-    ReferenceSimulator as NativeSimulator, ScenarioSpec, REPORT_SCHEMA_VERSION,
-    SCENE_SCHEMA_VERSION,
+    PointMotionRuntime as NativePointMotionRuntime, ReferenceSimulator as NativeSimulator,
+    ScenarioSpec, REPORT_SCHEMA_VERSION, SCENE_SCHEMA_VERSION,
 };
+use pipe_sim_core::{ManipulatorId, Vec3};
 use wasm_bindgen::prelude::*;
 
 pub const WASM_API_SCHEMA_VERSION: u32 = REPORT_SCHEMA_VERSION;
 const DEFAULT_MAX_CYCLES: u32 = 12_000;
+const DEFAULT_MAX_POINT_MOTION_STEPS: u32 = 20_000;
 
 fn js_error(error: impl std::fmt::Display) -> JsValue {
     JsValue::from_str(&error.to_string())
@@ -19,6 +21,96 @@ fn js_error(error: impl std::fmt::Display) -> JsValue {
 #[wasm_bindgen(js_name = ReferenceSimulator)]
 pub struct WasmReferenceSimulator {
     inner: NativeSimulator,
+}
+
+/// Standalone M1b browser runtime. This deliberately excludes the legacy
+/// gearbox executive so it cannot overwrite a Cartesian calibration command.
+#[wasm_bindgen(js_name = PointMotionSimulator)]
+pub struct WasmPointMotionSimulator {
+    inner: NativePointMotionRuntime,
+}
+
+#[wasm_bindgen(js_class = PointMotionSimulator)]
+impl WasmPointMotionSimulator {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Result<WasmPointMotionSimulator, JsValue> {
+        Ok(Self {
+            inner: NativePointMotionRuntime::new().map_err(js_error)?,
+        })
+    }
+
+    #[wasm_bindgen(js_name = setToolTarget)]
+    pub fn set_tool_target(
+        &mut self,
+        manipulator_id: u32,
+        x_m: f64,
+        y_m: f64,
+        z_m: f64,
+    ) -> Result<u64, JsValue> {
+        self.inner
+            .submit_tool_target(
+                ManipulatorId(manipulator_id),
+                Vec3::new(x_m, y_m, z_m),
+            )
+            .map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = setCalibrationTarget)]
+    pub fn set_calibration_target(&mut self) -> Result<u64, JsValue> {
+        self.inner.submit_calibration_target().map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = stepJson)]
+    pub fn step_json(&mut self) -> Result<String, JsValue> {
+        self.inner.step().map_err(js_error)?;
+        self.inner.scene_frame_json(false).map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = runUntilSettledJson)]
+    pub fn run_until_settled_json(&mut self, max_steps: u32) -> Result<String, JsValue> {
+        let limit = if max_steps == 0 {
+            DEFAULT_MAX_POINT_MOTION_STEPS
+        } else {
+            max_steps
+        };
+        self.inner
+            .run_until_settled(limit)
+            .and_then(|report| report.to_json(false))
+            .map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = runCalibrationCycleJson)]
+    pub fn run_calibration_cycle_json(&mut self, max_steps_per_leg: u32) -> Result<String, JsValue> {
+        let limit = if max_steps_per_leg == 0 {
+            DEFAULT_MAX_POINT_MOTION_STEPS
+        } else {
+            max_steps_per_leg
+        };
+        self.inner
+            .run_calibration_cycle(limit)
+            .and_then(|report| report.to_json(false))
+            .map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = reportJson)]
+    pub fn report_json(&self, pretty: bool) -> Result<String, JsValue> {
+        self.inner.report().to_json(pretty).map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = sceneDescriptionJson)]
+    pub fn scene_description_json(&self) -> Result<String, JsValue> {
+        self.inner.scene_description_json(false).map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = sceneFrameJson)]
+    pub fn scene_frame_json(&self) -> Result<String, JsValue> {
+        self.inner.scene_frame_json(false).map_err(js_error)
+    }
+
+    #[wasm_bindgen(getter, js_name = active)]
+    pub fn active(&self) -> bool {
+        self.inner.is_active()
+    }
 }
 
 #[wasm_bindgen(js_class = ReferenceSimulator)]

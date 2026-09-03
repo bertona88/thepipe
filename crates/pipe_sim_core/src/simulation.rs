@@ -5,11 +5,14 @@ use crate::collision::{query_pair, Clearance, CollisionReport, CollisionSettings
 use crate::geometry::{BodyId, MotionType, RigidBody};
 use crate::gripper::{GripperConfig, GripperState};
 use crate::machine::{
-    CarriageConfig, MachineBackend, MachineCommand, MachineCommandError, MachineCommandEvent,
-    ManipulatorMotionConfig, ManipulatorMotionState,
+    wrap_angle_pi, CarriageConfig, MachineBackend, MachineCommand, MachineCommandError,
+    MachineCommandEvent, ManipulatorMotionConfig, ManipulatorMotionState, ToolMotionPlan,
+    ToolMotionStatus,
 };
 use crate::math::{Pose, Quat, Vec3};
-use crate::serial_arm::{SerialArm, SerialArmError, SerialArmKinematics};
+use crate::serial_arm::{
+    SerialArm, SerialArmError, SerialArmKinematics, ToolPositionIkError,
+};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArmId(pub u32);
@@ -107,6 +110,9 @@ pub struct SerialArmInstance {
     pub motion: ManipulatorMotionState,
     pub carriage_config: CarriageConfig,
     pub motion_config: ManipulatorMotionConfig,
+    /// Scale applied when time-parameterizing Cartesian plans. Direct axis
+    /// commands retain their configured limits.
+    pub tool_motion_speed_scale: f64,
 }
 
 impl SerialArmInstance {
@@ -131,6 +137,7 @@ impl SerialArmInstance {
             motion,
             carriage_config,
             motion_config: ManipulatorMotionConfig::default(),
+            tool_motion_speed_scale: 1.0,
         })
     }
 
@@ -234,6 +241,18 @@ pub struct StepReport {
     pub dynamic_kinetic_energy_j: f64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolMotionTraceSample {
+    pub tick: u64,
+    pub time_s: f64,
+    pub manipulator: ArmId,
+    pub target_position_world_m: Vec3,
+    pub actual_position_world_m: Vec3,
+    pub position_error_m: f64,
+    pub progress: f64,
+    pub positions: crate::serial_arm::SerialJointPositions,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Simulation {
     pub config: SimulationConfig,
@@ -246,6 +265,10 @@ pub struct Simulation {
     pub serial_arms: Vec<SerialArmInstance>,
     pub machine_command_sequence: u64,
     pub machine_command_log: Vec<MachineCommandEvent>,
+    /// Deterministic, fixed-step evidence for Cartesian point motions. Samples
+    /// are appended only while a tool plan advances, including its terminal
+    /// sample, and are never synthesized by presentation adapters.
+    pub tool_motion_trace: Vec<ToolMotionTraceSample>,
     /// Remainder used only by [`Simulation::advance_by`]. Calling `step`
     /// directly leaves this unchanged.
     pub accumulator_s: f64,
@@ -265,6 +288,7 @@ impl Simulation {
             serial_arms: Vec::new(),
             machine_command_sequence: 0,
             machine_command_log: Vec::new(),
+            tool_motion_trace: Vec::new(),
             accumulator_s: 0.0,
         })
     }
@@ -398,9 +422,11 @@ impl Simulation {
                 .manipulator()
                 .expect("only the all-arm stop omits a manipulator");
             let arm_id = ArmId(manipulator.0);
-            let arm = self
-                .serial_arm_mut(arm_id)
-                .ok_or(SimulationError::ArmNotFound)?;
+            let arm_index = self
+                .serial_arms
+                .binary_search_by_key(&arm_id, |arm| arm.id)
+                .map_err(|_| SimulationError::ArmNotFound)?;
+            let arm = &self.serial_arms[arm_index];
             ManipulatorMotionState::validate_command(
                 command,
                 arm.carriage_config,
@@ -408,15 +434,56 @@ impl Simulation {
                 arm.gripper_config,
             )
             .map_err(SimulationError::InvalidMachineCommand)?;
-            arm.motion.apply_command(command);
-            match command {
-                MachineCommand::SetGripperOpening {
-                    target_opening_m, ..
-                } => arm
-                    .gripper
-                    .set_command(target_opening_m, arm.gripper_config),
-                MachineCommand::Stop { .. } => arm.gripper.stop(),
-                _ => {}
+
+            let tool_plan = if let MachineCommand::SetToolPoseTarget {
+                target_position_world_m,
+                ..
+            } = command
+            {
+                let solution = arm
+                    .arm
+                    .solve_tool_position(target_position_world_m, arm.motion.positions())
+                    .map_err(|error| {
+                        SimulationError::InvalidMachineCommand(match error {
+                            ToolPositionIkError::NonFiniteTarget => {
+                                MachineCommandError::NonFiniteTarget
+                            }
+                            ToolPositionIkError::Unreachable => {
+                                MachineCommandError::ToolTargetUnreachable
+                            }
+                            ToolPositionIkError::JointLimits => {
+                                MachineCommandError::ToolTargetJointLimits
+                            }
+                        })
+                    })?;
+                let plan = ToolMotionPlan::new(
+                    target_position_world_m,
+                    arm.motion.positions(),
+                    solution.positions,
+                    arm.carriage_config,
+                    arm.motion_config,
+                    arm.tool_motion_speed_scale,
+                );
+                self.validate_tool_motion_path(arm_id, plan)?;
+                Some(plan)
+            } else {
+                None
+            };
+
+            let arm = &mut self.serial_arms[arm_index];
+            if let Some(plan) = tool_plan {
+                arm.motion.start_tool_motion(plan);
+            } else {
+                arm.motion.apply_command(command);
+                match command {
+                    MachineCommand::SetGripperOpening {
+                        target_opening_m, ..
+                    } => arm
+                        .gripper
+                        .set_command(target_opening_m, arm.gripper_config),
+                    MachineCommand::Stop { .. } => arm.gripper.stop(),
+                    _ => {}
+                }
             }
         }
 
@@ -427,6 +494,104 @@ impl Simulation {
             command,
         });
         Ok(self.machine_command_sequence)
+    }
+
+    fn validate_tool_motion_path(
+        &self,
+        arm_id: ArmId,
+        plan: ToolMotionPlan,
+    ) -> Result<(), SimulationError> {
+        let moving_arm = self
+            .serial_arm(arm_id)
+            .ok_or(SimulationError::ArmNotFound)?;
+        let obstacle_bodies = self
+            .bodies
+            .iter()
+            .filter(|body| body.enabled)
+            .cloned()
+            .chain(
+                self.serial_arms
+                    .iter()
+                    .filter(|arm| arm.id != arm_id)
+                    .flat_map(|arm| {
+                        arm.kinematics
+                            .collision_capsules
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(index, (pose, shape))| {
+                                Some(RigidBody::new(
+                                    serial_arm_link_body_id(arm.id, index as u8)?,
+                                    *shape,
+                                    *pose,
+                                    MotionType::Kinematic,
+                                ))
+                            })
+                    }),
+            )
+            .collect::<Vec<_>>();
+        let joint_delta = plan
+            .start
+            .tendon_joint_angles()
+            .iter()
+            .zip(plan.goal.tendon_joint_angles())
+            .map(|(start, goal)| (goal - start).abs())
+            .fold(0.0, f64::max);
+        let theta_delta = wrap_angle_pi(plan.goal.base_theta_rad - plan.start.base_theta_rad).abs();
+        let z_delta = (plan.goal.base_z_m - plan.start.base_z_m).abs();
+        let sample_count = ((joint_delta.max(theta_delta) / 1.0_f64.to_radians())
+            .max(z_delta / 0.25e-3)
+            .ceil() as usize)
+            .clamp(2, 512);
+        let mut candidate = moving_arm.arm.clone();
+        for sample in 1..=sample_count {
+            let progress = sample as f64 / sample_count as f64;
+            candidate
+                .set_positions(plan.sample(progress))
+                .map_err(SimulationError::SerialArm)?;
+            let candidate_links = candidate.forward_kinematics().collision_capsules;
+            for (link_index, (pose, shape)) in candidate_links.iter().enumerate() {
+                let moving_body = RigidBody::new(
+                    serial_arm_link_body_id(arm_id, link_index as u8)
+                        .expect("serial arm has three physical links"),
+                    *shape,
+                    *pose,
+                    MotionType::Kinematic,
+                );
+                if obstacle_bodies.iter().any(|obstacle| {
+                    moving_body.collision_filter.allows(obstacle.collision_filter)
+                        && query_pair(&moving_body, obstacle).is_some_and(|proximity| {
+                            proximity.signed_distance_m
+                                <= self.config.collision.clearance_threshold_m
+                        })
+                }) {
+                    return Err(SimulationError::InvalidMachineCommand(
+                        MachineCommandError::ToolPathCollision,
+                    ));
+                }
+            }
+            if let (Some(first), Some(last)) = (candidate_links.first(), candidate_links.last()) {
+                let first_body = RigidBody::new(
+                    serial_arm_link_body_id(arm_id, 0).expect("valid link"),
+                    first.1,
+                    first.0,
+                    MotionType::Kinematic,
+                );
+                let last_body = RigidBody::new(
+                    serial_arm_link_body_id(arm_id, 2).expect("valid link"),
+                    last.1,
+                    last.0,
+                    MotionType::Kinematic,
+                );
+                if query_pair(&first_body, &last_body).is_some_and(|proximity| {
+                    proximity.signed_distance_m <= self.config.collision.clearance_threshold_m
+                }) {
+                    return Err(SimulationError::InvalidMachineCommand(
+                        MachineCommandError::ToolPathCollision,
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Materialize current serial-arm link capsules as kinematic rigid bodies.
@@ -599,8 +764,44 @@ impl Simulation {
         for arm in &mut self.arms {
             arm.step(dt_s)?;
         }
+        let active_tool_motions = self
+            .serial_arms
+            .iter()
+            .filter_map(|arm| {
+                matches!(
+                    arm.motion.tool_motion.map(|plan| plan.status),
+                    Some(ToolMotionStatus::Active)
+                )
+                .then_some(arm.id)
+            })
+            .collect::<Vec<_>>();
         for arm in &mut self.serial_arms {
             arm.step(dt_s)?;
+        }
+
+        for arm_id in active_tool_motions {
+            let sample = {
+                let arm = self
+                    .serial_arm(arm_id)
+                    .expect("active tool-motion arm remains present");
+                let plan = arm
+                    .motion
+                    .tool_motion
+                    .expect("active tool-motion arm retains its plan");
+                let actual_position_world_m = arm.kinematics.tool_pose.translation;
+                ToolMotionTraceSample {
+                    tick: self.step_index + 1,
+                    time_s: (self.step_index + 1) as f64 * dt_s,
+                    manipulator: arm_id,
+                    target_position_world_m: plan.target_position_world_m,
+                    actual_position_world_m,
+                    position_error_m: (actual_position_world_m - plan.target_position_world_m)
+                        .length(),
+                    progress: plan.progress(),
+                    positions: arm.motion.positions(),
+                }
+            };
+            self.tool_motion_trace.push(sample);
         }
 
         // Kinematically attach grasped parts after arm motion.
@@ -992,6 +1193,89 @@ mod tests {
         assert_eq!(arm.arm.positions, arm.motion.positions());
         assert_eq!(simulation.machine_command_sequence, 2);
         assert_eq!(simulation.machine_command_log.len(), 2);
+    }
+
+    #[test]
+    fn cartesian_tool_command_executes_a_deterministic_bounded_trace() {
+        let mut simulation = Simulation::new(SimulationConfig {
+            fixed_dt_s: 0.001,
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        simulation
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        let target = Vec3::new(20.0e-3, 0.0, 10.0e-3);
+        simulation
+            .submit_machine_command(MachineCommand::SetToolPoseTarget {
+                manipulator: ManipulatorId(1),
+                target_position_world_m: target,
+            })
+            .unwrap();
+        for _ in 0..10_000 {
+            simulation.step().unwrap();
+            if simulation.serial_arm(ArmId(1)).unwrap().motion.tool_motion
+                .is_some_and(|plan| plan.status == ToolMotionStatus::Complete)
+            {
+                break;
+            }
+        }
+        let arm = simulation.serial_arm(ArmId(1)).unwrap();
+        let plan = arm.motion.tool_motion.expect("tool plan remains inspectable");
+        assert_eq!(plan.status, ToolMotionStatus::Complete);
+        assert!((arm.tool_pose().translation - target).length() < 1.0e-9);
+        assert!(!simulation.tool_motion_trace.is_empty());
+        let last = simulation.tool_motion_trace.last().unwrap();
+        assert_eq!(last.progress, 1.0);
+        assert!(last.position_error_m < 1.0e-9);
+        assert_eq!(last.tick, simulation.step_index);
+    }
+
+    #[test]
+    fn cartesian_tool_command_rejects_unreachable_and_colliding_paths_atomically() {
+        let mut unreachable = Simulation::new(SimulationConfig::default()).unwrap();
+        unreachable
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        let before = unreachable.serial_arm(ArmId(1)).unwrap().motion;
+        let result = unreachable.submit_machine_command(MachineCommand::SetToolPoseTarget {
+            manipulator: ManipulatorId(1),
+            target_position_world_m: Vec3::new(90.0e-3, 0.0, 0.0),
+        });
+        assert_eq!(
+            result,
+            Err(SimulationError::InvalidMachineCommand(
+                MachineCommandError::ToolTargetUnreachable
+            ))
+        );
+        assert_eq!(unreachable.serial_arm(ArmId(1)).unwrap().motion, before);
+        assert_eq!(unreachable.machine_command_sequence, 0);
+
+        let mut colliding = Simulation::new(SimulationConfig::default()).unwrap();
+        colliding
+            .add_serial_arm(baseline_serial_instance(1))
+            .unwrap();
+        colliding
+            .add_body(RigidBody::new(
+                BodyId(7),
+                Shape::Sphere { radius_m: 8.0e-3 },
+                Pose::from_translation(Vec3::new(20.0e-3, 0.0, 0.0)),
+                MotionType::Static,
+            ))
+            .unwrap();
+        let result = colliding.submit_machine_command(MachineCommand::SetToolPoseTarget {
+            manipulator: ManipulatorId(1),
+            target_position_world_m: Vec3::new(20.0e-3, 0.0, 0.0),
+        });
+        assert_eq!(
+            result,
+            Err(SimulationError::InvalidMachineCommand(
+                MachineCommandError::ToolPathCollision
+            ))
+        );
+        assert_eq!(colliding.machine_command_sequence, 0);
+        assert!(colliding.tool_motion_trace.is_empty());
     }
 
     #[test]

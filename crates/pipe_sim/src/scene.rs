@@ -3,7 +3,7 @@
 use pipe_optics::StructuredLightRig;
 use pipe_sim_core::{
     serial_arm_link_body_id, Contact, ContactKind, MotionType, PipeCellConfig, Pose, RigidBody,
-    Shape, Simulation, Vec3, TENDON_JOINT_COUNT,
+    Shape, Simulation, ToolMotionStatus, Vec3, TENDON_JOINT_COUNT,
 };
 use serde::Serialize;
 
@@ -241,7 +241,18 @@ pub struct CommandedManipulatorState {
     pub carriage_theta_rad: f64,
     pub joint_positions_rad: [f64; TENDON_JOINT_COUNT],
     pub gripper_opening_m: f64,
+    pub tool_motion: Option<ToolMotionSnapshot>,
     pub stopped: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct ToolMotionSnapshot {
+    pub target_position_world_m: [f64; 3],
+    pub planned_duration_s: f64,
+    pub elapsed_s: f64,
+    pub progress: f64,
+    pub status: &'static str,
+    pub position_error_m: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -451,6 +462,16 @@ pub(crate) fn build_scene_frame(simulation: &Simulation, contacts: &[Contact]) -
                 carriage_theta_rad: instance.motion.carriage_target.theta_rad,
                 joint_positions_rad: instance.motion.joint_targets_rad,
                 gripper_opening_m: instance.gripper.command_opening_m,
+                tool_motion: instance.motion.tool_motion.map(|plan| ToolMotionSnapshot {
+                    target_position_world_m: vec3(plan.target_position_world_m),
+                    planned_duration_s: plan.duration_s,
+                    elapsed_s: plan.elapsed_s,
+                    progress: plan.progress(),
+                    status: tool_motion_status_name(plan.status),
+                    position_error_m: (instance.kinematics.tool_pose.translation
+                        - plan.target_position_world_m)
+                        .length(),
+                }),
                 stopped: instance.motion.stopped,
             })
             .collect(),
@@ -466,6 +487,14 @@ pub(crate) fn build_scene_frame(simulation: &Simulation, contacts: &[Contact]) -
         }),
         estimate: None,
         commanded,
+    }
+}
+
+fn tool_motion_status_name(status: ToolMotionStatus) -> &'static str {
+    match status {
+        ToolMotionStatus::Active => "active",
+        ToolMotionStatus::Complete => "complete",
+        ToolMotionStatus::Stopped => "stopped",
     }
 }
 

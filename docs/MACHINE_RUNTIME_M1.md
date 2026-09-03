@@ -1,6 +1,6 @@
 # Machine runtime M1 — architecture decision and implementation contract
 
-Status: M1a implemented; simulation baseline, not hardware-qualified
+Status: M1a and M1b implemented; simulation baseline, not hardware-qualified
 
 This note records the machine-architecture reset and the amendments made while
 turning it into an executable milestone. It is subordinate to the safety and
@@ -38,7 +38,7 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 | Milestone | Evidence | Status |
 | --- | --- | --- |
 | M1a — authoritative machine state | Canonical configuration, bounded direct-axis commands, named FK poses, collision capsules, versioned scene export, snapshot-driven browser | Implemented |
-| M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Next |
+| M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Implemented |
 | M1c — simple manipulation | Pick and place a calibration peg; grasp ownership and held-part pose come from the plant | Planned |
 | M2 — two-arm handoff | Collision-aware dual grasp, transfer, release, and retreat | Planned |
 | M3 — observed-state control | Timestamped estimates and uncertainty drive the controller; truth is evaluation-only | Planned |
@@ -144,9 +144,25 @@ acceleration-limited; circumferential motion follows the shortest wrapped path.
 `Stop` captures current axis and jaw positions, zeros velocities, and preserves
 an existing grasp instead of opening the tool.
 
-`SetToolPoseTarget` is intentionally not faked in this landing. It belongs to
-M1b, where the carriage-first IK policy, limit checks, collision result, and
-numeric target error can be tested together.
+`SetToolPoseTarget` now provides M1b Cartesian point motion. Its target is a
+world-space position; tool orientation remains unconstrained and the current
+wrist roll is preserved. The deterministic carriage-first solver aligns rail
+azimuth to the point, puts carriage Z as close as its limits allow, and solves
+the shoulder/elbow pair with explicit reach and joint-limit rejection.
+
+Accepted solutions are executed with one synchronized cubic smoothstep over
+carriage and joint coordinates. Duration is derived from every configured
+velocity and acceleration limit and uses the baseline commissioning speed
+scale. A preflight samples the complete configuration-space path at no more
+than 1 degree or 0.25 mm between checks and rejects arm/body, inter-arm, and
+non-adjacent self collisions before target state is mutated. This is bounded
+sampled collision checking, not yet a continuous swept-volume proof.
+
+`PointMotionRuntime` isolates this acceptance path from the legacy gearbox
+executive. Its default calibration point is `[0.020, 0.000, 0.000]` m. Native
+and WASM callers receive authoritative scene frames plus a fixed-step trace
+containing target/actual position, TCP error, progress, rail coordinates, and
+joint positions. The final sample lands exactly on the solved state.
 
 ## Browser boundary
 
@@ -170,14 +186,20 @@ M1a is accepted when all of the following pass:
 - native and WASM code compile against the same scene types;
 - browser bridge rejects unknown scene schema versions;
 - the browser renders machine geometry only when Rust scene state is present;
+- Cartesian targets reject non-finite, unreachable, joint-limited, and
+  collision-bearing requests without changing command sequence or targets;
+- the calibration target completes under synchronized velocity/acceleration
+  bounds with a deterministic trace and numeric final TCP error;
+- native and WASM point-motion runtimes expose the same scene and report data;
 - formatting, unit tests, clippy with warnings denied, WASM release build, web verification, and CAD tests pass in CI.
 
 ## Explicit remaining risks
 
 - The task executive still maps logical gearbox commands to diagnostic arm
   targets; parts do not yet follow executed gripper trajectories.
-- There is no tool-position or pose IK, trajectory planner, singularity metric,
-  or carriage-selection optimizer.
+- M1b has analytic tool-position IK and a sampled collision-aware joint path,
+  but no constrained orientation IK, singularity metric, continuous collision
+  checking, obstacle-avoiding planner, or multi-arm carriage optimizer.
 - Serial-arm collision contacts are diagnostic and are not yet safety-gating
   the legacy gearbox acceptance result.
 - The estimator layer is empty, so `estimate` is `null` and controllers are not
