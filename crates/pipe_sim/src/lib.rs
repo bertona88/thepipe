@@ -8,6 +8,7 @@
 #![forbid(unsafe_code)]
 
 mod machine_config;
+pub mod point_motion;
 pub mod scene;
 
 use std::collections::BTreeSet;
@@ -35,6 +36,10 @@ use pipe_sim_core::{
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+pub use point_motion::{
+    CalibrationCycleReport, PointMotionReport, PointMotionRuntime, PointMotionTraceRecord,
+    CALIBRATION_APPROACH_WORLD_M, CALIBRATION_TARGET_WORLD_M, POINT_MOTION_REPORT_SCHEMA_VERSION,
+};
 pub use scene::{SceneDescription, SceneFrame, SCENE_SCHEMA_VERSION};
 
 pub const REPORT_SCHEMA_VERSION: u32 = 1;
@@ -1902,6 +1907,7 @@ fn build_mechanics(
                 .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
         instance.carriage_config = cell_config.carriage;
         instance.motion_config = cell_config.motion;
+        instance.tool_motion_speed_scale = cell_config.safety.commissioning_speed_scale;
         simulation
             .add_serial_arm(instance)
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;

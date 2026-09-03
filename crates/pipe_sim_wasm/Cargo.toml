@@ -10,4 +10,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pipe_sim = { path = "../pipe_sim" }
+pipe_sim_core = { path = "../pipe_sim_core" }
 wasm-bindgen = "=0.2.127"

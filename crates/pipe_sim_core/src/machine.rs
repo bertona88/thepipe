@@ -7,6 +7,7 @@
 //! actuator targets that drive it.
 
 use crate::gripper::GripperConfig;
+use crate::math::Vec3;
 use crate::serial_arm::{SerialArmConfig, SerialJointPositions, TENDON_JOINT_COUNT};
 
 pub const MACHINE_CONFIG_SCHEMA_VERSION: u32 = 1;
@@ -276,6 +277,12 @@ pub enum MachineCommand {
         manipulator: ManipulatorId,
         target_rad: [f64; TENDON_JOINT_COUNT],
     },
+    /// M1b Cartesian point command. Orientation remains unconstrained and the
+    /// carriage-first IK policy preserves the current wrist roll.
+    SetToolPoseTarget {
+        manipulator: ManipulatorId,
+        target_position_world_m: Vec3,
+    },
     SetGripperOpening {
         manipulator: ManipulatorId,
         target_opening_m: f64,
@@ -290,6 +297,7 @@ impl MachineCommand {
             Self::MoveCarriageZ { manipulator, .. }
             | Self::MoveCarriageTheta { manipulator, .. }
             | Self::SetJointTargets { manipulator, .. }
+            | Self::SetToolPoseTarget { manipulator, .. }
             | Self::SetGripperOpening { manipulator, .. } => Some(manipulator),
             Self::Stop { manipulator } => manipulator,
         }
@@ -300,6 +308,10 @@ impl MachineCommand {
 pub enum MachineCommandError {
     NonFiniteTarget,
     TargetOutOfRange,
+    ToolTargetUnreachable,
+    ToolTargetJointLimits,
+    ToolPathCollision,
+    ToolPathSamplingLimit,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -307,6 +319,106 @@ pub struct MachineCommandEvent {
     pub sequence: u64,
     pub issued_at_tick: u64,
     pub command: MachineCommand,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolMotionStatus {
+    Active,
+    Complete,
+    Stopped,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolMotionPlan {
+    pub target_position_world_m: Vec3,
+    pub start: SerialJointPositions,
+    pub goal: SerialJointPositions,
+    pub duration_s: f64,
+    pub elapsed_s: f64,
+    pub status: ToolMotionStatus,
+}
+
+impl ToolMotionPlan {
+    pub fn new(
+        target_position_world_m: Vec3,
+        start: SerialJointPositions,
+        goal: SerialJointPositions,
+        carriage: CarriageConfig,
+        motion: ManipulatorMotionConfig,
+        speed_scale: f64,
+    ) -> Self {
+        let speed_scale = speed_scale.clamp(f64::EPSILON, 1.0);
+        let acceleration_scale = speed_scale * speed_scale;
+        let start_joints = start.tendon_joint_angles();
+        let goal_joints = goal.tendon_joint_angles();
+        let mut duration_s = minimum_smoothstep_duration(
+            (goal.base_z_m - start.base_z_m).abs(),
+            carriage.max_z_speed_m_s * speed_scale,
+            carriage.max_z_accel_m_s2 * acceleration_scale,
+        );
+        duration_s = duration_s.max(minimum_smoothstep_duration(
+            wrap_angle_pi(goal.base_theta_rad - start.base_theta_rad).abs(),
+            carriage.max_theta_speed_rad_s * speed_scale,
+            carriage.max_theta_accel_rad_s2 * acceleration_scale,
+        ));
+        for index in 0..TENDON_JOINT_COUNT {
+            duration_s = duration_s.max(minimum_smoothstep_duration(
+                (goal_joints[index] - start_joints[index]).abs(),
+                motion.max_joint_speed_rad_s[index] * speed_scale,
+                motion.max_joint_accel_rad_s2[index] * acceleration_scale,
+            ));
+        }
+        let status = if duration_s <= f64::EPSILON {
+            ToolMotionStatus::Complete
+        } else {
+            ToolMotionStatus::Active
+        };
+        Self {
+            target_position_world_m,
+            start,
+            goal,
+            duration_s,
+            elapsed_s: 0.0,
+            status,
+        }
+    }
+
+    pub fn progress(self) -> f64 {
+        if self.duration_s <= f64::EPSILON {
+            1.0
+        } else {
+            (self.elapsed_s / self.duration_s).clamp(0.0, 1.0)
+        }
+    }
+
+    pub fn sample(self, progress: f64) -> SerialJointPositions {
+        let progress = progress.clamp(0.0, 1.0);
+        let blend = progress * progress * (3.0 - 2.0 * progress);
+        let start_joints = self.start.tendon_joint_angles();
+        let goal_joints = self.goal.tendon_joint_angles();
+        let joints: [f64; TENDON_JOINT_COUNT] = core::array::from_fn(|index| {
+            start_joints[index] + (goal_joints[index] - start_joints[index]) * blend
+        });
+        SerialJointPositions {
+            base_z_m: self.start.base_z_m + (self.goal.base_z_m - self.start.base_z_m) * blend,
+            base_theta_rad: wrap_angle_pi(
+                self.start.base_theta_rad
+                    + wrap_angle_pi(self.goal.base_theta_rad - self.start.base_theta_rad) * blend,
+            ),
+            shoulder_yaw_rad: joints[0],
+            shoulder_pitch_rad: joints[1],
+            elbow_pitch_rad: joints[2],
+            wrist_roll_rad: joints[3],
+        }
+    }
+}
+
+fn minimum_smoothstep_duration(distance: f64, max_speed: f64, max_acceleration: f64) -> f64 {
+    if distance <= f64::EPSILON {
+        0.0
+    } else {
+        (1.5 * distance / max_speed).max((6.0 * distance / max_acceleration).sqrt())
+    }
 }
 
 /// Interface implemented by the deterministic simulator and, later, by the
@@ -326,6 +438,7 @@ pub struct ManipulatorMotionState {
     pub joint_positions_rad: [f64; TENDON_JOINT_COUNT],
     pub joint_velocities_rad_s: [f64; TENDON_JOINT_COUNT],
     pub joint_targets_rad: [f64; TENDON_JOINT_COUNT],
+    pub tool_motion: Option<ToolMotionPlan>,
     pub stopped: bool,
 }
 
@@ -346,6 +459,7 @@ impl ManipulatorMotionState {
             joint_positions_rad: joints,
             joint_velocities_rad_s: [0.0; TENDON_JOINT_COUNT],
             joint_targets_rad: joints,
+            tool_motion: None,
             stopped: false,
         }
     }
@@ -400,6 +514,16 @@ impl ManipulatorMotionState {
                     Ok(())
                 }
             }
+            MachineCommand::SetToolPoseTarget {
+                target_position_world_m,
+                ..
+            } => {
+                if target_position_world_m.is_finite() {
+                    Ok(())
+                } else {
+                    Err(MachineCommandError::NonFiniteTarget)
+                }
+            }
             MachineCommand::SetGripperOpening {
                 target_opening_m, ..
             } => {
@@ -420,21 +544,39 @@ impl ManipulatorMotionState {
     pub fn apply_command(&mut self, command: MachineCommand) {
         match command {
             MachineCommand::MoveCarriageZ { target_z_m, .. } => {
+                self.tool_motion = None;
                 self.carriage_target.z_m = target_z_m;
                 self.stopped = false;
             }
             MachineCommand::MoveCarriageTheta {
                 target_theta_rad, ..
             } => {
+                self.tool_motion = None;
                 self.carriage_target.theta_rad = wrap_angle_pi(target_theta_rad);
                 self.stopped = false;
             }
             MachineCommand::SetJointTargets { target_rad, .. } => {
+                self.tool_motion = None;
                 self.joint_targets_rad = target_rad;
                 self.stopped = false;
             }
-            MachineCommand::SetGripperOpening { .. } => {}
+            MachineCommand::SetToolPoseTarget { .. } | MachineCommand::SetGripperOpening { .. } => {
+            }
             MachineCommand::Stop { .. } => self.stop(),
+        }
+    }
+
+    pub fn start_tool_motion(&mut self, plan: ToolMotionPlan) {
+        let goal_joints = plan.goal.tendon_joint_angles();
+        self.carriage_target = CarriageTarget {
+            z_m: plan.goal.base_z_m,
+            theta_rad: wrap_angle_pi(plan.goal.base_theta_rad),
+        };
+        self.joint_targets_rad = goal_joints;
+        self.tool_motion = Some(plan);
+        self.stopped = false;
+        if plan.status == ToolMotionStatus::Complete {
+            self.set_from_tool_plan_sample(plan, 1.0, 0.0);
         }
     }
 
@@ -447,6 +589,9 @@ impl ManipulatorMotionState {
         self.carriage.z_velocity_m_s = 0.0;
         self.carriage.theta_velocity_rad_s = 0.0;
         self.joint_velocities_rad_s = [0.0; TENDON_JOINT_COUNT];
+        if let Some(plan) = &mut self.tool_motion {
+            plan.status = ToolMotionStatus::Stopped;
+        }
         self.stopped = true;
     }
 
@@ -465,6 +610,22 @@ impl ManipulatorMotionState {
             || !motion_config.is_valid()
         {
             return;
+        }
+        if let Some(mut plan) = self.tool_motion {
+            if plan.status == ToolMotionStatus::Active {
+                let previous = plan.progress();
+                plan.elapsed_s = (plan.elapsed_s + dt_s).min(plan.duration_s);
+                let progress = plan.progress();
+                self.set_from_tool_plan_sample(plan, progress, dt_s);
+                if progress >= 1.0 {
+                    plan.status = ToolMotionStatus::Complete;
+                    self.set_from_tool_plan_sample(plan, 1.0, dt_s);
+                } else if progress <= previous {
+                    return;
+                }
+                self.tool_motion = Some(plan);
+                return;
+            }
         }
 
         step_linear_axis(
@@ -505,6 +666,33 @@ impl ManipulatorMotionState {
                 arm_config.joint_limits_rad[index][0],
                 arm_config.joint_limits_rad[index][1],
             );
+        }
+    }
+
+    fn set_from_tool_plan_sample(&mut self, plan: ToolMotionPlan, progress: f64, dt_s: f64) {
+        let previous_positions = self.positions();
+        let positions = plan.sample(progress);
+        self.carriage.z_m = positions.base_z_m;
+        self.carriage.theta_rad = wrap_angle_pi(positions.base_theta_rad);
+        let joints = positions.tendon_joint_angles();
+        if dt_s > 0.0 {
+            self.carriage.z_velocity_m_s =
+                (positions.base_z_m - previous_positions.base_z_m) / dt_s;
+            self.carriage.theta_velocity_rad_s =
+                wrap_angle_pi(positions.base_theta_rad - previous_positions.base_theta_rad) / dt_s;
+            let previous_joints = previous_positions.tendon_joint_angles();
+            self.joint_velocities_rad_s =
+                core::array::from_fn(|index| (joints[index] - previous_joints[index]) / dt_s);
+        } else {
+            self.carriage.z_velocity_m_s = 0.0;
+            self.carriage.theta_velocity_rad_s = 0.0;
+            self.joint_velocities_rad_s = [0.0; TENDON_JOINT_COUNT];
+        }
+        self.joint_positions_rad = joints;
+        if progress >= 1.0 {
+            self.carriage.z_velocity_m_s = 0.0;
+            self.carriage.theta_velocity_rad_s = 0.0;
+            self.joint_velocities_rad_s = [0.0; TENDON_JOINT_COUNT];
         }
     }
 }

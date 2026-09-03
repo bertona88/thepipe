@@ -31,6 +31,15 @@ The wrapper supplies a static `SceneDescription` after reset and a dynamic
 shoulder, elbow, wrist, tool, jaw, body, and contact state; JavaScript does not
 run machine forward kinematics.
 
+The generated module also exports `PointMotionSimulator`, the isolated M1b
+Cartesian calibration runtime. `setCalibrationTarget()` runs the canonical
+20 mm radial point, while `setToolTarget(manipulatorId, xM, yM, zM)` accepts a
+custom world-space point. `stepJson()`, `runUntilSettledJson()`, and
+`reportJson()` expose the authoritative scene and deterministic TCP-error
+trace without letting the gearbox executive overwrite the command.
+`runCalibrationCycleJson()` executes the canonical approach, touch, and
+retreat sequence and returns one trace per leg.
+
 ## Keyboard controls
 
 - `Space`: run or pause

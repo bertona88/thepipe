@@ -442,6 +442,7 @@ name = "pipe_sim_wasm"
 version = "0.1.0"
 dependencies = [
  "pipe_sim",
+ "pipe_sim_core",
  "wasm-bindgen",
 ]
 
