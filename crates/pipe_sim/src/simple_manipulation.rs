@@ -15,8 +15,8 @@ pub const SIMPLE_MANIPULATION_REPORT_SCHEMA_VERSION: u32 = 1;
 pub const CALIBRATION_PEG_BODY_ID: u32 = 10_001;
 pub const CALIBRATION_PICK_APPROACH_WORLD_M: [f64; 3] = [22.0e-3, 0.0, -6.0e-3];
 pub const CALIBRATION_PICK_WORLD_M: [f64; 3] = [20.0e-3, 0.0, -6.0e-3];
-pub const CALIBRATION_INSERT_APPROACH_WORLD_M: [f64; 3] = [22.0e-3, 0.0, 6.0e-3];
 pub const CALIBRATION_INSERT_WORLD_M: [f64; 3] = [20.0e-3, 0.0, 6.0e-3];
+pub const CALIBRATION_INSERT_APPROACH_DISTANCE_M: f64 = 2.0e-3;
 
 const ACTIVE_ARM_ID: ArmId = ArmId(1);
 const ACTIVE_MANIPULATOR_ID: ManipulatorId = ManipulatorId(1);
@@ -282,12 +282,13 @@ impl SimpleManipulationRuntime {
             Some(array_vec3(CALIBRATION_PICK_APPROACH_WORLD_M)),
         );
 
-        self.move_tool(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M), max_steps)?;
+        // Follow the socket's local -Z axis. A world-axis offset would approach
+        // this tilted coupon laterally and correctly fail carried-body
+        // collision preflight before entering the opening.
+        let insert_approach = self.insert_approach_target();
+        self.move_tool(insert_approach, max_steps)?;
         self.require_peg_held()?;
-        self.finish_phase(
-            ManipulationPhase::Transfer,
-            Some(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M)),
-        );
+        self.finish_phase(ManipulationPhase::Transfer, Some(insert_approach));
 
         self.move_tool(array_vec3(CALIBRATION_INSERT_WORLD_M), max_steps)?;
         self.require_peg_held()?;
@@ -304,12 +305,9 @@ impl SimpleManipulationRuntime {
         self.release_observed = true;
         self.finish_phase(ManipulationPhase::Release, None);
 
-        self.move_tool(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M), max_steps)?;
+        self.move_tool(insert_approach, max_steps)?;
         self.validate_inserted_pose()?;
-        self.finish_phase(
-            ManipulationPhase::Retreat,
-            Some(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M)),
-        );
+        self.finish_phase(ManipulationPhase::Retreat, Some(insert_approach));
 
         self.phase = ManipulationPhase::Complete;
         self.current_target = None;
@@ -478,6 +476,12 @@ impl SimpleManipulationRuntime {
             axis_error_rad,
             minimum_clearance_m,
         }
+    }
+
+    fn insert_approach_target(&self) -> Vec3 {
+        self.socket_target_pose.translation
+            - self.socket_target_pose.transform_vector(Vec3::Z)
+                * CALIBRATION_INSERT_APPROACH_DISTANCE_M
     }
 
     fn active_arm(&self) -> &pipe_sim_core::SerialArmInstance {
@@ -750,5 +754,19 @@ mod tests {
         let frame = runtime.scene_frame();
         assert!(frame.truth.is_some());
         assert!(frame.estimate.is_none());
+    }
+
+    #[test]
+    fn insertion_approach_is_axial_in_the_socket_frame() {
+        let runtime = SimpleManipulationRuntime::new().unwrap();
+        let local_approach = runtime
+            .socket_target_pose
+            .inverse_transform_point(runtime.insert_approach_target());
+
+        assert!(local_approach.x.abs() < 1.0e-12);
+        assert!(local_approach.y.abs() < 1.0e-12);
+        assert!(
+            (local_approach.z + CALIBRATION_INSERT_APPROACH_DISTANCE_M).abs() < 1.0e-12
+        );
     }
 }

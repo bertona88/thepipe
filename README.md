@@ -120,8 +120,9 @@ preflight sweeps the attached peg as well as the arm links. The native `pipe-man
 and the WASM `SimpleManipulationSimulator` expose the same Rust runtime and structured report.
 
 This is an F0 geometry/M1c simulation baseline. The socket has deliberate 0.125 mm radial
-clearance so the current unqualified point-motion planner can safety-gate the complete path. The
-runtime has zero gravity, rigid attachment, no gripper/tool collision mesh, no contact-derived
+clearance so the current unqualified point-motion planner can safety-gate the complete path.
+Insertion and retreat follow the tilted socket's local axis rather than a world-coordinate axis.
+The runtime has zero gravity, rigid attachment, no gripper/tool collision mesh, no contact-derived
 insertion force, and no estimator. Its scene therefore exposes simulation truth while keeping
 `estimate` empty. It proves software ownership and sequencing, not micrometre insertion or
 hardware performance.

@@ -11,12 +11,12 @@ two-arm handoff. The legacy gearbox executive remains separate and retains its F
 Manipulator 1 executes this fixed action order:
 
 1. open the parallel jaws;
-2. approach the pickup datum from 2 mm radially outward;
+2. approach the pickup datum from a 2 mm world-X offset;
 3. move the tool centre to the calibration peg;
 4. close to 12 µm modeled pad compression on the 0.40 mm peg;
 5. acquire the peg only after the geometric bilateral-contact test passes;
 6. retract to the pickup approach datum;
-7. translate to the socket approach datum while retaining plant ownership;
+7. translate to a datum 2 mm along the socket's local -Z axis while retaining plant ownership;
 8. insert along the nominal socket axis;
 9. open until geometric jaw contact is lost and the plant releases the peg; and
 10. retreat to the socket approach datum while the released peg remains in the socket.
@@ -37,7 +37,8 @@ All persistent values use SI units. The compiled coupon baseline is:
 | Commanded pad compression | 0.012 mm |
 | Pickup tool centre | `[20, 0, -6]` mm |
 | Socket tool centre | `[20, 0, 6]` mm |
-| Radial approach offset | 2.000 mm |
+| Pickup world-X approach offset | 2.000 mm |
+| Socket axial approach offset | 2.000 mm along local -Z |
 | Socket radial clearance | 0.125 mm |
 | Socket half-depth | 0.800 mm |
 | Fixed simulation step | 0.001 s |
