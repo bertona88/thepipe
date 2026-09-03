@@ -376,44 +376,134 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
     validate_profile(&config.global_profile)?;
     validate_profile(&config.macro_profile)?;
 
-    let global_range_m = config
-        .global_layout
-        .mount_radius_m
-        .hypot(config.global_layout.axial_offsets_m[0].abs());
-    let global_baseline_m =
-        2.0 * config.global_layout.mount_radius_m * (0.5 * 120.0_f64.to_radians()).sin();
-    let global_angle_rad = 2.0
-        * (global_baseline_m / (2.0 * global_range_m))
-            .clamp(-1.0, 1.0)
-            .asin();
-    let global_field_width_m = 2.0
-        * global_range_m
-        * (0.5
-            * config
-                .global_layout
-                .horizontal_field_of_view_deg
-                .to_radians())
-        .tan();
+    let targets = [
+        config.targets.global_lateral_nominal_sigma_m,
+        config.targets.global_axial_nominal_sigma_m,
+        config.targets.macro_sampling_nominal_m_px,
+        config.targets.macro_sampling_worst_m_px,
+        config.targets.macro_lateral_servo_sigma_m,
+        config.targets.macro_axial_servo_sigma_m,
+        config.targets.macro_depth_nominal_sigma_m,
+        config.targets.macro_depth_worst_sigma_m,
+        config.targets.sensor_to_estimate_worst_s,
+        config.targets.coarse_tcp_sigma_m,
+    ];
+    if targets.iter().any(|value| !value.is_finite() || *value <= 0.0) {
+        return invalid("all optical and robot targets must be finite and positive");
+    }
+
+    let global = &config.global_layout;
+    if !global.rigid_mount_required
+        || !global.mount_radius_m.is_finite()
+        || global.mount_radius_m <= 0.0
+        || !global.horizontal_field_of_view_deg.is_finite()
+        || global.horizontal_field_of_view_deg <= 0.0
+        || global.horizontal_field_of_view_deg >= 180.0
+        || global
+            .axial_offsets_m
+            .iter()
+            .chain(global.target_world_m.iter())
+            .any(|value| !value.is_finite())
+        || global
+            .azimuths_by_end_deg
+            .iter()
+            .flatten()
+            .any(|value| !value.is_finite())
+    {
+        return invalid("global layout must contain finite rigid-mount geometry");
+    }
+    if global.axial_offsets_m[0] * global.axial_offsets_m[1] >= 0.0 {
+        return invalid("global camera triplets must lie on opposite axial ends");
+    }
     require_close(
-        "global range",
-        global_range_m,
-        config.global_profile.range_m,
+        "global axial offset symmetry",
+        global.axial_offsets_m[0].abs(),
+        global.axial_offsets_m[1].abs(),
     )?;
-    require_close(
-        "global baseline",
-        global_baseline_m,
-        config.global_profile.effective_baseline_m,
-    )?;
-    require_close(
-        "global angle",
-        global_angle_rad.to_degrees(),
-        config.global_profile.triangulation_angle_deg,
-    )?;
-    require_close(
-        "global field width",
-        global_field_width_m,
-        config.global_profile.field_width_at_target_m,
-    )?;
+
+    let mut camera_positions = [[[0.0; 3]; 3]; 2];
+    for (end_index, azimuths) in global.azimuths_by_end_deg.iter().enumerate() {
+        for camera_index in 0..3 {
+            let next_index = (camera_index + 1) % 3;
+            let spacing_deg =
+                (azimuths[next_index] - azimuths[camera_index]).rem_euclid(360.0);
+            require_close(
+                &format!("global end {end_index} azimuth spacing {camera_index}"),
+                spacing_deg,
+                120.0,
+            )?;
+            camera_positions[end_index][camera_index] = global_camera_position(
+                global.mount_radius_m,
+                global.axial_offsets_m[end_index],
+                azimuths[camera_index],
+            );
+        }
+    }
+    for camera_index in 0..3 {
+        let clocking_deg = (global.azimuths_by_end_deg[1][camera_index]
+            - global.azimuths_by_end_deg[0][camera_index])
+            .rem_euclid(360.0);
+        require_close(
+            &format!("global end clocking {camera_index}"),
+            clocking_deg,
+            60.0,
+        )?;
+    }
+
+    for (end_index, positions) in camera_positions.iter().enumerate() {
+        for camera_index in 0..3 {
+            let range_m = point_distance(positions[camera_index], global.target_world_m);
+            require_close(
+                &format!("global range end {end_index} camera {camera_index}"),
+                range_m,
+                config.global_profile.range_m,
+            )?;
+            let field_width_m = 2.0
+                * range_m
+                * (0.5 * global.horizontal_field_of_view_deg.to_radians()).tan();
+            require_close(
+                &format!("global field width end {end_index} camera {camera_index}"),
+                field_width_m,
+                config.global_profile.field_width_at_target_m,
+            )?;
+
+            let next_index = (camera_index + 1) % 3;
+            let baseline_m = point_distance(positions[camera_index], positions[next_index]);
+            require_close(
+                &format!("global baseline end {end_index} pair {camera_index}"),
+                baseline_m,
+                config.global_profile.effective_baseline_m,
+            )?;
+            let angle_rad = triangulation_angle_at_target_rad(
+                positions[camera_index],
+                positions[next_index],
+                global.target_world_m,
+            )
+            .ok_or_else(|| {
+                OpticalCodesignError::InvalidConfiguration(format!(
+                    "invalid global triangulation geometry at end {end_index} pair {camera_index}"
+                ))
+            })?;
+            require_close(
+                &format!("global angle end {end_index} pair {camera_index}"),
+                angle_rad.to_degrees(),
+                config.global_profile.triangulation_angle_deg,
+            )?;
+        }
+    }
+
+    let macro_geometry = [
+        config.macro_layout.entrance_pupil_baseline_m,
+        config.macro_layout.perpendicular_working_distance_m,
+        config.macro_layout.field_width_m,
+        config.macro_layout.field_height_m,
+    ];
+    if macro_geometry
+        .iter()
+        .any(|value| !value.is_finite() || *value <= 0.0)
+    {
+        return invalid("macro layout geometry must be finite and positive");
+    }
 
     let macro_angle_rad = symmetric_triangulation_angle_rad(
         config.macro_layout.entrance_pupil_baseline_m,
@@ -492,11 +582,15 @@ fn validate_configuration(config: &OpticalCodesignConfig) -> Result<(), OpticalC
     }
     if config.macro_sweep.field_widths_m.is_empty()
         || config.macro_sweep.baselines_m.is_empty()
-        || !config
+        || config
             .macro_sweep
-            .perpendicular_working_distance_m
-            .is_finite()
-        || config.macro_sweep.perpendicular_working_distance_m <= 0.0
+            .field_widths_m
+            .iter()
+            .chain(config.macro_sweep.baselines_m.iter())
+            .chain(core::iter::once(
+                &config.macro_sweep.perpendicular_working_distance_m,
+            ))
+            .any(|value| !value.is_finite() || *value <= 0.0)
     {
         return invalid("macro sweep must contain finite positive geometry");
     }
@@ -702,6 +796,44 @@ fn upper_bound_gate(id: &str, value: f64, limit: f64, units: &str) -> ModelGateR
     }
 }
 
+fn global_camera_position(radius_m: f64, axial_m: f64, azimuth_deg: f64) -> [f64; 3] {
+    let azimuth_rad = azimuth_deg.to_radians();
+    [
+        radius_m * azimuth_rad.cos(),
+        radius_m * azimuth_rad.sin(),
+        axial_m,
+    ]
+}
+
+fn point_distance(a: [f64; 3], b: [f64; 3]) -> f64 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
+fn triangulation_angle_at_target_rad(
+    camera_a: [f64; 3],
+    camera_b: [f64; 3],
+    target: [f64; 3],
+) -> Option<f64> {
+    let ray_a = [
+        camera_a[0] - target[0],
+        camera_a[1] - target[1],
+        camera_a[2] - target[2],
+    ];
+    let ray_b = [
+        camera_b[0] - target[0],
+        camera_b[1] - target[1],
+        camera_b[2] - target[2],
+    ];
+    let norm_a = point_distance(ray_a, [0.0; 3]);
+    let norm_b = point_distance(ray_b, [0.0; 3]);
+    if !norm_a.is_finite() || !norm_b.is_finite() || norm_a <= 0.0 || norm_b <= 0.0 {
+        return None;
+    }
+    let cosine = (ray_a[0] * ray_b[0] + ray_a[1] * ray_b[1] + ray_a[2] * ray_b[2])
+        / (norm_a * norm_b);
+    cosine.is_finite().then(|| cosine.clamp(-1.0, 1.0).acos())
+}
+
 fn require_close(label: &str, derived: f64, declared: f64) -> Result<(), OpticalCodesignError> {
     let tolerance = 1.0e-10 * derived.abs().max(declared.abs()).max(1.0);
     if !derived.is_finite() || !declared.is_finite() || (derived - declared).abs() > tolerance {
@@ -719,6 +851,10 @@ fn invalid<T>(message: impl Into<String>) -> Result<T, OpticalCodesignError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn baseline_configuration() -> OpticalCodesignConfig {
+        serde_json::from_str(BASELINE_OPTICAL_CODESIGN_JSON).unwrap()
+    }
 
     #[test]
     fn m1d_baseline_is_model_feasible_but_not_hardware_qualified() {
@@ -783,5 +919,32 @@ mod tests {
         let first = optical_codesign_report().unwrap().to_json(false).unwrap();
         let second = optical_codesign_report().unwrap().to_json(false).unwrap();
         assert_eq!(first, second);
+    }
+
+    #[test]
+    fn validator_rejects_second_end_range_drift() {
+        let mut config = baseline_configuration();
+        config.global_layout.axial_offsets_m[1] += 1.0e-3;
+
+        let error = validate_configuration(&config).unwrap_err();
+        assert!(error.to_string().contains("axial offset symmetry"));
+    }
+
+    #[test]
+    fn validator_rejects_camera_azimuth_drift() {
+        let mut config = baseline_configuration();
+        config.global_layout.azimuths_by_end_deg[1][1] += 1.0;
+
+        let error = validate_configuration(&config).unwrap_err();
+        assert!(error.to_string().contains("azimuth spacing"));
+    }
+
+    #[test]
+    fn validator_uses_the_declared_world_target() {
+        let mut config = baseline_configuration();
+        config.global_layout.target_world_m[0] = 1.0e-3;
+
+        let error = validate_configuration(&config).unwrap_err();
+        assert!(error.to_string().contains("global range"));
     }
 }

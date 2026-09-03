@@ -235,7 +235,15 @@ impl SimpleManipulationRuntime {
             self.execute_cycle(max_steps_per_action)
         };
         if let Err(reason) = outcome {
-            self.failure_reason = Some(reason);
+            let failure_reason = match self
+                .mechanics
+                .submit_machine_command(MachineCommand::Stop {
+                    manipulator: Some(ACTIVE_MANIPULATOR_ID),
+                }) {
+                Ok(_) => reason,
+                Err(error) => format!("{reason}; controlled_stop_rejected:{error:?}"),
+            };
+            self.failure_reason = Some(failure_reason);
             self.phase = ManipulationPhase::Aborted;
             self.record(ManipulationPhase::Aborted, self.current_target);
         }
@@ -741,6 +749,33 @@ mod tests {
         assert!(!report.release_observed);
         assert_eq!(runtime.active_arm().gripper.held_body, None);
         assert_eq!(report.trace.last().unwrap().phase, "aborted");
+    }
+
+    #[test]
+    fn timeout_abort_issues_a_controlled_stop() {
+        let mut runtime = SimpleManipulationRuntime::new().unwrap();
+        let report = runtime.run_cycle(1).unwrap();
+
+        assert_eq!(report.status, "aborted");
+        assert!(report
+            .failure_reason
+            .as_deref()
+            .is_some_and(|reason| reason.starts_with("tool_motion_timeout_after_1_steps")));
+        let arm = runtime.active_arm();
+        assert!(arm.motion.stopped);
+        assert!(arm
+            .motion
+            .tool_motion
+            .is_some_and(|plan| plan.status == ToolMotionStatus::Stopped));
+        assert_eq!(arm.gripper.opening_velocity_m_s, 0.0);
+        assert!(matches!(
+            runtime.mechanics.machine_command_log.last(),
+            Some(event)
+                if event.command
+                    == (MachineCommand::Stop {
+                        manipulator: Some(ACTIVE_MANIPULATOR_ID),
+                    })
+        ));
     }
 
     #[test]

@@ -49,6 +49,17 @@ fn serial_arm_link_key(body_id: BodyId) -> Option<(ArmId, u8)> {
     Some((ArmId(encoded >> 2), link_index))
 }
 
+/// Carried parts always participate in collision checks against arm links.
+/// World-body filters can intentionally narrow process contact (for example,
+/// a peg against its socket), but they must not suppress robot self- or
+/// inter-arm collision preflight.
+fn carried_body_collision_enabled(carried: &RigidBody, obstacle: &RigidBody) -> bool {
+    serial_arm_link_key(obstacle.id).is_some()
+        || carried
+            .collision_filter
+            .allows(obstacle.collision_filter)
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArmInstance {
     pub id: ArmId,
@@ -577,9 +588,7 @@ impl Simulation {
                 let mut carried_body = held_body.clone();
                 carried_body.pose = candidate_kinematics.tool_pose * *held_local_pose;
                 let collides_with_obstacle = obstacle_bodies.iter().any(|obstacle| {
-                    carried_body
-                        .collision_filter
-                        .allows(obstacle.collision_filter)
+                    carried_body_collision_enabled(&carried_body, obstacle)
                         && query_pair(&carried_body, obstacle).is_some_and(|proximity| {
                             proximity.signed_distance_m
                                 <= self.config.collision.clearance_threshold_m
@@ -599,9 +608,7 @@ impl Simulation {
                             *pose,
                             MotionType::Kinematic,
                         );
-                        carried_body
-                            .collision_filter
-                            .allows(link_body.collision_filter)
+                        carried_body_collision_enabled(&carried_body, &link_body)
                             && query_pair(&carried_body, &link_body).is_some_and(|proximity| {
                                 proximity.signed_distance_m
                                     <= self.config.collision.clearance_threshold_m
@@ -1481,6 +1488,41 @@ mod tests {
             simulation.serial_arm(ArmId(1)).unwrap().gripper.held_body,
             Some(BodyId(7))
         );
+    }
+
+    #[test]
+    fn carried_body_filters_cannot_disable_arm_link_preflight() {
+        const PROCESS_GROUP: u32 = 0b0010;
+        const PROCESS_MASK: u32 = 0b0100;
+
+        let mut carried = RigidBody::new(
+            BodyId(7),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::IDENTITY,
+            MotionType::Dynamic,
+        );
+        carried.collision_filter = CollisionFilter {
+            group: PROCESS_GROUP,
+            mask: PROCESS_MASK,
+        };
+        let link = RigidBody::new(
+            serial_arm_link_body_id(ArmId(1), 0).unwrap(),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::IDENTITY,
+            MotionType::Kinematic,
+        );
+        let ordinary_body = RigidBody::new(
+            BodyId(8),
+            Shape::Sphere { radius_m: 0.2e-3 },
+            Pose::IDENTITY,
+            MotionType::Static,
+        );
+
+        assert!(!carried
+            .collision_filter
+            .allows(link.collision_filter));
+        assert!(carried_body_collision_enabled(&carried, &link));
+        assert!(!carried_body_collision_enabled(&carried, &ordinary_body));
     }
 
     #[test]
