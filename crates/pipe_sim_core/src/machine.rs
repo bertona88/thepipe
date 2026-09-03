@@ -396,7 +396,7 @@ impl ToolMotionPlan {
         let blend = progress * progress * (3.0 - 2.0 * progress);
         let start_joints = self.start.tendon_joint_angles();
         let goal_joints = self.goal.tendon_joint_angles();
-        let joints = core::array::from_fn(|index| {
+        let joints: [f64; TENDON_JOINT_COUNT] = core::array::from_fn(|index| {
             start_joints[index] + (goal_joints[index] - start_joints[index]) * blend
         });
         SerialJointPositions {
