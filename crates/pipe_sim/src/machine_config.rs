@@ -211,9 +211,7 @@ pub(crate) fn load_baseline_machine_config() -> Result<LoadedMachineConfig, SimE
 /// at the commissioning datum; the remaining manipulators are parked at
 /// separated axial datums so standalone single-arm milestones cannot obtain
 /// clearance by silently removing them from the machine.
-pub(crate) fn build_baseline_machine(
-    loaded: &LoadedMachineConfig,
-) -> Result<Simulation, SimError> {
+pub(crate) fn build_baseline_machine(loaded: &LoadedMachineConfig) -> Result<Simulation, SimError> {
     let mut mechanics = Simulation::new(SimulationConfig {
         fixed_dt_s: 0.001,
         gravity_m_s2: Vec3::ZERO,

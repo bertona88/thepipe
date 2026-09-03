@@ -268,8 +268,7 @@ impl SimpleManipulationRuntime {
         if grip_force_n <= 0.0 || grip_force_n > self.cell_config.gripper.max_grip_force_n {
             return Err("grasp_force_out_of_bounds".to_owned());
         }
-        self.peak_estimated_grip_force_n =
-            self.peak_estimated_grip_force_n.max(grip_force_n);
+        self.peak_estimated_grip_force_n = self.peak_estimated_grip_force_n.max(grip_force_n);
         self.grasp_observed = true;
         self.finish_phase(
             ManipulationPhase::Grasp,
@@ -283,10 +282,7 @@ impl SimpleManipulationRuntime {
             Some(array_vec3(CALIBRATION_PICK_APPROACH_WORLD_M)),
         );
 
-        self.move_tool(
-            array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M),
-            max_steps,
-        )?;
+        self.move_tool(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M), max_steps)?;
         self.require_peg_held()?;
         self.finish_phase(
             ManipulationPhase::Transfer,
@@ -308,10 +304,7 @@ impl SimpleManipulationRuntime {
         self.release_observed = true;
         self.finish_phase(ManipulationPhase::Release, None);
 
-        self.move_tool(
-            array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M),
-            max_steps,
-        )?;
+        self.move_tool(array_vec3(CALIBRATION_INSERT_APPROACH_WORLD_M), max_steps)?;
         self.validate_inserted_pose()?;
         self.finish_phase(
             ManipulationPhase::Retreat,
@@ -422,8 +415,7 @@ impl SimpleManipulationRuntime {
         if metrics.minimum_clearance_m <= self.mechanics.config.collision.clearance_threshold_m {
             return Err(format!(
                 "socket_clearance_m={:.9e}_does_not_exceed_preflight_threshold_m={:.9e}",
-                metrics.minimum_clearance_m,
-                self.mechanics.config.collision.clearance_threshold_m
+                metrics.minimum_clearance_m, self.mechanics.config.collision.clearance_threshold_m
             ));
         }
         Ok(())
@@ -695,10 +687,7 @@ mod tests {
         assert!(report.grasp_observed);
         assert!(report.release_observed);
         assert!(report.peak_estimated_grip_force_n > 0.0);
-        assert!(
-            report.peak_estimated_grip_force_n
-                <= runtime.cell_config.gripper.max_grip_force_n
-        );
+        assert!(report.peak_estimated_grip_force_n <= runtime.cell_config.gripper.max_grip_force_n);
         assert_eq!(report.maximum_unplanned_penetration_m, 0.0);
         assert_eq!(report.maximum_planned_socket_penetration_m, 0.0);
         assert!(report.final_socket_lateral_error_m < 1.0e-9);
@@ -712,11 +701,8 @@ mod tests {
         assert_eq!(runtime.active_arm().gripper.held_body, None);
         assert_eq!(report.trace.first().unwrap().phase, "ready");
         assert_eq!(report.trace.last().unwrap().phase, "complete");
-        assert!(report
-            .trace
-            .iter()
-            .any(|record| record.phase == "grasp"
-                && record.held_body_id == Some(CALIBRATION_PEG_BODY_ID)));
+        assert!(report.trace.iter().any(|record| record.phase == "grasp"
+            && record.held_body_id == Some(CALIBRATION_PEG_BODY_ID)));
         assert!(report
             .trace
             .iter()
@@ -760,8 +746,7 @@ mod tests {
         assert!(description
             .rigid_bodies
             .iter()
-            .any(|body| body.id == CALIBRATION_PEG_BODY_ID
-                && body.name == "calibration_peg"));
+            .any(|body| body.id == CALIBRATION_PEG_BODY_ID && body.name == "calibration_peg"));
         let frame = runtime.scene_frame();
         assert!(frame.truth.is_some());
         assert!(frame.estimate.is_none());

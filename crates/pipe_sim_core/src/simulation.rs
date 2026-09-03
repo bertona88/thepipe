@@ -815,21 +815,20 @@ impl Simulation {
                 .binary_search_by_key(&body_id, |body| body.id)
                 .ok()
                 .map(|index| self.bodies[index].clone());
-            let retained = if let (Some(body), Some(local_pose)) =
-                (body.as_mut(), arm.held_body_local_pose)
-            {
-                body.pose = arm.tool_pose() * local_pose;
-                let candidate =
-                    arm.gripper
-                        .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
-                body.enabled
-                    && body.motion != MotionType::Static
-                    && arm
-                        .gripper
-                        .update_held_contact(candidate, arm.gripper_config)
-            } else {
-                false
-            };
+            let retained =
+                if let (Some(body), Some(local_pose)) = (body.as_mut(), arm.held_body_local_pose) {
+                    body.pose = arm.tool_pose() * local_pose;
+                    let candidate =
+                        arm.gripper
+                            .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
+                    body.enabled
+                        && body.motion != MotionType::Static
+                        && arm
+                            .gripper
+                            .update_held_contact(candidate, arm.gripper_config)
+                } else {
+                    false
+                };
             if !retained {
                 arm.gripper.release();
                 arm.held_body_local_pose = None;
@@ -844,21 +843,20 @@ impl Simulation {
                 .binary_search_by_key(&body_id, |body| body.id)
                 .ok()
                 .map(|index| self.bodies[index].clone());
-            let retained = if let (Some(body), Some(local_pose)) =
-                (body.as_mut(), arm.held_body_local_pose)
-            {
-                body.pose = arm.tool_pose() * local_pose;
-                let candidate =
-                    arm.gripper
-                        .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
-                body.enabled
-                    && body.motion != MotionType::Static
-                    && arm
-                        .gripper
-                        .update_held_contact(candidate, arm.gripper_config)
-            } else {
-                false
-            };
+            let retained =
+                if let (Some(body), Some(local_pose)) = (body.as_mut(), arm.held_body_local_pose) {
+                    body.pose = arm.tool_pose() * local_pose;
+                    let candidate =
+                        arm.gripper
+                            .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
+                    body.enabled
+                        && body.motion != MotionType::Static
+                        && arm
+                            .gripper
+                            .update_held_contact(candidate, arm.gripper_config)
+                } else {
+                    false
+                };
             if !retained {
                 arm.gripper.release();
                 arm.held_body_local_pose = None;
@@ -1448,7 +1446,11 @@ mod tests {
             mask: OBSTACLE_GROUP,
         };
         simulation.add_body(held).unwrap();
-        simulation.serial_arm_mut(ArmId(1)).unwrap().gripper.opening_m = 0.39e-3;
+        simulation
+            .serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .opening_m = 0.39e-3;
         simulation.grasp_body_serial(ArmId(1), BodyId(7)).unwrap();
 
         let target = Vec3::new(20.0e-3, 0.0, 0.0);
@@ -1504,7 +1506,11 @@ mod tests {
         );
         disabled.enabled = false;
         simulation.add_body(disabled).unwrap();
-        simulation.serial_arm_mut(ArmId(1)).unwrap().gripper.opening_m = 0.4e-3;
+        simulation
+            .serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .opening_m = 0.4e-3;
 
         assert_eq!(
             simulation.grasp_body_serial(ArmId(1), BodyId(7)),

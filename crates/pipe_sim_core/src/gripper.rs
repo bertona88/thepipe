@@ -3,6 +3,8 @@
 use crate::geometry::{BodyId, RigidBody, Shape};
 use crate::math::{Pose, Vec3};
 
+const CONTACT_EPSILON_M: f64 = 1.0e-12;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GripperConfig {
     pub min_opening_m: f64,
@@ -148,7 +150,7 @@ impl GripperState {
             // Positive clearance is still free space. Compliance bounds how
             // far the pads may compress; it must never create a grasp across
             // an air gap.
-            || candidate.jaw_clearance_m > 0.0
+            || candidate.jaw_clearance_m > CONTACT_EPSILON_M
             || candidate.jaw_clearance_m < -config.pad_compliance_m * 2.0
             || candidate.center_error_m.x.abs() > config.pad_compliance_m
             || self.held_body.is_some()
@@ -171,7 +173,7 @@ impl GripperState {
         if self.held_body != Some(candidate.body_id) {
             return false;
         }
-        if candidate.jaw_clearance_m > 0.0 || !candidate.within_finger_depth {
+        if candidate.jaw_clearance_m > CONTACT_EPSILON_M || !candidate.within_finger_depth {
             self.release();
             return false;
         }
@@ -188,8 +190,7 @@ impl GripperState {
 fn grip_force(jaw_clearance_m: f64, config: GripperConfig) -> f64 {
     let compression_m = (-jaw_clearance_m).max(0.0);
     if config.pad_compliance_m > 0.0 {
-        config.max_grip_force_n
-            * (compression_m / (2.0 * config.pad_compliance_m)).clamp(0.0, 1.0)
+        config.max_grip_force_n * (compression_m / (2.0 * config.pad_compliance_m)).clamp(0.0, 1.0)
     } else if compression_m > 0.0 {
         config.max_grip_force_n
     } else {
