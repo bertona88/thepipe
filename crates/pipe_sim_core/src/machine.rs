@@ -560,8 +560,8 @@ impl ManipulatorMotionState {
                 self.joint_targets_rad = target_rad;
                 self.stopped = false;
             }
-            MachineCommand::SetToolPoseTarget { .. }
-            | MachineCommand::SetGripperOpening { .. } => {}
+            MachineCommand::SetToolPoseTarget { .. } | MachineCommand::SetGripperOpening { .. } => {
+            }
             MachineCommand::Stop { .. } => self.stop(),
         }
     }
@@ -611,8 +611,6 @@ impl ManipulatorMotionState {
         {
             return;
         }
-
-
         if let Some(mut plan) = self.tool_motion {
             if plan.status == ToolMotionStatus::Active {
                 let previous = plan.progress();
@@ -680,13 +678,11 @@ impl ManipulatorMotionState {
         if dt_s > 0.0 {
             self.carriage.z_velocity_m_s =
                 (positions.base_z_m - previous_positions.base_z_m) / dt_s;
-            self.carriage.theta_velocity_rad_s = wrap_angle_pi(
-                positions.base_theta_rad - previous_positions.base_theta_rad,
-            ) / dt_s;
+            self.carriage.theta_velocity_rad_s =
+                wrap_angle_pi(positions.base_theta_rad - previous_positions.base_theta_rad) / dt_s;
             let previous_joints = previous_positions.tendon_joint_angles();
-            self.joint_velocities_rad_s = core::array::from_fn(|index| {
-                (joints[index] - previous_joints[index]) / dt_s
-            });
+            self.joint_velocities_rad_s =
+                core::array::from_fn(|index| (joints[index] - previous_joints[index]) / dt_s);
         } else {
             self.carriage.z_velocity_m_s = 0.0;
             self.carriage.theta_velocity_rad_s = 0.0;

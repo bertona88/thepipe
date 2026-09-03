@@ -454,16 +454,12 @@ impl SerialArm {
             return Err(ToolPositionIkError::NonFiniteTarget);
         }
 
-        let radial_m = target_position_world_m
-            .x
-            .hypot(target_position_world_m.y);
+        let radial_m = target_position_world_m.x.hypot(target_position_world_m.y);
         if radial_m > self.config.rail_radius_m + 1.0e-12 {
             return Err(ToolPositionIkError::Unreachable);
         }
         let base_theta_rad = if radial_m > 1.0e-12 {
-            target_position_world_m
-                .y
-                .atan2(target_position_world_m.x)
+            target_position_world_m.y.atan2(target_position_world_m.x)
         } else {
             wrap_pi(seed.base_theta_rad)
         };
@@ -495,7 +491,12 @@ impl SerialArm {
             let shoulder_pitch_rad = direction_rad
                 - (distal_m * elbow_pitch_rad.sin())
                     .atan2(upper_m + distal_m * elbow_pitch_rad.cos());
-            let joint_angles = [0.0, shoulder_pitch_rad, elbow_pitch_rad, seed.wrist_roll_rad];
+            let joint_angles = [
+                0.0,
+                shoulder_pitch_rad,
+                elbow_pitch_rad,
+                seed.wrist_roll_rad,
+            ];
             if joint_angles
                 .iter()
                 .zip(self.config.joint_limits_rad)

@@ -10,9 +10,7 @@ use crate::machine::{
     ToolMotionStatus,
 };
 use crate::math::{Pose, Quat, Vec3};
-use crate::serial_arm::{
-    SerialArm, SerialArmError, SerialArmKinematics, ToolPositionIkError,
-};
+use crate::serial_arm::{SerialArm, SerialArmError, SerialArmKinematics, ToolPositionIkError};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArmId(pub u32);
@@ -550,7 +548,9 @@ impl Simulation {
                     MotionType::Kinematic,
                 );
                 if obstacle_bodies.iter().any(|obstacle| {
-                    moving_body.collision_filter.allows(obstacle.collision_filter)
+                    moving_body
+                        .collision_filter
+                        .allows(obstacle.collision_filter)
                         && query_pair(&moving_body, obstacle).is_some_and(|proximity| {
                             proximity.signed_distance_m
                                 <= self.config.collision.clearance_threshold_m
@@ -1233,14 +1233,21 @@ mod tests {
             .unwrap();
         for _ in 0..10_000 {
             simulation.step().unwrap();
-            if simulation.serial_arm(ArmId(1)).unwrap().motion.tool_motion
+            if simulation
+                .serial_arm(ArmId(1))
+                .unwrap()
+                .motion
+                .tool_motion
                 .is_some_and(|plan| plan.status == ToolMotionStatus::Complete)
             {
                 break;
             }
         }
         let arm = simulation.serial_arm(ArmId(1)).unwrap();
-        let plan = arm.motion.tool_motion.expect("tool plan remains inspectable");
+        let plan = arm
+            .motion
+            .tool_motion
+            .expect("tool plan remains inspectable");
         assert_eq!(plan.status, ToolMotionStatus::Complete);
         assert!((arm.tool_pose().translation - target).length() < 1.0e-9);
         assert!(!simulation.tool_motion_trace.is_empty());
@@ -1336,8 +1343,7 @@ mod tests {
                 .zip(previous.tendon_joint_angles())
             {
                 assert!(
-                    (current - previous).abs()
-                        <= TOOL_PATH_MAX_ANGULAR_STEP_RAD + f64::EPSILON
+                    (current - previous).abs() <= TOOL_PATH_MAX_ANGULAR_STEP_RAD + f64::EPSILON
                 );
             }
             previous = current;

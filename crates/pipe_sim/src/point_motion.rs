@@ -92,8 +92,7 @@ impl PointMotionRuntime {
             let (base_z_m, shoulder_pitch_rad) = if arm_index == 0 {
                 (0.0, 0.0)
             } else {
-                let parked_z = [-120.0e-3, 120.0e-3, -80.0e-3]
-                    [usize::from(arm_index - 1) % 3];
+                let parked_z = [-120.0e-3, 120.0e-3, -80.0e-3][usize::from(arm_index - 1) % 3];
                 (parked_z, core::f64::consts::FRAC_PI_2)
             };
             arm.set_positions(SerialJointPositions {
@@ -105,12 +104,9 @@ impl PointMotionRuntime {
                 wrist_roll_rad: 0.0,
             })
             .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
-            let mut instance = SerialArmInstance::new(
-                ArmId(u32::from(arm_index) + 1),
-                arm,
-                loaded.cell.gripper,
-            )
-            .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
+            let mut instance =
+                SerialArmInstance::new(ArmId(u32::from(arm_index) + 1), arm, loaded.cell.gripper)
+                    .map_err(|error| SimError::Mechanics(format!("{error:?}")))?;
             instance.carriage_config = loaded.cell.carriage;
             instance.motion_config = loaded.cell.motion;
             instance.tool_motion_speed_scale = loaded.cell.safety.commissioning_speed_scale;
@@ -167,10 +163,7 @@ impl PointMotionRuntime {
         ];
         let mut legs = Vec::with_capacity(points.len());
         for point in points {
-            self.submit_tool_target(
-                ManipulatorId(1),
-                Vec3::new(point[0], point[1], point[2]),
-            )?;
+            self.submit_tool_target(ManipulatorId(1), Vec3::new(point[0], point[1], point[2]))?;
             legs.push(self.run_until_settled(max_steps_per_leg)?);
         }
         let maximum_final_position_error_m = legs
@@ -239,9 +232,7 @@ impl PointMotionRuntime {
     }
 
     pub fn report(&self) -> PointMotionReport {
-        let arm = self
-            .mechanics
-            .serial_arm(ArmId(self.active_manipulator.0));
+        let arm = self.mechanics.serial_arm(ArmId(self.active_manipulator.0));
         let plan = arm.and_then(|arm| arm.motion.tool_motion);
         let final_position_error_m = arm.zip(plan).map(|(arm, plan)| {
             (arm.tool_pose().translation - plan.target_position_world_m).length()

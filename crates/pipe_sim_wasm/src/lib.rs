@@ -48,10 +48,7 @@ impl WasmPointMotionSimulator {
         z_m: f64,
     ) -> Result<u64, JsValue> {
         self.inner
-            .submit_tool_target(
-                ManipulatorId(manipulator_id),
-                Vec3::new(x_m, y_m, z_m),
-            )
+            .submit_tool_target(ManipulatorId(manipulator_id), Vec3::new(x_m, y_m, z_m))
             .map_err(js_error)
     }
 
@@ -80,7 +77,10 @@ impl WasmPointMotionSimulator {
     }
 
     #[wasm_bindgen(js_name = runCalibrationCycleJson)]
-    pub fn run_calibration_cycle_json(&mut self, max_steps_per_leg: u32) -> Result<String, JsValue> {
+    pub fn run_calibration_cycle_json(
+        &mut self,
+        max_steps_per_leg: u32,
+    ) -> Result<String, JsValue> {
         let limit = if max_steps_per_leg == 0 {
             DEFAULT_MAX_POINT_MOTION_STEPS
         } else {
