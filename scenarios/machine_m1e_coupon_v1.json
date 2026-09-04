@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "pipe_machine_m1e_coupon_v1",
+  "status": "simulation_baseline_not_hardware_qualified",
+  "manipulator_count": 4,
+  "tube": {
+    "inner_radius_m": 0.080,
+    "working_length_m": 0.320,
+    "central_work_radius_m": 0.040
+  },
+  "carriage": {
+    "topology": "paired_belt_end_bogies",
+    "shoulder_datum_radius_m": 0.072,
+    "z_limits_m": [-0.150, 0.150],
+    "max_z_speed_m_s": 0.030,
+    "max_theta_speed_rad_s": 0.5235987755982988,
+    "max_z_accel_m_s2": 0.100,
+    "max_theta_accel_rad_s2": 2.0943951023931953
+  },
+  "arm": {
+    "link_lengths_m": [0.032, 0.030, 0.015],
+    "link_collision_radii_m": [0.0032, 0.0028, 0.0018],
+    "joint_limits_rad": [
+      [-1.7453292519943295, 1.7453292519943295],
+      [-1.2217304763960306, 2.0943951023931953],
+      [-0.17453292519943295, 2.705260340591211],
+      [-3.141592653589793, 3.141592653589793]
+    ],
+    "max_joint_speed_rad_s": [1.50, 1.25, 1.25, 2.00],
+    "max_joint_accel_rad_s2": [6.0, 5.0, 5.0, 8.0],
+    "tendon": {
+      "routing_radius_m": 0.00165,
+      "stiffness_n_m": 7500.0,
+      "pretension_n": 1.2,
+      "differential_backlash_m": 0.000018,
+      "max_tension_n": 4.0
+    }
+  },
+  "gripper": {
+    "min_opening_m": 0.000080,
+    "max_opening_m": 0.0028,
+    "max_speed_m_s": 0.004,
+    "jaw_half_extents_m": [0.00010, 0.00025, 0.00020],
+    "pad_compliance_m": 0.000012,
+    "max_grip_force_n": 0.15
+  },
+  "tool_geometry": {
+    "palm_forward_plane_tool_z_m": -0.00035,
+    "side_target_center_offset_tool_m": [0.00080, 0.0, 0.0],
+    "side_target_radius_m": 0.00010,
+    "side_target_axial_half_extent_m": 0.00035,
+    "side_target_feature_half_span_m": 0.00025
+  },
+  "safety": {
+    "minimum_unplanned_clearance_m": 0.00020,
+    "watchdog_timeout_s": 0.100,
+    "commissioning_speed_scale": 0.20
+  },
+  "qualification_targets": {
+    "minimum_payload_kg": 0.005,
+    "minimum_tool_force_n": 0.050,
+    "force_hold_duration_s": 2.0,
+    "maximum_observed_position_sigma_m": 0.000010,
+    "maximum_closed_loop_tcp_error_m": 0.000012,
+    "smallest_declared_feature_m": 0.000008
+  }
+}

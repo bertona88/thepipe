@@ -1,6 +1,10 @@
 #![forbid(unsafe_code)]
 
 use pipe_sim::{
+    observed_manipulation::{
+        M1eFault, ObservedManipulationRuntime as NativeObservedManipulationRuntime, ScenarioError,
+        M1E_SCENARIO_SCHEMA_VERSION, OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION,
+    },
     optical_codesign_report, PointMotionRuntime as NativePointMotionRuntime,
     ReferenceSimulator as NativeSimulator, ScenarioSpec,
     SimpleManipulationRuntime as NativeSimpleManipulationRuntime, REPORT_SCHEMA_VERSION,
@@ -47,6 +51,78 @@ pub struct WasmPointMotionSimulator {
 #[wasm_bindgen(js_name = SimpleManipulationSimulator)]
 pub struct WasmSimpleManipulationSimulator {
     inner: NativeSimpleManipulationRuntime,
+}
+
+/// M1e observed-state manipulation runtime. The WASM boundary accepts only a
+/// versioned scenario document (when explicitly supplied) and a named fault;
+/// all observation, estimation, guard, and report logic remains in Rust.
+#[wasm_bindgen(js_name = ObservedManipulationSimulator)]
+pub struct WasmObservedManipulationSimulator {
+    inner: NativeObservedManipulationRuntime,
+}
+
+#[wasm_bindgen(js_class = ObservedManipulationSimulator)]
+impl WasmObservedManipulationSimulator {
+    /// Construct the checked-in baseline scenario. Omit `fault` (or pass
+    /// `"none"`/`"nominal"`) for the nominal deterministic run.
+    #[wasm_bindgen(constructor)]
+    pub fn new(fault: Option<String>) -> Result<WasmObservedManipulationSimulator, JsValue> {
+        let fault = parse_m1e_fault(fault.as_deref()).map_err(js_error)?;
+        Ok(Self {
+            inner: NativeObservedManipulationRuntime::new(fault).map_err(js_error)?,
+        })
+    }
+
+    /// Construct from an explicit versioned M1e scenario JSON document.
+    #[wasm_bindgen(js_name = fromScenarioJson)]
+    pub fn from_scenario_json(
+        scenario_json: &str,
+        fault: Option<String>,
+    ) -> Result<WasmObservedManipulationSimulator, JsValue> {
+        let fault = parse_m1e_fault(fault.as_deref()).map_err(js_error)?;
+        Ok(Self {
+            inner: NativeObservedManipulationRuntime::from_scenario_json(scenario_json, fault)
+                .map_err(js_error)?,
+        })
+    }
+
+    /// Execute the complete fixed-step M1e vertical slice once.
+    #[wasm_bindgen(js_name = runCycleJson)]
+    pub fn run_cycle_json(&mut self, pretty: bool) -> Result<String, JsValue> {
+        self.inner
+            .run_cycle()
+            .and_then(|report| report.to_json(pretty))
+            .map_err(js_error)
+    }
+
+    #[wasm_bindgen(js_name = reportJson)]
+    pub fn report_json(&self, pretty: bool) -> Result<String, JsValue> {
+        self.inner.report().to_json(pretty).map_err(js_error)
+    }
+
+    #[wasm_bindgen(getter, js_name = terminal)]
+    pub fn terminal(&self) -> bool {
+        self.inner.is_terminal()
+    }
+
+    #[wasm_bindgen(getter, js_name = completed)]
+    pub fn completed(&self) -> bool {
+        self.inner.is_completed()
+    }
+
+    #[wasm_bindgen(getter, js_name = status)]
+    pub fn status(&self) -> String {
+        self.inner.report().status.to_owned()
+    }
+
+    #[wasm_bindgen(getter, js_name = controllerReportSha256)]
+    pub fn controller_report_sha256(&self) -> String {
+        self.inner.report().controller_report_sha256
+    }
+}
+
+fn parse_m1e_fault(value: Option<&str>) -> Result<M1eFault, ScenarioError> {
+    value.unwrap_or("none").parse()
 }
 
 #[wasm_bindgen(js_class = SimpleManipulationSimulator)]
@@ -282,6 +358,26 @@ pub fn scene_schema_version() -> u32 {
     SCENE_SCHEMA_VERSION
 }
 
+#[wasm_bindgen(js_name = observedManipulationReportSchemaVersion)]
+pub fn observed_manipulation_report_schema_version() -> u32 {
+    OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = observedManipulationScenarioSchemaVersion)]
+pub fn observed_manipulation_scenario_schema_version() -> u32 {
+    M1E_SCENARIO_SCHEMA_VERSION
+}
+
+#[wasm_bindgen(js_name = availableObservedManipulationFaultsJson)]
+pub fn available_observed_manipulation_faults_json() -> String {
+    let values = M1eFault::available()
+        .iter()
+        .map(|name| format!("\"{name}\""))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("[{values}]")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -298,5 +394,51 @@ mod tests {
     fn schema_versions_match() {
         assert_eq!(report_schema_version(), pipe_sim::REPORT_SCHEMA_VERSION);
         assert_eq!(scene_schema_version(), pipe_sim::SCENE_SCHEMA_VERSION);
+        assert_eq!(
+            observed_manipulation_report_schema_version(),
+            pipe_sim::observed_manipulation::OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION
+        );
+        assert_eq!(
+            observed_manipulation_scenario_schema_version(),
+            pipe_sim::observed_manipulation::M1E_SCENARIO_SCHEMA_VERSION
+        );
+    }
+
+    #[test]
+    fn m1e_fault_listing_and_default_runtime_are_stable() {
+        assert_eq!(
+            available_observed_manipulation_faults_json(),
+            "[\"none\",\"optical_dropout\",\"excessive_calibration_bias\",\"stale_observation\",\"correction_floor_too_large\",\"grasp_outside_capture\",\"insertion_jam\",\"occluded_mating_feature\",\"carried_part_collision\",\"inconsistent_observation\",\"non_convergence\"]"
+        );
+        assert_eq!(parse_m1e_fault(None).unwrap(), M1eFault::None);
+        assert_eq!(parse_m1e_fault(Some("nominal")).unwrap(), M1eFault::None);
+
+        let runtime = WasmObservedManipulationSimulator::new(None).unwrap();
+        assert_eq!(runtime.status(), "ready");
+        assert!(!runtime.terminal());
+        assert!(!runtime.completed());
+        assert_eq!(runtime.controller_report_sha256().len(), 64);
+        let ready_json = runtime.report_json(false).unwrap();
+        assert!(ready_json.contains("\"schema_version\":1"));
+        assert!(ready_json.contains("\"evaluation_only_truth\":null"));
+    }
+
+    #[test]
+    fn m1e_host_wrapper_preserves_deterministic_report() {
+        let mut first = WasmObservedManipulationSimulator::new(None).unwrap();
+        let mut second = WasmObservedManipulationSimulator::new(Some("none".to_owned())).unwrap();
+        let first_json = first.run_cycle_json(false).unwrap();
+        let second_json = second.run_cycle_json(false).unwrap();
+
+        assert_eq!(first_json, second_json);
+        assert!(first_json.contains("\"source\":\"direct_feature_fit\""));
+        assert!(first_json.contains("\"source\":\"held_transform_from_fresh_tool\""));
+        assert_eq!(
+            first.controller_report_sha256(),
+            second.controller_report_sha256()
+        );
+        assert_eq!(first.status(), "complete");
+        assert!(first.completed());
+        assert!(first.terminal());
     }
 }

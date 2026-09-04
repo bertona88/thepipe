@@ -1,6 +1,6 @@
 # Machine runtime M1 — architecture decision and implementation contract
 
-Status: M1a, M1b, M1c, and the M1d analytic trade study implemented; not hardware-qualified
+Status: M1a--M1e coupon slices implemented; not hardware-qualified
 
 This note records the machine-architecture reset and the amendments made while
 turning it into an executable milestone. It is subordinate to the safety and
@@ -41,8 +41,9 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 | M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Implemented |
 | M1c — simple manipulation | Pick, carry, insert, release, and retreat with a calibration peg; grasp ownership and held-part pose come from the plant | Implemented |
 | M1d — optical/robot co-design | Versioned two-scale layout, analytic precision sweep, and phase-by-phase arm residual budgets with an explicit hardware-evidence boundary | Implemented as a model; bench qualification not started |
+| M1e — observed-state single-arm manipulation | Timestamped camera/projector features feed a 5-DoF axisymmetric estimator, bounded stop-and-look motion, guarded grasp/insertion, and explicit fail-closed reports for one peg/socket coupon | Implemented as an F1-reduced model; not hardware-qualified |
 | M2 — two-arm handoff | Collision-aware dual grasp, transfer, release, and retreat | Planned |
-| M3 — observed-state control | Timestamped estimates and uncertainty drive the controller; truth is evaluation-only | Planned |
+| M3 — general observed-state control | Extend the M1e coupon boundary to general roll-constrained parts, multiple arms/views, and the gearbox executive | Planned |
 | M4 — gearbox integration | Gearbox executive issues real machine goals after the preceding gates pass | Deferred |
 
 The existing gearbox scenario remains an explicitly labelled F1-reduced
@@ -208,13 +209,15 @@ M1a is accepted when all of the following pass:
   checking, obstacle-avoiding planner, or multi-arm carriage optimizer.
 - Serial-arm collision contacts are diagnostic and are not yet safety-gating
   the legacy gearbox acceptance result.
-- The estimator layer is empty, so `estimate` is `null` and controllers are not
-  yet closed around observed machine state.
+- The general `SceneFrame` estimator layer remains empty, so its `estimate` is `null`. The isolated
+  M1e report owns peg/socket/tool 5-DoF estimates and closes one controller loop without populating
+  the browser scene contract.
 - Watchdog, brake, force-limit, and commissioning-scale values are contracts;
   they are not yet a complete safety state machine.
 - The selected rail topology and all qualification targets require physical
   prototype and calibration evidence.
 
-The next physical experiment should be a calibration peg and socket, not a
-gearbox: move one carriage, solve one tool target, approach, grasp or insert at
-low speed, report target/contact error, retreat, and replay the Rust frames.
+The next physical experiment remains a calibration peg and socket, not a gearbox. Follow
+`HARDWARE_COUPON_M1E.md` with one arm, two temporary global views, one rigid macro head, the
+intended clear-wall coupon, independent gauges, and held-out evaluation data before assigning any
+hardware meaning to the modeled M1e result.

@@ -170,6 +170,23 @@ impl Scene {
 
     /// True when another surface blocks the open segment from `from` to `to`.
     pub fn occluded(&self, from: Vec3, to: Vec3, epsilon_m: f64) -> bool {
+        self.occluded_ignoring_tag(from, to, epsilon_m, None)
+    }
+
+    /// True when a surface other than `ignored_tag` blocks the open segment.
+    ///
+    /// Point features are commonly defined on, or slightly inside, the primitive
+    /// carrying the feature. Sensor generation may ignore that primitive's tag
+    /// while it must continue to test every other piece of scene geometry. This
+    /// is deliberately an optics/visibility operation; callers must not use it
+    /// as a general collision query.
+    pub fn occluded_ignoring_tag(
+        &self,
+        from: Vec3,
+        to: Vec3,
+        epsilon_m: f64,
+        ignored_tag: Option<u32>,
+    ) -> bool {
         let delta = to - from;
         let distance = delta.norm();
         if distance <= 2.0 * epsilon_m.max(0.0) {
@@ -178,8 +195,15 @@ impl Scene {
         let Some(ray) = Ray::new(from, delta) else {
             return false;
         };
-        self.intersect(ray, epsilon_m.max(0.0), distance - epsilon_m.max(0.0))
-            .is_some()
+        let t_min_m = epsilon_m.max(0.0);
+        let t_max_m = distance - epsilon_m.max(0.0);
+        self.primitives
+            .iter()
+            .copied()
+            .filter(|primitive| Some(primitive.tag) != ignored_tag)
+            .any(|primitive| {
+                intersect_geometry(primitive.geometry, ray, t_min_m, t_max_m).is_some()
+            })
     }
 }
 

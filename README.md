@@ -4,11 +4,14 @@ This repository is the engineering core for a tube-shaped robotic micro-assembly
 contains low-cost tendon-arm models, printable machine fixtures, idealized gearbox parts,
 reduced collision checks, structured-light/multi-camera primitives, and a deterministic guarded
 gearbox task. Rust now also owns a canonical machine configuration, bounded carriage/arm command
-state, and a versioned physical scene consumed by the WebAssembly operator console. The current
-end-to-end gearbox run still advances a reduced observed-part plant; it does not yet execute
-task-space trajectories or couple parts to the four arms. A separate M1c calibration runtime now
-executes one plant-owned peg grasp, carry, socket insertion, release, and retreat; that bounded
-coupon cycle is not yet wired into the gearbox executive.
+state, and a versioned physical scene consumed by the WebAssembly operator console. M1e adds a
+separate observed-state single-arm coupon runtime: timestamped macro camera/projector feature
+measurements feed an uncertainty-bearing axisymmetric pose estimator, bounded stop-and-look
+corrections, guarded grasp/contact transitions, incremental insertion, and fail-closed recovery.
+The current end-to-end gearbox run remains a reduced observed-part surrogate; it does not yet
+execute real task-space held-part trajectories or couple parts to the four arms. M1c remains as a
+deliberately truth-visible mechanics baseline, while M1e is the smallest closed-loop test of the
+external-metrology thesis.
 
 This is an engineering simulator, not a photorealistic animation and not yet a validated
 predictor of a particular manufacturing process or actuator. Every pass/fail result declares its model
@@ -23,6 +26,8 @@ data before using it to release hardware.
 - [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
 - [M1c simple-manipulation acceptance contract](docs/MACHINE_RUNTIME_M1C.md)
 - [M1d optical/robot co-design and precision budget](docs/OPTICAL_CODESIGN_M1D.md)
+- [M1e observed-state single-arm manipulation](docs/OBSERVED_STATE_MANIPULATION_M1E.md)
+- [M1e one-arm hardware coupon qualification](docs/HARDWARE_COUPON_M1E.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -34,12 +39,12 @@ data before using it to release hardware.
 | `crates/pipe_optics` | calibrated cameras/projector, visibility, ray/depth noise and observation quality |
 | `crates/pipe_physics` | optional f64 Rapier backend with CCD, contact groups and deterministic snapshots |
 | `crates/pipe_planner` | guarded gearbox assembly state machine, recovery and acceptance metrics |
-| `crates/pipe_sim` | reduced observed-volume plant, sensor boundary and end-to-end reference run |
+| `crates/pipe_sim` | reduced gearbox plant plus the isolated M1c and observed-state M1e single-arm runtimes |
 | `crates/pipe_sim_cli` | deterministic headless run and machine-readable report |
 | `crates/pipe_sim_wasm` | browser-neutral WebAssembly boundary consumed by the operator console |
 | `web` | engineering operator console, viewport, telemetry and report export |
 | `cad` | build123d source models, printable exports and dimension manifest |
-| `scenarios` | versioned machine and gearbox acceptance inputs |
+| `scenarios` | versioned machine, gearbox, optical co-design, and M1e coupon acceptance inputs |
 | `scripts` | reproducible build, CAD and verification entry points |
 
 ## Browser operator console
@@ -69,6 +74,7 @@ cargo test --locked --workspace
 cargo run --locked -p pipe_sim_cli -- --scenario scenarios/gearbox_acceptance.json --report out/run.json
 cargo run --locked -p pipe_sim_cli --bin pipe-manipulation -- --compact
 cargo run --locked -p pipe_sim_cli --bin pipe-optical-codesign -- --compact
+cargo run --locked -p pipe_sim_cli --bin pipe-observed-manipulation -- --compact
 python -m pytest cad/tests
 PYTHONPATH=cad python -m pipe_cad.cli gearbox --output cad/out --stl-tolerance 0.01
 ./scripts/build_wasm.sh
@@ -138,6 +144,47 @@ loaded arm-control allocation for every manipulation phase. A feasible report is
 `model_feasible_hardware_qualification_required`; it is not measured accuracy. See the M1d note
 for the proposed camera/projector layout, current 7.9 µm tightest lateral residual allocation, and
 the coupon sequence required before camera replication or arm architecture freeze.
+
+## M1e observed-state single-arm manipulation
+
+`scenarios/observed_manipulation_m1e_v1.json` drives a deterministic vertical slice with one
+tendon arm, a nominal 0.40 mm calibration peg, one socket coupon, and one local macro
+camera/projector head. The sensor boundary produces timestamped labelled feature measurements
+with finite field of view, opaque-proxy occlusion/self-shadow checks, localization noise, dropout,
+latency, drift, and a correlated calibration floor. Symmetric `+/-0.800 mm` tool targets and
+`+/-1.000 mm` external socket targets are observed independently; measured midpoints constrain the
+axis without subtracting a latent-pose offset. A deterministic weighted least-squares estimator fits the
+translation and axis direction that the circular peg/socket geometry can actually constrain.
+Rotation about that axis is deliberately unobservable, so the result is 5-DoF rather than a
+fabricated image-derived 6D pose.
+
+The M1e executive enters a calibrated capture volume, stops and settles, acquires observation
+bursts, gates covariance/age/residual/visibility, and issues bounded reproducible corrections.
+Observed geometry plus bilateral compliant-pad evidence gates grasp; the transfer propagates
+held-transform uncertainty; socket and peg features are reacquired before incremental guarded
+insertion. Estimated swept envelopes include conservative tool/gripper and carried-peg geometry.
+Invalid, stale, occluded, inconsistent, over-uncertain, non-converging, colliding, or excessive
+force-proxy states fail closed with an explicit report reason. Recoverable contact may use a fresh,
+preflighted in-task reverse move; a terminal failure issues Stop and holds rather than inventing an
+unobserved retreat. The fault suite covers all of those decision paths.
+
+The native `pipe-observed-manipulation` CLI and the WASM
+`ObservedManipulationSimulator` class expose the same Rust executive and report schema. Host-side
+wrapper replay is deterministic and CI compiles that core for `wasm32-unknown-unknown`; an actual
+JavaScript/WASM-versus-native golden execution comparison remains deferred and is not claimed as
+demonstrated cross-target parity. The WASM surface runs a full cycle and reports status/hash, but
+does not yet populate the general browser `SceneFrame` with M1e estimates.
+
+This is an **F1-reduced modeled M1e coupon result, not hardware qualification**. It uses labelled
+geometric features rather than rendered images or a detector, opaque primitives rather than clear-
+tube refraction/glare, an uncalibrated reduced contact-force proxy, and an uncertain kinematic
+attachment without gravity, frictional slip, or breakaway dynamics. Its idealized macro head is
+retiled about requested regions without modeling a head actuator, repositioning error/time, or
+collision envelope. The approximately 3.0 µm
+lateral / 3.4 µm depth M1d optical values and approximately 7.9 µm guarded-insertion residual
+allocation remain modeled hypotheses. `docs/HARDWARE_COUPON_M1E.md` defines the measurements that
+must replace scenario assumptions before any precision, latency, compliance, force, or yield
+claim can refer to hardware.
 
 ## Safety boundary
 

@@ -10,12 +10,30 @@ use crate::{sha256_hex, SimError};
 
 const BASELINE_MACHINE_CONFIG_JSON: &str =
     include_str!("../../../scenarios/machine_baseline_v1.json");
+const M1E_COUPON_MACHINE_CONFIG_JSON: &str =
+    include_str!("../../../scenarios/machine_m1e_coupon_v1.json");
 
 #[derive(Clone, Debug)]
 pub(crate) struct LoadedMachineConfig {
     pub id: String,
     pub source_sha256: String,
     pub cell: PipeCellConfig,
+    pub tool_geometry: Option<CalibratedToolGeometry>,
+}
+
+/// M1e-local, versioned geometry for the physical macro-observation target.
+///
+/// This stays outside `PipeCellConfig` until a later milestone defines a
+/// general interchangeable-tool contract.  Keeping it in the hashed machine
+/// configuration still makes the collision proxy and optical model share one
+/// calibrated source rather than unrelated literals.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct CalibratedToolGeometry {
+    pub palm_forward_plane_tool_z_m: f64,
+    pub side_target_center_offset_tool_m: [f64; 3],
+    pub side_target_radius_m: f64,
+    pub side_target_axial_half_extent_m: f64,
+    pub side_target_feature_half_span_m: f64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,6 +47,8 @@ struct MachineConfigDocument {
     carriage: CarriageDocument,
     arm: ArmDocument,
     gripper: GripperDocument,
+    #[serde(default)]
+    tool_geometry: Option<ToolGeometryDocument>,
     safety: SafetyDocument,
     qualification_targets: QualificationDocument,
 }
@@ -87,6 +107,16 @@ struct GripperDocument {
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
+struct ToolGeometryDocument {
+    palm_forward_plane_tool_z_m: f64,
+    side_target_center_offset_tool_m: [f64; 3],
+    side_target_radius_m: f64,
+    side_target_axial_half_extent_m: f64,
+    side_target_feature_half_span_m: f64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SafetyDocument {
     minimum_unplanned_clearance_m: f64,
     watchdog_timeout_s: f64,
@@ -105,7 +135,15 @@ struct QualificationDocument {
 }
 
 pub(crate) fn load_baseline_machine_config() -> Result<LoadedMachineConfig, SimError> {
-    let document: MachineConfigDocument = serde_json::from_str(BASELINE_MACHINE_CONFIG_JSON)
+    load_machine_config(BASELINE_MACHINE_CONFIG_JSON)
+}
+
+pub(crate) fn load_m1e_coupon_machine_config() -> Result<LoadedMachineConfig, SimError> {
+    load_machine_config(M1E_COUPON_MACHINE_CONFIG_JSON)
+}
+
+fn load_machine_config(source_json: &str) -> Result<LoadedMachineConfig, SimError> {
+    let document: MachineConfigDocument = serde_json::from_str(source_json)
         .map_err(|error| SimError::InvalidScenario(format!("machine config: {error}")))?;
     if document.schema_version != MACHINE_CONFIG_SCHEMA_VERSION {
         return Err(SimError::InvalidScenario(format!(
@@ -200,10 +238,38 @@ pub(crate) fn load_baseline_machine_config() -> Result<LoadedMachineConfig, SimE
             "machine config failed physical consistency checks".to_owned(),
         ));
     }
+    let tool_geometry = document.tool_geometry.map(|tool| CalibratedToolGeometry {
+        palm_forward_plane_tool_z_m: tool.palm_forward_plane_tool_z_m,
+        side_target_center_offset_tool_m: tool.side_target_center_offset_tool_m,
+        side_target_radius_m: tool.side_target_radius_m,
+        side_target_axial_half_extent_m: tool.side_target_axial_half_extent_m,
+        side_target_feature_half_span_m: tool.side_target_feature_half_span_m,
+    });
+    if tool_geometry.is_some_and(|tool| {
+        !tool.palm_forward_plane_tool_z_m.is_finite()
+            || tool.palm_forward_plane_tool_z_m >= 0.0
+            || !tool
+                .side_target_center_offset_tool_m
+                .iter()
+                .all(|value| value.is_finite())
+            || tool.side_target_radius_m <= 0.0
+            || !tool.side_target_radius_m.is_finite()
+            || tool.side_target_axial_half_extent_m <= 0.0
+            || !tool.side_target_axial_half_extent_m.is_finite()
+            || tool.side_target_feature_half_span_m <= 0.0
+            || !tool.side_target_feature_half_span_m.is_finite()
+            || tool.side_target_feature_half_span_m + tool.side_target_radius_m
+                > tool.side_target_axial_half_extent_m + f64::EPSILON
+    }) {
+        return Err(SimError::InvalidScenario(
+            "machine tool geometry failed physical consistency checks".to_owned(),
+        ));
+    }
     Ok(LoadedMachineConfig {
         id: document.id,
-        source_sha256: sha256_hex(BASELINE_MACHINE_CONFIG_JSON.as_bytes()),
+        source_sha256: sha256_hex(source_json.as_bytes()),
         cell,
+        tool_geometry,
     })
 }
 
@@ -263,5 +329,23 @@ mod tests {
         assert!(loaded.cell.is_valid());
         assert_eq!(loaded.cell.arm.upper_arm_length_m, 32.0e-3);
         assert_eq!(loaded.cell.carriage.rail_radius_m, 72.0e-3);
+    }
+
+    #[test]
+    fn m1e_coupon_machine_versions_short_jaws_recessed_palm_and_side_target() {
+        let baseline = load_baseline_machine_config().unwrap();
+        let m1e = load_m1e_coupon_machine_config().unwrap();
+        assert_eq!(m1e.id, "pipe_machine_m1e_coupon_v1");
+        assert_eq!(m1e.source_sha256.len(), 64);
+        assert_eq!(m1e.cell.gripper.jaw_half_extents_m.z, 0.200e-3);
+        assert_eq!(baseline.cell.gripper.jaw_half_extents_m.z, 0.600e-3);
+        assert!(baseline.tool_geometry.is_none());
+        let tool = m1e.tool_geometry.unwrap();
+        assert_eq!(tool.palm_forward_plane_tool_z_m, -0.350e-3);
+        assert_eq!(tool.side_target_center_offset_tool_m, [0.800e-3, 0.0, 0.0]);
+        assert_eq!(tool.side_target_radius_m, 0.100e-3);
+        assert_eq!(tool.side_target_axial_half_extent_m, 0.350e-3);
+        assert_eq!(m1e.cell.arm, baseline.cell.arm);
+        assert_eq!(m1e.cell.carriage, baseline.cell.carriage);
     }
 }

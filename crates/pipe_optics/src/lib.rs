@@ -32,6 +32,7 @@ pub use scene::{
     Aabb, Cylinder, Geometry, Hit, Material, MeshError, Primitive, Scene, Sphere, Triangle,
 };
 pub use sensing::{
-    DepthReturn, DepthSample, Fiducial, FiducialObservation, MissingReturn, ScanConfig, ScanFrame,
-    ScanStats, StructuredLightRig,
+    DepthReturn, DepthSample, FeaturePoint, FeaturePointObservation, FeaturePointSample, Fiducial,
+    FiducialObservation, MissingFeaturePoint, MissingReturn, ScanConfig, ScanFrame, ScanStats,
+    StructuredLightRig, TriangulationHead,
 };

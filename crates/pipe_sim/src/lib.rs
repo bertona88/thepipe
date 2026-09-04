@@ -8,6 +8,7 @@
 #![forbid(unsafe_code)]
 
 mod machine_config;
+pub mod observed_manipulation;
 pub mod optical_codesign;
 pub mod point_motion;
 pub mod scene;

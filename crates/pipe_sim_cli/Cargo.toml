@@ -18,6 +18,10 @@ path = "src/bin/pipe-manipulation.rs"
 name = "pipe-optical-codesign"
 path = "src/bin/pipe-optical-codesign.rs"
 
+[[bin]]
+name = "pipe-observed-manipulation"
+path = "src/bin/pipe-observed-manipulation.rs"
+
 [dependencies]
 pipe_sim = { path = "../pipe_sim" }
 serde_json = "1"

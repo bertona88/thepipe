@@ -10,10 +10,10 @@ not the normative F1 milestone specified below.
 
 ## 1. Architecture principles
 
-1. **One simulation core.** Native and WebAssembly reference builds call the same Rust state-transition, reduced mechanics, sensing, and task code. A fuller estimator and optional Rapier scheduler integration remain target work.
+1. **One simulation core.** Native and WebAssembly reference builds call the same Rust state-transition, reduced mechanics, sensing, and task code. M1e adds a deliberately small axisymmetric pose estimator inside that Rust boundary; a general multi-object estimator and optional Rapier scheduler integration remain target work.
 2. **CAD is generated, not hand-edited.** build123d owns dimensional geometry and manufacturing exports. The current Rust CLI validates a versioned metadata manifest against its reduced model; runtime mesh ingestion is a later fidelity step.
 3. **Estimation is separated from truth.** The target controllers receive timestamped sensor observations and estimates. Only evaluation and debugging may access simulator truth.
-4. **Precision is closed-loop.** The target tendon mechanisms are compliant and hysteretic; optics and local force evidence correct them near the work. The current reduced plant does not yet close this loop through executed arm trajectories.
+4. **Precision is closed-loop.** The target tendon mechanisms are compliant and hysteretic; optics and local force evidence correct them near the work. M1e closes that loop for one modeled arm/peg/socket coupon through executed bounded arm commands. The gearbox executive still does not execute real held-part task-space trajectories.
 5. **Determinism is designed in.** Fixed steps, stable iteration order, seeded streams, hashed assets, and replay logs are first-class requirements.
 6. **Fidelity is selectable and declared.** Fast kinematic studies, default engineering runs, and slow tooth/contact validation share scene data but never masquerade as each other.
 7. **The core is headless.** The operator console is an adapter over a versioned Rust scene contract, not the owner of simulation state.
@@ -121,8 +121,10 @@ safety-target, and qualification-target types plus a sequenced `MachineCommand`
 boundary. `scenarios/machine_baseline_v1.json` is parsed and hashed once, and
 native/WASM adapters project the same state into a static `SceneDescription`
 and dynamic `SceneFrame`. The dynamic schema keeps truth, estimate, and
-commanded targets separate. The estimator is not implemented yet, so its field
-is absent rather than being populated from truth.
+commanded targets separate. That general machine/console frame does not yet
+carry an estimator result. The isolated M1e runtime instead owns timestamped
+axisymmetric peg/socket/tool estimates and serializes them in its controller-visible
+report; it never fills estimate fields from simulator truth.
 
 ### 4.2 Multi-rate deterministic loop
 
@@ -212,7 +214,7 @@ The target `pipe-optics` boundary shall expose one observation schema with two i
 - **Rendered backend (diagnostic/F2):** offscreen GPU rasterization through `wgpu` or a native reference renderer, producing intensity, depth, normal, and object-ID buffers before camera noise/ISP effects. It validates glare/contrast and non-fiducial tracking assumptions, but GPU pixels are not the determinism oracle.
 
 The optics crate currently implements the geometric primitives, camera/projector triangulation,
-noise, fiducial, drift and covariance utilities. The F1-reduced integration uses the locked
+noise, fiducial, drift and covariance utilities. The legacy F1-reduced gearbox integration uses the locked
 60 mm/±106 mm global layout and rigid 12 mm macro pair numerically in a commanded
 active-component-local sensing frame; it does not attach those cameras to fixed CAD world or arm
 transforms. It ray-tests active/placed part spheres plus an optional synthetic occluder and requires
@@ -223,6 +225,27 @@ component pose error; the nominal shaft length, gear tip radius or cover corner 
 used only as a lever arm for orientation uncertainty. This is not an image-to-CAD 6D estimator.
 Nominal Brown–Conrady distortion is zero, and the reference run does not ray-test the complete
 tube, arms, tools, tendons or CAD mesh scene.
+
+M1e exercises a stricter path through the same optics crate for one coupon. Explicit labelled
+features on the peg, socket, and tool are projected through one calibrated
+camera/projector head, independently visibility-tested against finite opaque proxy geometry, and
+returned as timestamped measured pixels, a triangulated point, covariance, quality, or an explicit
+missing reason. The controller-safe observation has no true point, range, or truth-relative error.
+The tool uses two targets at local `+/-0.800 mm` and the socket two external rails at local
+`+/-1.000 mm`; each side is measured independently and only their observed midpoint enters the
+axis fit, so no truth-pose-derived lateral offset is subtracted. Four known axial stations constrain
+translation and axis direction; they do not constrain rotation about the circular peg/socket axis.
+Surface-arc probes exercise finite-field visibility, other-object occlusion, and carrier
+self-shadowing before a virtual centre is reconstructed with only its own carrier removed. This is
+still a geometric feature extractor, not rendered-image detection. A one-camera/one-projector pair is one triangulation head with
+two calibrated rays, not two statistically independent heads. Localization noise can average over
+frames, but the 3 µm correlated calibration floor is applied once by the estimator.
+
+That M1e path still starts after a synthetic feature-identification boundary. It does not render
+images, simulate detection/correspondence ambiguity, trace transparent-tube refraction or glare,
+or place the idealized macro head through a collision-checked physical mount. The runtime retile
+operation also omits head-actuator motion, settling, pose error, cables, and swept collisions. Its outputs and the
+M1d precision budget are modeled and hardware-unqualified.
 
 The rendered backend may approximate the transparent tube with measured contrast loss and reflection layers if physically based refraction is unavailable. Any such approximation is recorded in the report.
 
@@ -267,9 +290,20 @@ The same algorithms shall operate on simulated observations and physical CSV/ima
 
 ### 7.2 Estimator
 
-The estimator shall fuse encoder/spool state, tendon model prediction, fiducial corners, part features, structured-light points, and tool force evidence. An error-state EKF is adequate for body tracking; batch bundle adjustment handles calibration. All outputs include timestamp and covariance.
+The normative estimator shall fuse encoder/spool state, tendon model prediction, fiducial corners, part features, structured-light points, and tool force evidence. An error-state EKF may be adequate for general body tracking if its state and measurements justify it; batch bundle adjustment handles calibration. All outputs include timestamp and covariance.
 
 Outlier rejection shall use reprojection residuals and geometry, not object truth. Covariance growth during occlusion is required. The task executive uses covariance gates from the requirements, so an apparently correct but unobservable move pauses.
+
+M1e implements the smaller estimator justified by its coupon measurements: deterministic weighted
+least squares over known centreline feature stations for a 5-DoF axisymmetric pose. Each snapshot
+records capture/availability time, age, source/head/view/ray and feature counts, residual,
+innovation, rejected measurements, covariance, prediction status, and a validity reason. Burst
+updates replace rather than recursively over-count the shared calibration floor. Prediction uses
+commanded translation and configured process uncertainty only; it never reads exact FK or
+attachment state. Phase-specific age, covariance, residual, geometry, and visibility gates stop
+before stale or invalid estimates can command near-contact motion. Only a still-active recovery
+with a fresh preflight may reverse; terminal faults Stop+hold. This estimator is not a
+general image-derived 6D tracker and does not estimate unobservable roll.
 
 ### 7.3 Truth firewall
 
@@ -282,6 +316,16 @@ Crate boundaries enforce access:
 - debug APIs are feature-gated and acceptance binaries refuse that feature.
 
 An integration test shall deliberately offset a part from its nominal scene pose and prove the controller follows the observation, not the scene declaration.
+
+The current M1e vertical slice enforces the same policy within `pipe_sim` using explicit module
+boundaries: the plant alone owns latent simulation state and sensor synthesis; the estimator and
+pure controller consume sanitized value types; truth-only seating/error metrics are added only to
+a separately labelled evaluation payload. Source-boundary and transcript-replay tests detect
+accidental plant/raw-depth imports and show that identical sanitized estimate/contact DTOs produce
+identical pure-controller decisions; latent state is not an input to those functions. This is not
+yet a full-executive counterfactual transcript harness over arbitrary alternative worlds. A private plant collision or contact
+query may model the physical consequence of a command, but it cannot reveal a pose or choose a
+controller target.
 
 ## 8. Planning, control, and assembly executive
 
@@ -351,17 +395,29 @@ Truth fields are labelled and physically separated from estimated fields. Report
 
 ### 11.1 Native reference
 
-The current native CLI runs one compiled baseline headlessly, validates a file-backed CAD
-manifest over a defined field subset, and emits one structured JSON report. The target native
-tooling shall additionally own batch sweeps, F2 high-resolution contact runs, calibration
-fitting, richer CAD asset validation, and run-directory artifacts.
+The native package runs the compiled gearbox baseline, the isolated M1b point-motion and M1c
+mechanics coupon, the M1d optical co-design calculation, and the M1e observed-state coupon. M1e
+loads a strict versioned JSON scenario, selects one named fault or nominal operation, and emits a
+deterministic structured report whose controller-visible hash excludes the explicitly separated
+truth-only evaluation payload. The gearbox CLI separately validates a file-backed CAD manifest
+over a defined field subset. Target native tooling shall additionally own batch sweeps, F2
+high-resolution contact runs, calibration fitting, richer CAD asset validation, and run-directory
+artifacts.
 
 ### 11.2 WebAssembly adapter
 
-The current `pipe_sim_wasm` adapter constructs a compiled scenario by name, advances one or many
-bounded cycles, and returns JSON snapshots/reports. It also exposes the versioned static machine
-description and current truth/estimate/commanded scene frame used by the browser renderer. It does
-not load the file-backed CAD manifest.
+The current `pipe_sim_wasm` adapter constructs compiled gearbox/M1b/M1c scenarios, advances one or
+many bounded cycles, and returns JSON snapshots/reports. It also exposes the versioned static
+machine description and current truth/estimate/commanded scene frame used by the browser renderer.
+For M1e it exports `ObservedManipulationSimulator`, which accepts the embedded baseline or strict
+scenario JSON plus an optional named fault, runs the same Rust executive to a terminal state, and
+is designed to return the same report and controller hash as native execution. Host-side adapter
+tests cover deterministic replay, and CI builds the shared core for `wasm32-unknown-unknown`; an
+actual JavaScript/WASM-versus-native golden execution comparison is still deferred. JavaScript
+does not reimplement estimation, contact, or acceptance policy. The adapter does not load the
+file-backed CAD manifest. Stepwise M1e scene visualization remains deferred independently from
+that future cross-target golden because the general `SceneFrame` estimate population is not yet
+the M1e authority boundary.
 The target adapter shall additionally expose:
 
 - load validated asset/scenario bytes;
@@ -406,6 +462,13 @@ Small scenes isolate free fall, a sliding block, pendulum, tendon joint, jaw gra
 8. The 100-run robustness suite emits statistics and preserves every failing seed.
 9. F2 gear test demonstrates time-step and mesh convergence.
 
+M1e supplies coupon-sized evidence toward items 3, 4, 6, and 7: repeated same-seed reports,
+source-boundary and pure-controller DTO truth-firewall tests, and exact reasons for optical dropout, excessive calibration
+bias, stale data, excessive correction floor, grasp miss, insertion jam, mating-feature occlusion,
+carried-part collision, inconsistent observations, and non-convergence. Its firewall evidence is
+not the full offset-world executive harness required by item 4. Passing that suite does not satisfy
+the canonical gearbox F1 test in item 5 or replace native/WASM parity evidence.
+
 ### 12.4 Hardware correlation hooks
 
 Physical controller and simulator logs shall share observation, command, estimate, and event schemas. Identification tools fit tendon stiffness/hysteresis, base slip, camera timing/noise, insertion friction, and gear torque from measured logs. Correlation reports show residuals and the tested envelope; calibration does not overwrite the original prior data.
@@ -423,6 +486,11 @@ For F1 on a current laptop-class CPU:
 F2 tooth-resolved contact and rendered optics are allowed to run slower than real time. Reports include wall time, physics step, solver iterations, mesh level, and dropped sensor frames.
 
 ## 14. Initial build order
+
+This remains the order for the normative gearbox simulator. M1e deliberately advances parts of
+steps 5–7 only for a one-arm calibration coupon: explicit geometric feature observations, a
+truth-separated reduced estimator, bounded visual corrections, guarded grasp/insertion, and named
+fault outcomes. It does not imply that those steps are complete for the multi-arm gearbox.
 
 1. Freeze schemas, frames, units, scenario seed, and report gates.
 2. Generate build123d gearbox, fixture, simple arm solids, and collision metadata.

@@ -31,7 +31,7 @@ pub use collision::{
 pub use geometry::{
     Aabb, BodyId, CollisionFilter, GearGeometry, Material, MotionType, RigidBody, Shape,
 };
-pub use gripper::{GraspCandidate, GripperConfig, GripperState};
+pub use gripper::{GraspCandidate, GripperConfig, GripperState, MIN_PARTIAL_GRASP_AXIAL_OVERLAP_M};
 pub use machine::{
     wrap_angle_pi, CarriageConfig, CarriageState, CarriageTarget, MachineBackend, MachineCommand,
     MachineCommandError, MachineCommandEvent, ManipulatorId, ManipulatorMotionConfig,
