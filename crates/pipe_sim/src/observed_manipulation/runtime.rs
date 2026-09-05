@@ -2460,10 +2460,7 @@ impl ObservedManipulationRuntime {
             )?;
             let anticipated =
                 self.anticipated_motion_uncertainty(peg, target_world_m, motion_class)?;
-            let held_offset_radius_m = self.held_transform.map_or(
-                self.scenario.grasp.tool_to_peg_axial_offset_m,
-                |transform| transform.axial_offset_m.abs() + transform.lateral_offset_bound_m,
-            );
+            let held_offset_radius_m = self.held_offset_radius_m();
             let carried_rotation_bound_m = 2.0
                 * held_offset_radius_m
                 * (0.5
@@ -2589,24 +2586,7 @@ impl ObservedManipulationRuntime {
                 let anticipated =
                     self.anticipated_motion_uncertainty(peg, target_world_m, motion_class)?;
                 guard_target_rail_sweep(
-                    AxialEnvelopeSweep {
-                        center_world_m: peg.position_world_m,
-                        axis_world: peg.axis_world,
-                        translation_world_m: delta,
-                        center_axial_offset_m: 0.0,
-                        half_length_m: self.scenario.coupon.peg_half_segment_m,
-                        radius_m: 0.5 * self.scenario.coupon.peg_diameter_m,
-                        position_bound_m: 3.0 * anticipated.position_sigma_m,
-                        axis_bound_rad: 3.0 * anticipated.axis_sigma_rad
-                            + commanded_tool_axis_change_bound_rad,
-                        path_deviation_bound_m: tool_path_deviation_bound_m
-                            + 2.0
-                                * self.scenario.grasp.tool_to_peg_axial_offset_m
-                                * (0.5
-                                    * commanded_tool_axis_change_bound_rad
-                                        .min(core::f64::consts::PI))
-                                .sin(),
-                    },
+                    self.carried_peg_rail_sweep(peg, delta, anticipated),
                     rail,
                     self.scenario.safety.minimum_obstacle_clearance_m,
                 )
@@ -2649,6 +2629,38 @@ impl ObservedManipulationRuntime {
             return Ok(Some(evidence));
         }
         Ok(None)
+    }
+
+    fn held_offset_radius_m(&self) -> f64 {
+        self.held_transform.map_or(
+            self.scenario.grasp.tool_to_peg_axial_offset_m,
+            |transform| transform.axial_offset_m.abs() + transform.lateral_offset_bound_m,
+        )
+    }
+
+    fn carried_peg_rail_sweep(
+        &self,
+        peg: &EstimateView,
+        delta: [f64; 3],
+        anticipated: AnticipatedMotionUncertainty,
+    ) -> AxialEnvelopeSweep {
+        let angular_travel = anticipated.commanded_tool_axis_change_bound_rad;
+        AxialEnvelopeSweep {
+            center_world_m: peg.position_world_m,
+            axis_world: peg.axis_world,
+            translation_world_m: delta,
+            center_axial_offset_m: 0.0,
+            // The rail guard uses a cylinder support: enclose the capsule's
+            // hemispherical tips as well as its straight central segment.
+            half_length_m: self.peg_tip_offset_m(),
+            radius_m: 0.5 * self.scenario.coupon.peg_diameter_m,
+            position_bound_m: 3.0 * anticipated.position_sigma_m,
+            axis_bound_rad: 3.0 * anticipated.axis_sigma_rad + angular_travel,
+            path_deviation_bound_m: anticipated.tool_path_deviation_bound_m
+                + 2.0
+                    * self.held_offset_radius_m()
+                    * (0.5 * angular_travel.min(core::f64::consts::PI)).sin(),
+        }
     }
 
     fn motion_position_sigma_limit_m(&self) -> f64 {
@@ -3951,6 +3963,69 @@ mod tests {
             .correction_iterations
             .iter()
             .any(|record| record.outcome == "correction_floor_too_large"));
+    }
+
+    #[test]
+    fn carried_peg_rail_preflight_covers_endcaps_and_observed_grasp_offset() {
+        let mut runtime = ObservedManipulationRuntime::from_scenario_json(
+            super::super::scenario::BASELINE_M1F_SCENARIO_JSON,
+            M1eFault::None,
+        )
+        .unwrap();
+        let rail = TargetRailDatum {
+            center_world_m: [0.0; 3],
+            axis_world: [0.0, 0.0, 1.0],
+            position_bound_m: 0.0,
+            axis_bound_rad: 0.0,
+            lateral_offset_m: 0.001,
+            radius_m: 0.0001,
+            half_length_m: 0.00035,
+        };
+        let mut peg = valid_test_estimate(PEG_OBJECT_ID, 0);
+        let radius = 0.5 * runtime.scenario.coupon.peg_diameter_m;
+        // Collinear capsule tips overlap by half a peg radius, while the
+        // straight peg segment remains clear of the rail's rounded tip.
+        peg.position_world_m = [
+            rail.lateral_offset_m,
+            0.0,
+            -(rail.half_length_m
+                + rail.radius_m
+                + runtime.scenario.coupon.peg_half_segment_m
+                + 0.5 * radius),
+        ];
+        let mut anticipated = AnticipatedMotionUncertainty {
+            position_sigma_m: 0.0,
+            axis_sigma_rad: 0.0,
+            commanded_tool_axis_change_bound_rad: 0.0,
+            tool_path_deviation_bound_m: 0.0,
+            interval_s: 0.0,
+        };
+        let sweep = runtime.carried_peg_rail_sweep(&peg, [0.0; 3], anticipated);
+        assert_eq!(
+            guard_target_rail_sweep(sweep, rail, 0.0),
+            Err("target_rail_collision_risk")
+        );
+        let truncated = AxialEnvelopeSweep {
+            half_length_m: runtime.scenario.coupon.peg_half_segment_m,
+            ..sweep
+        };
+        assert!(guard_target_rail_sweep(truncated, rail, 0.0).is_ok());
+
+        runtime.held_transform = Some(HeldTransformEstimate {
+            captured_at_tick: 0,
+            available_at_tick: 0,
+            axial_offset_m: -0.0007,
+            lateral_offset_bound_m: 0.0002,
+            axis_mismatch_bound_rad: 0.0,
+            position_sigma_m: 0.0,
+            axis_sigma_rad: 0.0,
+            residual_rms_m: 0.0,
+        });
+        anticipated.commanded_tool_axis_change_bound_rad = 0.1;
+        anticipated.tool_path_deviation_bound_m = 0.00001;
+        let sweep = runtime.carried_peg_rail_sweep(&peg, [0.0; 3], anticipated);
+        let expected = 0.00001 + 2.0 * 0.0009 * 0.05_f64.sin();
+        assert!((sweep.path_deviation_bound_m - expected).abs() < 1.0e-15);
     }
 
     fn valid_test_estimate(object_id: u32, tick: u64) -> EstimateView {

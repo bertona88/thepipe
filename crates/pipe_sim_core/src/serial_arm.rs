@@ -326,6 +326,9 @@ impl SerialArm {
         {
             return Err(ToolPositionIkError::NonFiniteTarget);
         }
+        // Admission allows small unit-length roundoff. Solve for direction,
+        // otherwise an accepted norm error can exceed the final IK residual.
+        let target_axis_world = target_axis_world / target_axis_world.length();
         let length_scale = self.config.maximum_reach_m();
         let point_seed = self
             .solve_tool_position(target_position_world_m, seed)
@@ -750,6 +753,23 @@ mod tests {
                 (pose.transform_vector(Vec3::Z) - target.transform_vector(Vec3::Z)).length()
                     < 1.0e-7
             );
+        }
+    }
+
+    #[test]
+    fn axis_ik_accepts_unit_length_roundoff_within_command_tolerance() {
+        let arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        let pose = arm.forward_kinematics().tool_pose;
+        for scale in [1.0 - 5.0e-7, 1.0 + 5.0e-7] {
+            let solution = arm
+                .solve_tool_axis(
+                    pose.translation,
+                    pose.transform_vector(Vec3::Z) * scale,
+                    arm.positions,
+                )
+                .unwrap();
+            assert!(solution.position_error_m <= 1.0e-9);
+            assert!(solution.axis_error_rad <= 1.0e-7);
         }
     }
 
