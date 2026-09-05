@@ -23,7 +23,9 @@ use pipe_sim_core::{
 };
 use serde::Serialize;
 
-use super::controller::{ContactPacket, PlanningObstacle};
+use super::controller::{
+    preflight_swept_envelope, ContactPacket, PlanningObstacle, SweptEnvelope, TargetRailDatum,
+};
 use super::estimator::{FeatureMeasurement, KnownAxialFeature};
 use super::scenario::{M1eFault, ObservedManipulationScenario};
 use crate::{machine_config, SimError};
@@ -118,6 +120,8 @@ pub(super) struct JawSocketClearanceGeometry {
     pub side_target_axial_half_extent_m: f64,
     pub side_target_forward_extent_m: f64,
     pub side_target_transverse_radius_m: f64,
+    pub terminal_backing_length_m: f64,
+    pub terminal_backing_radius_m: f64,
     pub socket_depth_m: f64,
     pub socket_inner_half_width_m: f64,
     pub socket_outer_half_width_m: f64,
@@ -269,6 +273,7 @@ pub(super) struct ObservedPlant {
     calibrated_macro_view_direction_world: [f64; 3],
     physical_tool_axis_tilt: Quat,
     commanded_tool_position_world_m: [f64; 3],
+    commanded_tool_axis_world: Option<[f64; 3]>,
     previous_motion_direction: [i8; 3],
     last_motion_complete_tick: u64,
     burst_sequence: u32,
@@ -356,10 +361,34 @@ impl ObservedPlant {
             - calibrated_socket_axis * scenario.motion.pick_capture_start_axial_standoff_m;
         let initial_tool_truth =
             initial_commanded_tool + array_vec3(scenario.coupon.initial_tool_command_error_m);
-        set_initial_tool_pose(&mut mechanics, initial_tool_truth)?;
+        let commanded_axis = if scenario.fixed_head.is_some() {
+            calibrated_socket_axis
+        } else {
+            solved_tool_pose(&mechanics, initial_commanded_tool)?
+                .transform_vector(Vec3::Z)
+                .normalized_or(Vec3::Z)
+        };
+        if scenario.fixed_head.is_some() {
+            let arm = mechanics.serial_arm_mut(ACTIVE_ARM_ID).expect("active arm");
+            let solution = arm
+                .arm
+                .solve_tool_axis(initial_tool_truth, commanded_axis, arm.motion.positions())
+                .map_err(|e| SimError::Mechanics(format!("M1f initial axis IK: {e:?}")))?;
+            arm.arm
+                .set_positions(solution.positions)
+                .map_err(|e| SimError::Mechanics(format!("M1f initial pose: {e:?}")))?;
+            arm.motion = ManipulatorMotionState::from_positions(solution.positions);
+            arm.kinematics = arm.arm.forward_kinematics();
+        } else {
+            set_initial_tool_pose(&mut mechanics, initial_tool_truth)?;
+        }
 
         let peg_position = pick_nominal + array_vec3(scenario.coupon.initial_peg_error_m);
-        let peg_pose = solved_tool_pose(&mechanics, peg_position)?;
+        let peg_pose = if scenario.fixed_head.is_some() {
+            calibrated_socket_pose
+        } else {
+            solved_tool_pose(&mechanics, peg_position)?
+        };
         let peg_tilt = two_axis_tilt(scenario.coupon.initial_peg_axis_tilt_rad);
         let mut peg = RigidBody::new(
             BodyId(PEG_OBJECT_ID),
@@ -384,12 +413,19 @@ impl ObservedPlant {
 
         let socket_position = array_vec3(scenario.coupon.socket_center_nominal_world_m)
             + array_vec3(scenario.coupon.initial_socket_error_m);
-        let mut socket_pose = solved_tool_pose(&mechanics, socket_position)?;
+        let mut socket_pose = if scenario.fixed_head.is_some() {
+            Pose::new(socket_position, calibrated_socket_pose.rotation)
+        } else {
+            solved_tool_pose(&mechanics, socket_position)?
+        };
         socket_pose.rotation = (socket_pose.rotation
             * two_axis_tilt(scenario.coupon.initial_socket_axis_tilt_rad))
         .normalized();
         add_socket_coupon(&mut mechanics, scenario, socket_pose)?;
         add_calibrated_planning_obstacles(&mut mechanics, scenario)?;
+        if scenario.fixed_head.is_some() {
+            add_fixed_head_bodies(&mut mechanics, scenario, socket_pose)?;
+        }
 
         if fault == M1eFault::CarriedPartCollision {
             add_carried_collision_obstacle(&mut mechanics, scenario)?;
@@ -414,6 +450,7 @@ impl ObservedPlant {
             ),
             physical_tool_axis_tilt: two_axis_tilt(scenario.coupon.initial_tool_axis_tilt_rad),
             commanded_tool_position_world_m: vec3(initial_commanded_tool),
+            commanded_tool_axis_world: scenario.fixed_head.as_ref().map(|_| vec3(commanded_axis)),
             previous_motion_direction: [0; 3],
             last_motion_complete_tick: 0,
             burst_sequence: 0,
@@ -440,6 +477,24 @@ impl ObservedPlant {
 
     pub fn commanded_tool_position_world_m(&self) -> [f64; 3] {
         self.commanded_tool_position_world_m
+    }
+
+    pub fn commanded_tool_axis_world(&self) -> Option<[f64; 3]> {
+        self.commanded_tool_axis_world
+    }
+
+    /// Set planning intent only; the following motion must still pass every
+    /// estimator, workspace and authoritative command guard before actuation.
+    pub fn set_axis_planning_target(&mut self, axis: [f64; 3]) -> Result<(), PlantFailure> {
+        let axis_vec = array_vec3(axis);
+        if self.scenario.fixed_head.is_none()
+            || !axis_vec.is_finite()
+            || (axis_vec.length() - 1.0).abs() > 1.0e-6
+        {
+            return Err(PlantFailure::InvalidCommand);
+        }
+        self.commanded_tool_axis_world = Some(axis);
+        Ok(())
     }
 
     pub fn machine_config_id(&self) -> &str {
@@ -518,6 +573,8 @@ impl ObservedPlant {
                 .side_target_axial_half_extent_m,
             side_target_forward_extent_m,
             side_target_transverse_radius_m,
+            terminal_backing_length_m: self.active_arm().arm.config.wrist_length_m,
+            terminal_backing_radius_m: self.active_arm().arm.config.link_collision_radii_m[2],
             socket_depth_m: self.scenario.coupon.socket_depth_m,
             socket_inner_half_width_m: inner_half_width_m,
             socket_outer_half_width_m: inner_half_width_m
@@ -565,6 +622,7 @@ impl ObservedPlant {
                 position_sigma_m: self.scenario.optics.correlated_calibration_sigma_m,
             });
         }
+        obstacles.extend(fixed_head_obstacles(&self.scenario));
         obstacles.sort_by_key(|obstacle| obstacle.id);
         obstacles
     }
@@ -630,12 +688,19 @@ impl ObservedPlant {
                 .tool_motion_speed_scale = speed_scale;
         }
         let issued_at_tick = self.now_tick();
-        let submission = self
-            .mechanics
-            .submit_machine_command(MachineCommand::SetToolPoseTarget {
+        let command = if let Some(axis) = self.commanded_tool_axis_world {
+            MachineCommand::SetToolAxisTarget {
                 manipulator: ACTIVE_MANIPULATOR_ID,
                 target_position_world_m: effective_target,
-            });
+                target_axis_world: array_vec3(axis),
+            }
+        } else {
+            MachineCommand::SetToolPoseTarget {
+                manipulator: ACTIVE_MANIPULATOR_ID,
+                target_position_world_m: effective_target,
+            }
+        };
+        let submission = self.mechanics.submit_machine_command(command);
         // The plan captures its duration at submission, so restoring the
         // commissioning scale cannot alter the active bounded plan and avoids
         // leaking a correction scale into a later transit or retreat.
@@ -653,7 +718,11 @@ impl ObservedPlant {
         Ok(CommandReceipt {
             command_sequence: sequence,
             issued_at_tick,
-            command_kind: "set_tool_position",
+            command_kind: if self.commanded_tool_axis_world.is_some() {
+                "set_tool_position_and_axis"
+            } else {
+                "set_tool_position"
+            },
             motion_class: Some(motion_class),
             target_position_world_m: Some(target_position_world_m),
             target_gripper_opening_m: None,
@@ -755,6 +824,75 @@ impl ObservedPlant {
         }
     }
 
+    /// Command/FK preflight for the two nonterminal links against an observed
+    /// or surveyed socket datum. No private socket pose participates. The
+    /// displacement bound covers every link point between smoothstep samples.
+    pub fn preview_arm_target_rail_clearance(
+        &self,
+        target: [f64; 3],
+        class: MotionClass,
+        rail: TargetRailDatum,
+    ) -> Result<(), PlantFailure> {
+        const INTERVALS: usize = 64;
+        let plan = self.preview_tool_motion_plan(target, class)?;
+        let arm = self.active_arm();
+        let angular_travel = wrap_angle_pi(plan.goal.base_theta_rad - plan.start.base_theta_rad)
+            .abs()
+            + plan
+                .start
+                .tendon_joint_angles()
+                .into_iter()
+                .zip(plan.goal.tendon_joint_angles())
+                .map(|(a, b)| (b - a).abs())
+                .sum::<f64>();
+        let length_bound = (plan.goal.base_z_m - plan.start.base_z_m).abs()
+            + (arm.arm.config.rail_radius_m + arm.arm.config.maximum_reach_m()) * angular_travel;
+        let margin = self.scenario.motion.pick_capture_relative_position_bound_m
+            + 1.5 * length_bound / INTERVALS as f64;
+        let mut candidate = arm.arm.clone();
+        for i in 0..=INTERVALS {
+            candidate
+                .set_positions(plan.sample(i as f64 / INTERVALS as f64))
+                .map_err(|_| PlantFailure::ImpossibleGeometry)?;
+            for (pose, shape) in candidate
+                .forward_kinematics()
+                .collision_capsules
+                .into_iter()
+                .take(2)
+            {
+                if let Shape::Capsule {
+                    radius_m,
+                    half_segment_m,
+                } = shape
+                {
+                    // Whole-link and whole-rail spherical enclosures are
+                    // sufficient for these distant links and cover all roll.
+                    preflight_swept_envelope(
+                        SweptEnvelope {
+                            center_start_world_m: vec3(pose.translation),
+                            center_end_world_m: vec3(pose.translation),
+                            radius_m: half_segment_m + radius_m,
+                            position_sigma_m: 0.0,
+                            hard_position_bound_m: margin,
+                            path_deviation_bound_m: 0.0,
+                        },
+                        &[PlanningObstacle {
+                            id: 10_043,
+                            center_world_m: rail.center_world_m,
+                            conservative_radius_m: rail.lateral_offset_m
+                                + rail.radius_m
+                                + rail.half_length_m,
+                            position_sigma_m: rail.position_bound_m / 3.0,
+                        }],
+                        self.scenario.safety.minimum_obstacle_clearance_m,
+                    )
+                    .map_err(|_| PlantFailure::MotionCollisionRisk)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn preview_tool_motion_plan(
         &self,
         target_position_world_m: [f64; 3],
@@ -775,18 +913,25 @@ impl ObservedPlant {
             arm.tool_motion_speed_scale
         };
         let start = arm.motion.positions();
-        let solution = arm
-            .arm
-            .solve_tool_position(effective_target, start)
-            .map_err(|_| PlantFailure::ImpossibleGeometry)?;
-        let plan = ToolMotionPlan::new(
+        let goal = if let Some(axis) = self.commanded_tool_axis_world {
+            arm.arm
+                .solve_tool_axis(effective_target, array_vec3(axis), start)
+                .map(|s| s.positions)
+        } else {
+            arm.arm
+                .solve_tool_position(effective_target, start)
+                .map(|s| s.positions)
+        }
+        .map_err(|_| PlantFailure::ImpossibleGeometry)?;
+        let mut plan = ToolMotionPlan::new(
             effective_target,
             start,
-            solution.positions,
+            goal,
             arm.carriage_config,
             arm.motion_config,
             speed_scale,
         );
+        plan.target_axis_world = self.commanded_tool_axis_world.map(array_vec3);
         let maximum_duration_s =
             f64::from(self.scenario.motion.maximum_steps_per_motion) * self.fixed_dt_s();
         if !plan.duration_s.is_finite() || plan.duration_s > maximum_duration_s + 1.0e-12 {
@@ -1012,7 +1157,12 @@ impl ObservedPlant {
         {
             return Err(PlantFailure::ObservationBeforeSettled);
         }
-        let roi = array_optical_vec3(roi_center_world_m);
+        let roi = array_optical_vec3(
+            self.scenario
+                .fixed_head
+                .as_ref()
+                .map_or(roi_center_world_m, |head| head.target_world_m),
+        );
         if !roi.is_finite() {
             return Err(PlantFailure::InvalidCommand);
         }
@@ -1418,7 +1568,7 @@ impl ObservedPlant {
         {
             return Err(PlantFailure::ImpossibleGeometry);
         }
-        let scale = arm
+        let mut scale = arm
             .tool_motion_speed_scale
             .min(self.scenario.motion.maximum_correction_velocity_m_s / unity_velocity_bound_m_s)
             .min(
@@ -1426,6 +1576,15 @@ impl ObservedPlant {
                     / unity_acceleration_bound_m_s2)
                     .sqrt(),
             );
+        if let Some(head) = &self.scenario.fixed_head {
+            let angular_speed = theta_speed + yaw_speed + shoulder_speed + elbow_speed;
+            scale = scale
+                .min(head.maximum_axis_speed_rad_s / angular_speed)
+                .min(
+                    (head.maximum_axis_acceleration_rad_s2 / distal_acceleration_bound_rad_s2)
+                        .sqrt(),
+                );
+        }
         if !scale.is_finite() || scale <= 0.0 {
             return Err(PlantFailure::InvalidCommand);
         }
@@ -1458,13 +1617,32 @@ impl ObservedPlant {
 
     fn build_macro_rig(&self, roi: OpticalVec3, sequence: u32) -> StructuredLightRig {
         let optics = &self.scenario.optics;
+        let roi = self
+            .scenario
+            .fixed_head
+            .as_ref()
+            .map_or(roi, |head| array_optical_vec3(head.target_world_m));
         let half_baseline = 0.5 * optics.camera_projector_baseline_m;
-        let long_axis = array_optical_vec3(self.calibrated_socket_axis_world)
-            .normalized()
-            .unwrap_or(OpticalVec3::Z);
-        let view_direction = array_optical_vec3(self.calibrated_macro_view_direction_world)
-            .normalized()
-            .unwrap_or(OpticalVec3::Y);
+        let long_axis = array_optical_vec3(
+            self.scenario
+                .fixed_head
+                .as_ref()
+                .map_or(self.calibrated_socket_axis_world, |head| {
+                    head.image_long_axis_world
+                }),
+        )
+        .normalized()
+        .unwrap_or(OpticalVec3::Z);
+        let view_direction = array_optical_vec3(
+            self.scenario
+                .fixed_head
+                .as_ref()
+                .map_or(self.calibrated_macro_view_direction_world, |head| {
+                    head.view_direction_world
+                }),
+        )
+        .normalized()
+        .unwrap_or(OpticalVec3::Y);
         let baseline_direction = view_direction
             .cross(long_axis)
             .normalized()
@@ -1608,6 +1786,16 @@ impl ObservedPlant {
                 }),
                 neutral,
                 OPTICAL_TAG_FIXTURE_BASE + index as u32,
+            ));
+        }
+        for obstacle in fixed_head_obstacles(&self.scenario) {
+            scene.push(OpticalPrimitive::new(
+                OpticalGeometry::Sphere(OpticalSphere {
+                    center: array_optical_vec3(obstacle.center_world_m),
+                    radius_m: obstacle.conservative_radius_m,
+                }),
+                neutral,
+                obstacle.id,
             ));
         }
         let arm = self.active_arm();
@@ -2046,12 +2234,17 @@ impl ObservedPlant {
             material: optical_material(self.scenario.optics.clear_wall_signal_scale, 3.0),
             self_occlusion_tag: None,
         };
+        let scene = if self.scenario.fixed_head.is_some() {
+            self.build_optical_scene()
+        } else {
+            OpticalScene::default()
+        };
         let mut residuals = capture_ticks
             .iter()
             .filter_map(|capture_tick| {
                 let frame_index = (u64::from(sequence) << 32) ^ *capture_tick ^ 0xCA11_BA7E_u64;
                 match rig
-                    .observe_feature_points(&OpticalScene::default(), frame_index, &[feature])
+                    .observe_feature_points(&scene, frame_index, &[feature])
                     .into_iter()
                     .next()?
                 {
@@ -2278,7 +2471,50 @@ impl ObservedPlant {
     fn private_tool_socket_max_penetration_m(&self) -> f64 {
         let (jaw_penetration_m, side_target_penetration_m) =
             self.private_tool_socket_component_penetrations_m();
-        jaw_penetration_m.max(side_target_penetration_m)
+        let mut maximum = jaw_penetration_m.max(side_target_penetration_m);
+        if self.scenario.fixed_head.is_some() {
+            maximum = maximum.max(self.private_palm_peg_penetration_m());
+            for id in [BodyId(10_043), BodyId(10_044)] {
+                if let Some(rail) = self.mechanics.body(id) {
+                    maximum = maximum.max(private_penetration_depth_m(self.peg_body(), rail));
+                    for (i, (pose, shape)) in self
+                        .active_arm()
+                        .kinematics
+                        .collision_capsules
+                        .iter()
+                        .take(2)
+                        .enumerate()
+                    {
+                        let link = RigidBody::new(
+                            BodyId(10_095 + i as u32),
+                            *shape,
+                            *pose,
+                            MotionType::Kinematic,
+                        );
+                        maximum = maximum.max(private_penetration_depth_m(&link, rail));
+                    }
+                    let g = self.jaw_socket_clearance_geometry();
+                    let half =
+                        0.5 * (g.terminal_backing_length_m + g.central_palm_forward_plane_tool_z_m);
+                    let center =
+                        0.5 * (g.central_palm_forward_plane_tool_z_m - g.terminal_backing_length_m);
+                    let tube = RigidBody::new(
+                        BodyId(10_097),
+                        Shape::Box {
+                            half_extents_m: Vec3::new(
+                                g.terminal_backing_radius_m,
+                                g.terminal_backing_radius_m,
+                                half,
+                            ),
+                        },
+                        self.physical_tool_pose() * Pose::from_translation(Vec3::Z * center),
+                        MotionType::Kinematic,
+                    );
+                    maximum = maximum.max(private_penetration_depth_m(&tube, rail));
+                }
+            }
+        }
+        maximum
     }
 
     fn private_tool_socket_component_penetrations_m(&self) -> (f64, f64) {
@@ -2297,7 +2533,12 @@ impl ObservedPlant {
                 pose,
                 MotionType::Kinematic,
             );
-            for socket_id in SOCKET_BODY_IDS {
+            for socket_id in SOCKET_BODY_IDS.into_iter().chain(
+                self.scenario
+                    .fixed_head
+                    .iter()
+                    .flat_map(|_| [BodyId(10_043), BodyId(10_044)]),
+            ) {
                 let Some(socket_wall) = self.mechanics.body(socket_id) else {
                     continue;
                 };
@@ -2330,7 +2571,12 @@ impl ObservedPlant {
                 self.physical_tool_pose() * Pose::from_translation(target_offset * sign),
                 MotionType::Kinematic,
             );
-            for socket_id in SOCKET_BODY_IDS {
+            for socket_id in SOCKET_BODY_IDS.into_iter().chain(
+                self.scenario
+                    .fixed_head
+                    .iter()
+                    .flat_map(|_| [BodyId(10_043), BodyId(10_044)]),
+            ) {
                 let Some(socket_wall) = self.mechanics.body(socket_id) else {
                     continue;
                 };
@@ -2694,6 +2940,86 @@ fn add_socket_coupon(
         mechanics
             .add_body(wall)
             .map_err(|error| SimError::Mechanics(format!("M1e socket wall: {error:?}")))?;
+    }
+    Ok(())
+}
+
+/// The same surveyed solids feed optical occlusion, controller preflight and
+/// arm mechanics. Lens apertures lie ahead of the opaque body spheres.
+fn fixed_head_obstacles(scenario: &ObservedManipulationScenario) -> Vec<PlanningObstacle> {
+    let Some(head) = &scenario.fixed_head else {
+        return Vec::new();
+    };
+    let target = array_vec3(head.target_world_m);
+    let view = array_vec3(head.view_direction_world);
+    let baseline = view
+        .cross(array_vec3(head.image_long_axis_world))
+        .normalized_or(Vec3::X);
+    let midpoint = target + view * scenario.optics.working_distance_m;
+    [-1.0, 1.0]
+        .into_iter()
+        .enumerate()
+        .map(|(i, sign)| {
+            let aperture =
+                midpoint + baseline * (sign * 0.5 * scenario.optics.camera_projector_baseline_m);
+            let center =
+                aperture + (aperture - target).normalized_or(view) * (head.body_radius_m + 0.1e-3);
+            PlanningObstacle {
+                id: 10_040 + i as u32,
+                center_world_m: vec3(center),
+                conservative_radius_m: head.body_radius_m,
+                position_sigma_m: scenario.optics.correlated_calibration_sigma_m,
+            }
+        })
+        .chain(core::iter::once(PlanningObstacle {
+            id: 10_042,
+            center_world_m: vec3(midpoint + array_vec3(head.mount_offset_world_m)),
+            conservative_radius_m: head.mount_radius_m,
+            position_sigma_m: scenario.optics.correlated_calibration_sigma_m,
+        }))
+        .collect()
+}
+
+fn add_fixed_head_bodies(
+    mechanics: &mut Simulation,
+    scenario: &ObservedManipulationScenario,
+    socket_pose: Pose,
+) -> Result<(), SimError> {
+    for obstacle in fixed_head_obstacles(scenario) {
+        let body = RigidBody::new(
+            BodyId(obstacle.id),
+            Shape::Sphere {
+                radius_m: obstacle.conservative_radius_m,
+            },
+            Pose::from_translation(array_vec3(obstacle.center_world_m)),
+            MotionType::Static,
+        );
+        mechanics
+            .add_body(body)
+            .map_err(|error| SimError::Mechanics(format!("fixed head: {error:?}")))?;
+    }
+    for (i, sign) in [-1.0, 1.0].into_iter().enumerate() {
+        let mut body = RigidBody::new(
+            BodyId(10_043 + i as u32),
+            Shape::Capsule {
+                radius_m: scenario.coupon.socket_fiducial_radius_m,
+                half_segment_m: scenario.coupon.socket_fiducial_axial_half_extent_m,
+            },
+            socket_pose
+                * Pose::from_translation(
+                    Vec3::X * (sign * scenario.coupon.socket_fiducial_lateral_offset_m),
+                ),
+            MotionType::Static,
+        );
+        // Mating features share the observed socket datum. Controller checks
+        // these using that estimate, not private displaced socket geometry.
+        body.collision_filter = CollisionFilter {
+            group: SOCKET_COLLISION_GROUP,
+            mask: 0,
+        };
+        mechanics
+            .add_body(body)
+            .map_err(|error| SimError::Mechanics(format!("socket target rail: {error:?}")))?;
     }
     Ok(())
 }
@@ -3249,6 +3575,35 @@ mod tests {
             .copied()
             .unwrap();
         optical_vec((minimum + maximum) * 0.5)
+    }
+
+    #[test]
+    fn m1f_observer_does_not_follow_roi_and_shares_physical_keepouts() {
+        let (scenario, _) = ObservedManipulationScenario::from_json(
+            super::super::scenario::BASELINE_M1F_SCENARIO_JSON,
+        )
+        .unwrap();
+        let plant = ObservedPlant::new(&scenario, M1eFault::None).unwrap();
+        let first = plant.build_macro_rig(OpticalVec3::ZERO, 0);
+        let second = plant.build_macro_rig(OpticalVec3::new(0.1, 0.2, 0.3), 10);
+        assert_eq!(first.cameras[0].nominal, second.cameras[0].nominal);
+        assert_eq!(first.projector.nominal, second.projector.nominal);
+        assert_eq!(fixed_head_obstacles(&scenario).len(), 3);
+        for obstacle in fixed_head_obstacles(&scenario) {
+            assert!(plant.mechanics.body(BodyId(obstacle.id)).is_some());
+            assert!(plant
+                .calibrated_planning_obstacles()
+                .iter()
+                .any(|p| p.id == obstacle.id));
+            assert!(plant
+                .build_optical_scene()
+                .primitives
+                .iter()
+                .any(|p| p.tag == obstacle.id));
+        }
+        for id in [BodyId(10_043), BodyId(10_044)] {
+            assert!(plant.mechanics.body(id).is_some());
+        }
     }
 
     #[test]

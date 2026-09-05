@@ -446,35 +446,52 @@ impl Simulation {
             )
             .map_err(SimulationError::InvalidMachineCommand)?;
 
-            let tool_plan = if let MachineCommand::SetToolPoseTarget {
-                target_position_world_m,
-                ..
-            } = command
+            let tool_target = match command {
+                MachineCommand::SetToolPoseTarget {
+                    target_position_world_m,
+                    ..
+                } => Some((target_position_world_m, None)),
+                MachineCommand::SetToolAxisTarget {
+                    target_position_world_m,
+                    target_axis_world,
+                    ..
+                } => Some((target_position_world_m, Some(target_axis_world))),
+                _ => None,
+            };
+            let tool_plan = if let Some((target_position_world_m, target_axis_world)) = tool_target
             {
-                let solution = arm
-                    .arm
-                    .solve_tool_position(target_position_world_m, arm.motion.positions())
-                    .map_err(|error| {
-                        SimulationError::InvalidMachineCommand(match error {
-                            ToolPositionIkError::NonFiniteTarget => {
-                                MachineCommandError::NonFiniteTarget
-                            }
-                            ToolPositionIkError::Unreachable => {
-                                MachineCommandError::ToolTargetUnreachable
-                            }
-                            ToolPositionIkError::JointLimits => {
-                                MachineCommandError::ToolTargetJointLimits
-                            }
-                        })
-                    })?;
-                let plan = ToolMotionPlan::new(
+                let positions = match target_axis_world {
+                    Some(axis) => arm
+                        .arm
+                        .solve_tool_axis(target_position_world_m, axis, arm.motion.positions())
+                        .map(|solution| solution.positions),
+                    None => arm
+                        .arm
+                        .solve_tool_position(target_position_world_m, arm.motion.positions())
+                        .map(|solution| solution.positions),
+                }
+                .map_err(|error| {
+                    SimulationError::InvalidMachineCommand(match error {
+                        ToolPositionIkError::NonFiniteTarget => {
+                            MachineCommandError::NonFiniteTarget
+                        }
+                        ToolPositionIkError::Unreachable => {
+                            MachineCommandError::ToolTargetUnreachable
+                        }
+                        ToolPositionIkError::JointLimits => {
+                            MachineCommandError::ToolTargetJointLimits
+                        }
+                    })
+                })?;
+                let mut plan = ToolMotionPlan::new(
                     target_position_world_m,
                     arm.motion.positions(),
-                    solution.positions,
+                    positions,
                     arm.carriage_config,
                     arm.motion_config,
                     arm.tool_motion_speed_scale,
                 );
+                plan.target_axis_world = target_axis_world;
                 self.validate_tool_motion_path(arm_id, plan)?;
                 Some(plan)
             } else {
@@ -1284,6 +1301,80 @@ mod tests {
     fn baseline_serial_instance(id: u32) -> SerialArmInstance {
         let arm = SerialArm::new(crate::serial_arm::SerialArmConfig::default()).unwrap();
         SerialArmInstance::new(ArmId(id), arm, GripperConfig::default()).unwrap()
+    }
+
+    #[test]
+    fn axis_command_executes_through_tendons_and_preflights_before_commit() {
+        let mut simulation = Simulation::new(SimulationConfig {
+            fixed_dt_s: 0.001,
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        let mut instance = baseline_serial_instance(1);
+        let start = instance
+            .arm
+            .solve_tool_position(Vec3::new(0.020, 0.0, 0.0), instance.arm.positions)
+            .unwrap()
+            .positions;
+        instance.arm.set_positions(start).unwrap();
+        instance.motion = ManipulatorMotionState::from_positions(start);
+        instance.kinematics = instance.arm.forward_kinematics();
+        let mut reference = instance.arm.clone();
+        reference
+            .set_positions(crate::SerialJointPositions {
+                shoulder_yaw_rad: 0.02,
+                shoulder_pitch_rad: start.shoulder_pitch_rad + 0.01,
+                ..start
+            })
+            .unwrap();
+        let target = reference.forward_kinematics().tool_pose;
+        simulation.add_serial_arm(instance).unwrap();
+        let command = MachineCommand::SetToolAxisTarget {
+            manipulator: ManipulatorId(1),
+            target_position_world_m: target.translation,
+            target_axis_world: target.transform_vector(Vec3::Z),
+        };
+        let mut collision = simulation.clone();
+        collision
+            .add_body(RigidBody::new(
+                BodyId(987),
+                Shape::Sphere { radius_m: 0.001 },
+                Pose::from_translation(target.translation),
+                MotionType::Static,
+            ))
+            .unwrap();
+        assert!(collision.submit_machine_command(command).is_err());
+        assert_eq!(collision.machine_command_sequence, 0);
+        assert!(collision.machine_command_log.is_empty());
+        assert!(collision
+            .serial_arm(ArmId(1))
+            .unwrap()
+            .motion
+            .tool_motion
+            .is_none());
+        simulation.submit_machine_command(command).unwrap();
+        let mut replay = simulation.clone();
+        for _ in 0..20_000 {
+            simulation.step().unwrap();
+            replay.step().unwrap();
+            let arm = simulation.serial_arm(ArmId(1)).unwrap();
+            if arm.motion.tool_motion.unwrap().status == ToolMotionStatus::Complete {
+                break;
+            }
+        }
+        let arm = simulation.serial_arm(ArmId(1)).unwrap();
+        assert_eq!(
+            arm.motion.tool_motion.unwrap().status,
+            ToolMotionStatus::Complete
+        );
+        assert_eq!(arm.arm.positions, arm.motion.positions());
+        assert!((arm.tool_pose().translation - target.translation).length() < 1.0e-9);
+        assert!(
+            (arm.tool_pose().transform_vector(Vec3::Z) - target.transform_vector(Vec3::Z)).length()
+                < 1.0e-7
+        );
+        assert_eq!(simulation.tool_motion_trace, replay.tool_motion_trace);
     }
 
     #[test]

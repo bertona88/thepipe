@@ -1,5 +1,9 @@
 # Observed-state single-arm manipulation M1e
 
+M1e is the preserved schema-v1 baseline. The opt-in [M1f extension](FIXED_HEAD_MANIPULATION_M1F.md)
+adds a fixed observer and executed position/axis corrections under schema 2. The
+M1e-specific shortcuts and limits described below still apply to M1e.
+
 Status: modeled deterministic vertical slice; not hardware-qualified
 
 M1e is the first Pipe milestone in which optical measurements, an uncertainty-bearing estimate,

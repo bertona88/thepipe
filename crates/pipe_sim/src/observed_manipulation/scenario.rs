@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 use crate::sha256_hex;
 
 pub const M1E_SCENARIO_SCHEMA_VERSION: u32 = 1;
+pub const M1F_SCENARIO_SCHEMA_VERSION: u32 = 2;
+pub const BASELINE_M1F_SCENARIO_JSON: &str =
+    include_str!("../../../../scenarios/observed_manipulation_m1f_v2.json");
 const M1E_PEG_FEATURE_AVAILABLE_SPAN_M: f64 = 0.400e-3;
 /// The injected jam must be geometrically beyond the classifier boundary,
 /// while preserving an explicit margin below the independent force trip.
@@ -34,6 +37,29 @@ pub struct ObservedManipulationScenario {
     pub contact: ContactConfig,
     pub safety: SafetyScenarioConfig,
     pub fault_profiles: Vec<FaultProfile>,
+    /// Version 2 adds a fixed surveyed observer and position/axis control.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixed_head: Option<FixedHeadConfig>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct FixedHeadConfig {
+    pub target_world_m: [f64; 3],
+    pub view_direction_world: [f64; 3],
+    pub image_long_axis_world: [f64; 3],
+    pub transfer_standoff_m: f64,
+    pub surveyed_socket_position_bound_m: f64,
+    pub surveyed_socket_axis_bound_rad: f64,
+    pub body_radius_m: f64,
+    pub mount_offset_world_m: [f64; 3],
+    pub mount_radius_m: f64,
+    pub maximum_axis_correction_rad: f64,
+    pub minimum_axis_correction_rad: f64,
+    pub axis_convergence_rad: f64,
+    pub maximum_axis_capture_error_rad: f64,
+    pub maximum_axis_speed_rad_s: f64,
+    pub maximum_axis_acceleration_rad_s2: f64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -371,8 +397,65 @@ impl ObservedManipulationScenario {
 
     fn validate(&self) -> Result<(), ScenarioError> {
         let fail = |message: &str| Err(ScenarioError::Invalid(message.to_owned()));
-        if self.schema_version != M1E_SCENARIO_SCHEMA_VERSION {
+        if !matches!(
+            (self.schema_version, self.fixed_head.is_some()),
+            (1, false) | (2, true)
+        ) {
             return fail("unsupported schema_version");
+        }
+        if let Some(head) = &self.fixed_head {
+            let norm = |v: [f64; 3]| v.iter().map(|x| x * x).sum::<f64>().sqrt();
+            let scalars = [
+                head.transfer_standoff_m,
+                head.surveyed_socket_position_bound_m,
+                head.surveyed_socket_axis_bound_rad,
+                head.body_radius_m,
+                head.mount_radius_m,
+                head.maximum_axis_correction_rad,
+                head.minimum_axis_correction_rad,
+                head.axis_convergence_rad,
+                head.maximum_axis_capture_error_rad,
+                head.maximum_axis_speed_rad_s,
+                head.maximum_axis_acceleration_rad_s2,
+            ];
+            if scalars.iter().any(|x| !x.is_finite() || *x <= 0.0)
+                || head
+                    .target_world_m
+                    .iter()
+                    .chain(head.mount_offset_world_m.iter())
+                    .any(|x| !x.is_finite())
+                || [head.view_direction_world, head.image_long_axis_world]
+                    .iter()
+                    .any(|v| v.iter().any(|x| !x.is_finite()) || (norm(*v) - 1.0).abs() > 1.0e-6)
+                || head
+                    .view_direction_world
+                    .iter()
+                    .zip(head.image_long_axis_world)
+                    .map(|(a, b)| a * b)
+                    .sum::<f64>()
+                    .abs()
+                    > 1.0e-6
+                || head.minimum_axis_correction_rad > head.axis_convergence_rad
+                || head.axis_convergence_rad
+                    >= self
+                        .grasp
+                        .maximum_axis_error_rad
+                        .min(self.contact.seat_axis_tolerance_rad)
+                || head.maximum_axis_correction_rad < head.axis_convergence_rad
+                || head.maximum_axis_capture_error_rad < head.maximum_axis_correction_rad
+                || head.maximum_axis_capture_error_rad > 0.25
+                || norm(self.coupon.initial_socket_error_m) > head.surveyed_socket_position_bound_m
+                || (self.coupon.initial_socket_axis_tilt_rad[0].cos()
+                    * self.coupon.initial_socket_axis_tilt_rad[1].cos())
+                .clamp(-1.0, 1.0)
+                .acos()
+                    > head.surveyed_socket_axis_bound_rad
+                || head.transfer_standoff_m
+                    < self.motion.insert_approach_distance_m + self.motion.maximum_correction_m
+                || head.body_radius_m >= 0.25 * self.optics.camera_projector_baseline_m
+            {
+                return fail("invalid fixed-head geometry or axis-control limits");
+            }
         }
         if self.id.trim().is_empty()
             || self.machine_config_id.trim().is_empty()

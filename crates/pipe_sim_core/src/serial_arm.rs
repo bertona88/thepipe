@@ -275,6 +275,14 @@ pub struct ToolPositionSolution {
     pub position_error_m: f64,
 }
 
+/// Position and directed tool axis; roll is deliberately not constrained.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolAxisSolution {
+    pub positions: SerialJointPositions,
+    pub position_error_m: f64,
+    pub axis_error_rad: f64,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SerialArmKinematics {
     /// Frame fixed to the mobile base, +Z pointing radially inward.
@@ -300,6 +308,124 @@ pub struct SerialArm {
 }
 
 impl SerialArm {
+    /// Bounded deterministic local 5-DoF IK. Rail Z is scaled by the arm's
+    /// reach so the least-squares system is dimensionless. Every trial is
+    /// clamped to physical limits, backtracked, and checked with independent
+    /// FK residuals. Failure never returns a best-effort pose. Wrist roll is
+    /// preserved; no roll measurement is invented from an axis constraint.
+    pub fn solve_tool_axis(
+        &self,
+        target_position_world_m: Vec3,
+        target_axis_world: Vec3,
+        seed: SerialJointPositions,
+    ) -> Result<ToolAxisSolution, ToolPositionIkError> {
+        if !target_position_world_m.is_finite()
+            || !target_axis_world.is_finite()
+            || !seed.is_finite()
+            || (target_axis_world.length() - 1.0).abs() > 1.0e-6
+        {
+            return Err(ToolPositionIkError::NonFiniteTarget);
+        }
+        // Admission allows small unit-length roundoff. Solve for direction,
+        // otherwise an accepted norm error can exceed the final IK residual.
+        let target_axis_world = target_axis_world / target_axis_world.length();
+        let length_scale = self.config.maximum_reach_m();
+        let point_seed = self
+            .solve_tool_position(target_position_world_m, seed)
+            .map(|solution| solution.positions)
+            .unwrap_or(seed);
+        let coordinates = |p: SerialJointPositions| {
+            [
+                p.base_z_m / length_scale,
+                p.base_theta_rad,
+                p.shoulder_yaw_rad,
+                p.shoulder_pitch_rad,
+                p.elbow_pitch_rad,
+            ]
+        };
+        let positions = |q: [f64; 5]| {
+            self.config.clamp_positions(SerialJointPositions {
+                base_z_m: q[0] * length_scale,
+                base_theta_rad: q[1],
+                shoulder_yaw_rad: q[2],
+                shoulder_pitch_rad: q[3],
+                elbow_pitch_rad: q[4],
+                wrist_roll_rad: seed.wrist_roll_rad,
+            })
+        };
+        let residual = |q: [f64; 5]| {
+            let mut candidate = self.clone();
+            candidate
+                .set_positions(positions(q))
+                .expect("finite IK trial");
+            let pose = candidate.forward_kinematics().tool_pose;
+            let p = (target_position_world_m - pose.translation) / length_scale;
+            let a = target_axis_world - pose.transform_vector(Vec3::Z);
+            [p.x, p.y, p.z, a.x, a.y, a.z]
+        };
+        let cost = |r: [f64; 6]| r.iter().map(|x| x * x).sum::<f64>();
+        for initial in [seed, point_seed] {
+            let mut q = coordinates(initial);
+            for _ in 0..100 {
+                let r = residual(q);
+                let position_error_m =
+                    (r[0] * r[0] + r[1] * r[1] + r[2] * r[2]).sqrt() * length_scale;
+                let axis_chord = (r[3] * r[3] + r[4] * r[4] + r[5] * r[5]).sqrt();
+                if position_error_m <= 1.0e-9 && axis_chord <= 1.0e-7 {
+                    return Ok(ToolAxisSolution {
+                        positions: positions(q),
+                        position_error_m,
+                        axis_error_rad: 2.0 * (0.5 * axis_chord).clamp(0.0, 1.0).asin(),
+                    });
+                }
+                let mut jacobian = [[0.0; 5]; 6];
+                for column in 0..5 {
+                    let mut plus = q;
+                    let mut minus = q;
+                    plus[column] += 1.0e-5;
+                    minus[column] -= 1.0e-5;
+                    let rp = residual(plus);
+                    let rm = residual(minus);
+                    for row in 0..6 {
+                        jacobian[row][column] = (rp[row] - rm[row]) / 2.0e-5;
+                    }
+                }
+                let mut normal = [[0.0; 6]; 5];
+                for i in 0..5 {
+                    for j in 0..5 {
+                        normal[i][j] = (0..6).map(|k| jacobian[k][i] * jacobian[k][j]).sum::<f64>()
+                            + if i == j { 1.0e-8 } else { 0.0 };
+                    }
+                    normal[i][5] = -(0..6).map(|k| jacobian[k][i] * r[k]).sum::<f64>();
+                }
+                let Some(mut step) = solve_ik_system(normal) else {
+                    break;
+                };
+                let largest = step.iter().copied().map(f64::abs).fold(0.0, f64::max);
+                if largest > 0.15 {
+                    for value in &mut step {
+                        *value *= 0.15 / largest;
+                    }
+                }
+                let mut accepted = false;
+                for backtrack in 0..12 {
+                    let gain = 0.5_f64.powi(backtrack);
+                    let trial =
+                        coordinates(positions(core::array::from_fn(|i| q[i] + gain * step[i])));
+                    if cost(residual(trial)) < cost(r) {
+                        q = trial;
+                        accepted = true;
+                        break;
+                    }
+                }
+                if !accepted {
+                    break;
+                }
+            }
+        }
+        Err(ToolPositionIkError::Unreachable)
+    }
+
     pub fn new(config: SerialArmConfig) -> Result<Self, SerialArmError> {
         if !config.is_valid() {
             return Err(SerialArmError::InvalidConfig);
@@ -541,6 +667,33 @@ fn wrap_pi(angle_rad: f64) -> f64 {
     (angle_rad + core::f64::consts::PI).rem_euclid(two_pi) - core::f64::consts::PI
 }
 
+fn solve_ik_system(mut rows: [[f64; 6]; 5]) -> Option<[f64; 5]> {
+    for column in 0..5 {
+        let pivot =
+            (column..5).max_by(|a, b| rows[*a][column].abs().total_cmp(&rows[*b][column].abs()))?;
+        rows.swap(column, pivot);
+        let divisor = rows[column][column];
+        if !divisor.is_finite() || divisor.abs() < 1.0e-14 {
+            return None;
+        }
+        for value in &mut rows[column][column..] {
+            *value /= divisor;
+        }
+        let pivot_row = rows[column];
+        for (i, row) in rows.iter_mut().enumerate() {
+            if i == column {
+                continue;
+            }
+            let factor = row[column];
+            for (value, pivot_value) in row[column..].iter_mut().zip(&pivot_row[column..]) {
+                *value -= factor * pivot_value;
+            }
+        }
+    }
+    let result = core::array::from_fn(|i| rows[i][5]);
+    result.iter().all(|x| x.is_finite()).then_some(result)
+}
+
 fn capsule_between(a: Vec3, b: Vec3, radius_m: f64) -> (Pose, Shape) {
     let delta = b - a;
     let length = delta.length();
@@ -562,6 +715,80 @@ mod tests {
 
     fn close(a: Vec3, b: Vec3) {
         assert!((a - b).length() < 1.0e-10, "{a:?} != {b:?}");
+    }
+
+    #[test]
+    fn axis_ik_reaches_generated_poses_and_preserves_unconstrained_roll() {
+        let mut arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        let seed = arm
+            .solve_tool_position(Vec3::new(0.020, 0.0, 0.0), arm.positions)
+            .unwrap()
+            .positions;
+        arm.set_positions(seed).unwrap();
+        for sign in [-1.0, 1.0] {
+            let target_joints = SerialJointPositions {
+                base_z_m: seed.base_z_m + sign * 0.0001,
+                base_theta_rad: sign * 0.012,
+                shoulder_yaw_rad: sign * 0.025,
+                shoulder_pitch_rad: seed.shoulder_pitch_rad + sign * 0.03,
+                elbow_pitch_rad: seed.elbow_pitch_rad - sign * 0.02,
+                wrist_roll_rad: 0.7,
+            };
+            let mut reference = arm.clone();
+            reference.set_positions(target_joints).unwrap();
+            let target = reference.forward_kinematics().tool_pose;
+            let solution = arm
+                .solve_tool_axis(target.translation, target.transform_vector(Vec3::Z), seed)
+                .unwrap();
+            let replay = arm
+                .solve_tool_axis(target.translation, target.transform_vector(Vec3::Z), seed)
+                .unwrap();
+            assert_eq!(solution, replay);
+            assert_eq!(solution.positions.wrist_roll_rad, seed.wrist_roll_rad);
+            let mut executed = arm.clone();
+            executed.set_positions(solution.positions).unwrap();
+            let pose = executed.forward_kinematics().tool_pose;
+            assert!((pose.translation - target.translation).length() < 1.0e-9);
+            assert!(
+                (pose.transform_vector(Vec3::Z) - target.transform_vector(Vec3::Z)).length()
+                    < 1.0e-7
+            );
+        }
+    }
+
+    #[test]
+    fn axis_ik_accepts_unit_length_roundoff_within_command_tolerance() {
+        let arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        let pose = arm.forward_kinematics().tool_pose;
+        for scale in [1.0 - 5.0e-7, 1.0 + 5.0e-7] {
+            let solution = arm
+                .solve_tool_axis(
+                    pose.translation,
+                    pose.transform_vector(Vec3::Z) * scale,
+                    arm.positions,
+                )
+                .unwrap();
+            assert!(solution.position_error_m <= 1.0e-9);
+            assert!(solution.axis_error_rad <= 1.0e-7);
+        }
+    }
+
+    #[test]
+    fn axis_ik_refuses_invalid_and_unreachable_constraints() {
+        let arm = SerialArm::new(SerialArmConfig::default()).unwrap();
+        for axis in [Vec3::ZERO, Vec3::Z * 2.0, Vec3::new(f64::NAN, 0.0, 1.0)] {
+            assert!(arm
+                .solve_tool_axis(Vec3::new(0.02, 0.0, 0.0), axis, arm.positions)
+                .is_err());
+        }
+        assert!(arm
+            .solve_tool_axis(Vec3::new(0.5, 0.0, 0.0), Vec3::Z, arm.positions)
+            .is_err());
+        let mut limited = arm.clone();
+        limited.config.joint_limits_rad = [[0.0, 0.0]; 4];
+        assert!(limited
+            .solve_tool_axis(Vec3::new(0.02, 0.0, 0.0), Vec3::Z, limited.positions)
+            .is_err());
     }
 
     #[test]

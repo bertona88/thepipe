@@ -6,6 +6,57 @@
 
 use serde::Serialize;
 
+/// A pure observed-axis correction. All vectors are directed unit axes; the
+/// minimum rotation is applied to command intent, never to a latent pose.
+pub fn bounded_axis_correction(
+    moving: [f64; 3],
+    target: [f64; 3],
+    commanded: [f64; 3],
+    convergence_rad: f64,
+    maximum_step_rad: f64,
+    capture_limit_rad: f64,
+) -> Result<Option<[f64; 3]>, &'static str> {
+    if [moving, target, commanded]
+        .iter()
+        .any(|v| v.iter().any(|x| !x.is_finite()) || (norm(*v) - 1.0).abs() > 1.0e-6)
+        || [convergence_rad, maximum_step_rad, capture_limit_rad]
+            .iter()
+            .any(|x| !x.is_finite() || *x <= 0.0)
+        || maximum_step_rad < convergence_rad
+        || capture_limit_rad < maximum_step_rad
+    {
+        return Err("invalid_axis_correction_geometry");
+    }
+    let angle = axis_angle(moving, target);
+    if angle > capture_limit_rad {
+        return Err("axis_outside_capture_envelope");
+    }
+    if angle <= convergence_rad {
+        return Ok(None);
+    }
+    let rotation_axis = [
+        moving[1] * target[2] - moving[2] * target[1],
+        moving[2] * target[0] - moving[0] * target[2],
+        moving[0] * target[1] - moving[1] * target[0],
+    ];
+    let axis_length = norm(rotation_axis);
+    if axis_length < 1.0e-12 {
+        return Err("invalid_axis_correction_geometry");
+    }
+    let k = scale(rotation_axis, 1.0 / axis_length);
+    let cross = [
+        k[1] * commanded[2] - k[2] * commanded[1],
+        k[2] * commanded[0] - k[0] * commanded[2],
+        k[0] * commanded[1] - k[1] * commanded[0],
+    ];
+    let step = (0.85 * angle).min(maximum_step_rad);
+    let result = add(
+        add(scale(commanded, step.cos()), scale(cross, step.sin())),
+        scale(k, dot(k, commanded) * (1.0 - step.cos())),
+    );
+    Ok(Some(scale(result, 1.0 / norm(result))))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ControlPhase {
@@ -790,6 +841,156 @@ pub struct PlanningObstacle {
     pub center_world_m: [f64; 3],
     pub conservative_radius_m: f64,
     pub position_sigma_m: f64,
+}
+
+/// M1f's minimum-step fallback preserves the calibrated actuator floor. If
+/// gain-scaled components all quantize to zero, one full reproducible step on
+/// the largest error axis is allowed only when it strictly reduces squared
+/// observed position error. This neither lowers the floor nor widens the
+/// convergence tolerance, and the ordinary sweep guards still apply.
+pub fn decide_quantized_correction(
+    current: [f64; 3],
+    desired: [f64; 3],
+    policy: CorrectionPolicy,
+) -> CorrectionDecision {
+    let decision = decide_correction(current, desired, policy);
+    if !matches!(
+        decision,
+        CorrectionDecision::Rejected {
+            reason: "correction_below_reproducible_floor",
+            ..
+        }
+    ) {
+        return decision;
+    }
+    let error = sub(desired, current);
+    let mut largest = 0;
+    for i in 1..3 {
+        if error[i].abs() > error[largest].abs() {
+            largest = i;
+        }
+    }
+    let step = policy.minimum_reproducible_m;
+    if step <= 0.0 || step > policy.maximum_magnitude_m || 2.0 * error[largest].abs() <= step {
+        return decision;
+    }
+    let mut correction = [0.0; 3];
+    correction[largest] = step.copysign(error[largest]);
+    CorrectionDecision::Command {
+        residual_before_m: norm(error),
+        correction_world_m: correction,
+        target_world_m: add(current, correction),
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct TargetRailDatum {
+    pub center_world_m: [f64; 3],
+    pub axis_world: [f64; 3],
+    pub position_bound_m: f64,
+    pub axis_bound_rad: f64,
+    pub lateral_offset_m: f64,
+    pub radius_m: f64,
+    pub half_length_m: f64,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct AxialEnvelopeSweep {
+    pub center_world_m: [f64; 3],
+    pub axis_world: [f64; 3],
+    pub translation_world_m: [f64; 3],
+    pub center_axial_offset_m: f64,
+    pub half_length_m: f64,
+    pub radius_m: f64,
+    pub position_bound_m: f64,
+    pub axis_bound_rad: f64,
+    pub path_deviation_bound_m: f64,
+}
+
+/// Rails are enclosed by a finite annular keep-out about the measured socket
+/// axis, including every possible unobserved roll. Cylinder supports include
+/// angular uncertainty and the entire commanded angular excursion. A chord
+/// length margin covers intervals between samples, in addition to the
+/// certified FK departure from that chord; samples alone are not a proof.
+pub fn guard_target_rail_sweep(
+    sweep: AxialEnvelopeSweep,
+    rail: TargetRailDatum,
+    clearance_m: f64,
+) -> Result<(), &'static str> {
+    let nonnegative = [
+        sweep.half_length_m,
+        sweep.radius_m,
+        sweep.position_bound_m,
+        sweep.axis_bound_rad,
+        sweep.path_deviation_bound_m,
+        rail.position_bound_m,
+        rail.axis_bound_rad,
+        rail.radius_m,
+        rail.half_length_m,
+        clearance_m,
+    ];
+    if nonnegative.iter().any(|x| !x.is_finite() || *x < 0.0)
+        || !rail.lateral_offset_m.is_finite()
+        || rail.lateral_offset_m <= rail.radius_m
+        || !sweep.center_axial_offset_m.is_finite()
+        || [
+            sweep.center_world_m,
+            sweep.translation_world_m,
+            rail.center_world_m,
+        ]
+        .iter()
+        .any(|v| !all_finite(v))
+        || [sweep.axis_world, rail.axis_world]
+            .iter()
+            .any(|v| !all_finite(v) || (norm(*v) - 1.0).abs() > 1.0e-6)
+    {
+        return Err("invalid_target_rail_geometry");
+    }
+    let start = sweep.center_world_m;
+    let end = add(start, sweep.translation_world_m);
+    let pivot = norm(sub(start, rail.center_world_m)).max(norm(sub(end, rail.center_world_m)));
+    let padding = clearance_m
+        + sweep.position_bound_m
+        + rail.position_bound_m
+        + sweep.path_deviation_bound_m
+        + norm(sweep.translation_world_m) / 128.0
+        + 2.0 * pivot * (0.5 * rail.axis_bound_rad.min(core::f64::consts::PI)).sin();
+    let cone =
+        axis_angle(sweep.axis_world, rail.axis_world) + sweep.axis_bound_rad + rail.axis_bound_rad;
+    if cone >= core::f64::consts::FRAC_PI_2 {
+        return Err("target_rail_axis_uncertainty_limit");
+    }
+    // Rotate each axial endpoint about the TCP as one rigid object. Moving a
+    // bounding cylinder's centre independently of its axis double-counts the
+    // offset uncertainty and loses the known recessed front plane.
+    let low = sweep.center_axial_offset_m - sweep.half_length_m;
+    let high = sweep.center_axial_offset_m + sweep.half_length_m;
+    let support = |endpoint: f64| {
+        if endpoint >= 0.0 {
+            maximum_axial_support_over_axis_cone(endpoint, sweep.radius_m, cone)
+        } else {
+            endpoint * cone.cos() + sweep.radius_m * cone.sin()
+        }
+    };
+    let front = support(high) + padding;
+    let back = support(-low) + padding;
+    let radial_support = sweep.radius_m + low.abs().max(high.abs()) * cone.sin() + padding;
+    for i in 0..=64 {
+        let relative = sub(
+            add(start, scale(sweep.translation_world_m, i as f64 / 64.0)),
+            rail.center_world_m,
+        );
+        let axial = dot(relative, rail.axis_world);
+        let radial = norm(sub(relative, scale(rail.axis_world, axial)));
+        let rail_extent = rail.half_length_m + rail.radius_m;
+        let axial_clear = axial + front < -rail_extent || axial - back > rail_extent;
+        let radial_inside = radial + radial_support < rail.lateral_offset_m - rail.radius_m;
+        let radial_outside = radial - radial_support > rail.lateral_offset_m + rail.radius_m;
+        if !(axial_clear || radial_inside || radial_outside) {
+            return Err("target_rail_collision_risk");
+        }
+    }
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]

@@ -16,6 +16,24 @@ being mistaken for a higher-fidelity claim.
 | Gearbox article | Ideal nominal 0.10-module 12/18/24-tooth train, three shafts, housing and cover; the reported forward/reverse ratio and backlash acceptance is calculated analytically after the task loop | A modeled rotary-tool/vision measurement in the task loop, optional metrology-driven perturbation sweeps, external 2PP feasibility/cleaning/metrology and measured friction/wear/stiction data |
 | Interfaces | One headless compiled-baseline gearbox run; standalone native/WASM M1b point-motion and M1c simple-manipulation runtimes; native/WASM M1d optical co-design report; native M1e scenario/fault CLI plus a full-cycle WASM `ObservedManipulationSimulator` using the same structured decision report and controller hash; fixed-step Cartesian and phase-boundary replay; strict CLI manifest/scenario gates; and independently versioned static `SceneDescription` plus dynamic truth/estimate/commanded `SceneFrame`; the operator console renders Rust-owned poses | General direct machine-command controls, file-backed manifest loading in WASM, M1e stepwise scene visualization and browser golden comparison, batch/robustness tools, compact binary replay/telemetry, and estimator population in the general operator-console scene contract |
 
+## M1f fixed-head extension
+
+The capability table above describes the M1e baseline and legacy gearbox. Explicit
+schema-v2 scenarios now select the [M1f extension](FIXED_HEAD_MANIPULATION_M1F.md):
+fixed cell-frame macro geometry; shared optical and mechanical head/mount envelopes;
+physical target rails with observed/surveyed-datum swept guards; bounded TCP position
+and directed-axis IK through the authoritative tendon runtime; observed angular
+corrections; and segmented, reobserved transfer and retraction. A versioned 44-case
+matrix reports completion, controlled refusal, exact failure reasons, and terminal
+physical scoring. It does not establish a continuous guaranteed envelope or yield.
+
+This closes the ROI-retile and absent angular-actuation gaps for the isolated coupon.
+General orientation planning, world-frame roll control, multi-arm trajectories,
+image-derived detections, hardware timing, calibrated contact and breakable grasps
+remain open. The new camera field and burst timing are a separate modeled candidate;
+M1d precision values are not inherited. M1f accepts scenario/report schema 2 through
+the same native and WASM runtime, while M1e remains schema 1 and the default.
+
 ## Fidelity labels
 
 - **F0 geometry:** kinematics, reach, conservative collision envelopes and visibility.

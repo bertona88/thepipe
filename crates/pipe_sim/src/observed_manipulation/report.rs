@@ -125,6 +125,8 @@ pub struct DecisionRecord {
     pub near_contact: bool,
     pub command_sequence: Option<u64>,
     pub target_world_m: Option<[f64; 3]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_axis_world: Option<[f64; 3]>,
     pub relevant_estimates: Vec<EstimateView>,
     pub contact_evidence: Option<ClassifiedContactEvidence>,
 }
@@ -222,6 +224,8 @@ pub struct ObservedManipulationReport {
     pub phase: ControlPhase,
     pub terminal_reason: Option<String>,
     pub expected_outcome_observed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fixed_head: Option<super::scenario::FixedHeadConfig>,
     pub fidelity: &'static str,
     pub hardware_qualification_status: &'static str,
     pub pose_state: String,

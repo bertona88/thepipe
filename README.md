@@ -28,6 +28,7 @@ data before using it to release hardware.
 - [M1d optical/robot co-design and precision budget](docs/OPTICAL_CODESIGN_M1D.md)
 - [M1e observed-state single-arm manipulation](docs/OBSERVED_STATE_MANIPULATION_M1E.md)
 - [M1e one-arm hardware coupon qualification](docs/HARDWARE_COUPON_M1E.md)
+- [M1f fixed-head observation and position/axis control](docs/FIXED_HEAD_MANIPULATION_M1F.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -185,6 +186,30 @@ lateral / 3.4 µm depth M1d optical values and approximately 7.9 µm guarded-ins
 allocation remain modeled hypotheses. `docs/HARDWARE_COUPON_M1E.md` defines the measurements that
 must replace scenario assumptions before any precision, latency, compliance, force, or yield
 claim can refer to hardware.
+
+## M1f fixed-head position-and-axis manipulation
+
+The schema-v2 M1f coupon uses a fixed camera/projector, modeled body/mount keep-outs,
+physical socket target rails, and a compact side-by-side pickup/socket layout. The
+new authoritative position-and-axis command executes through the same tendon
+scheduler, joint limits and swept preflight. Observed minimum-rotation corrections
+align the peg axis without claiming observable roll. Transfer and retraction use
+bounded segments with stopped reacquisition; insertion and terminal Stop+hold retain
+the M1e guards.
+
+```sh
+cargo build --locked --release -p pipe_sim_cli --bin pipe-observed-manipulation
+target/release/pipe-observed-manipulation --scenario scenarios/observed_manipulation_m1f_v2.json --compact
+python3 scripts/check_m1f_robustness.py --binary target/release/pipe-observed-manipulation
+```
+
+The 44-case matrix separates completed insertions, controlled stops, and scenario
+admission refusals. It records the tested operating set and exact reasons; it does
+not estimate hardware yield. The wider fixed optical field has its own sampling,
+60 Hz pattern timing and 160 ms age budget. Hardware throughput, loaded correction
+floors, contact forces, and precision remain unqualified. See the [M1f contract](docs/FIXED_HEAD_MANIPULATION_M1F.md)
+for geometry, acceptance, interfaces and remaining fidelity limits. M1e remains the
+default regression scenario, including its explicitly declared ROI-retile shortcut.
 
 ## Safety boundary
 
