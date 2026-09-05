@@ -793,6 +793,56 @@ impl Simulation {
         Ok(())
     }
 
+    /// Acquire a body with the explicit partial axial-overlap gripper model.
+    ///
+    /// The legacy [`Self::grasp_body_serial`] path continues to require full
+    /// axial containment. This entry point is intended for a shaft or capsule
+    /// whose center is axially offset from the tool while enough material
+    /// remains between both pads. The gripper retains the supplied overlap
+    /// threshold and reapplies it on every held-contact refresh.
+    pub fn grasp_body_serial_with_partial_axial_overlap(
+        &mut self,
+        arm_id: ArmId,
+        body_id: BodyId,
+        minimum_axial_overlap_m: f64,
+    ) -> Result<(), SimulationError> {
+        if self
+            .arms
+            .iter()
+            .any(|arm| arm.gripper.held_body == Some(body_id))
+            || self
+                .serial_arms
+                .iter()
+                .any(|arm| arm.gripper.held_body == Some(body_id))
+        {
+            return Err(SimulationError::BodyAlreadyHeld);
+        }
+        let body = self
+            .body(body_id)
+            .ok_or(SimulationError::BodyNotFound)?
+            .clone();
+        if !body.enabled || body.motion == MotionType::Static {
+            return Err(SimulationError::GraspRejected);
+        }
+        let arm_index = self
+            .serial_arms
+            .binary_search_by_key(&arm_id, |arm| arm.id)
+            .map_err(|_| SimulationError::ArmNotFound)?;
+        let arm = &mut self.serial_arms[arm_index];
+        let tool_pose = arm.tool_pose();
+        let candidate = arm.gripper.evaluate_partial_axial_overlap_candidate(
+            tool_pose,
+            &body,
+            arm.gripper_config,
+            minimum_axial_overlap_m,
+        );
+        if !arm.gripper.try_grasp(candidate, arm.gripper_config) {
+            return Err(SimulationError::GraspRejected);
+        }
+        arm.held_body_local_pose = Some(tool_pose.inverse() * body.pose);
+        Ok(())
+    }
+
     pub fn release_body(&mut self, arm_id: ArmId) -> Result<Option<BodyId>, SimulationError> {
         let arm = self.arm_mut(arm_id).ok_or(SimulationError::ArmNotFound)?;
         arm.held_body_local_pose = None;
@@ -820,20 +870,21 @@ impl Simulation {
                 .binary_search_by_key(&body_id, |body| body.id)
                 .ok()
                 .map(|index| self.bodies[index].clone());
-            let retained =
-                if let (Some(body), Some(local_pose)) = (body.as_mut(), arm.held_body_local_pose) {
-                    body.pose = arm.tool_pose() * local_pose;
-                    let candidate =
-                        arm.gripper
-                            .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
-                    body.enabled
-                        && body.motion != MotionType::Static
-                        && arm
-                            .gripper
-                            .update_held_contact(candidate, arm.gripper_config)
-                } else {
-                    false
-                };
+            let retained = if let (Some(body), Some(local_pose)) =
+                (body.as_mut(), arm.held_body_local_pose)
+            {
+                body.pose = arm.tool_pose() * local_pose;
+                let candidate =
+                    arm.gripper
+                        .evaluate_held_candidate(arm.tool_pose(), body, arm.gripper_config);
+                body.enabled
+                    && body.motion != MotionType::Static
+                    && arm
+                        .gripper
+                        .update_held_contact(candidate, arm.gripper_config)
+            } else {
+                false
+            };
             if !retained {
                 arm.gripper.release();
                 arm.held_body_local_pose = None;
@@ -848,20 +899,21 @@ impl Simulation {
                 .binary_search_by_key(&body_id, |body| body.id)
                 .ok()
                 .map(|index| self.bodies[index].clone());
-            let retained =
-                if let (Some(body), Some(local_pose)) = (body.as_mut(), arm.held_body_local_pose) {
-                    body.pose = arm.tool_pose() * local_pose;
-                    let candidate =
-                        arm.gripper
-                            .evaluate_candidate(arm.tool_pose(), body, arm.gripper_config);
-                    body.enabled
-                        && body.motion != MotionType::Static
-                        && arm
-                            .gripper
-                            .update_held_contact(candidate, arm.gripper_config)
-                } else {
-                    false
-                };
+            let retained = if let (Some(body), Some(local_pose)) =
+                (body.as_mut(), arm.held_body_local_pose)
+            {
+                body.pose = arm.tool_pose() * local_pose;
+                let candidate =
+                    arm.gripper
+                        .evaluate_held_candidate(arm.tool_pose(), body, arm.gripper_config);
+                body.enabled
+                    && body.motion != MotionType::Static
+                    && arm
+                        .gripper
+                        .update_held_contact(candidate, arm.gripper_config)
+            } else {
+                false
+            };
             if !retained {
                 arm.gripper.release();
                 arm.held_body_local_pose = None;
@@ -1485,6 +1537,76 @@ mod tests {
         assert_eq!(
             simulation.serial_arm(ArmId(1)).unwrap().gripper.held_body,
             Some(BodyId(7))
+        );
+    }
+
+    #[test]
+    fn serial_partial_axial_grasp_is_opt_in_and_persists_across_steps() {
+        let gripper_config = GripperConfig {
+            jaw_half_extents_m: Vec3::new(100.0e-6, 250.0e-6, 200.0e-6),
+            ..GripperConfig::default()
+        };
+        let arm = SerialArm::new(crate::serial_arm::SerialArmConfig::default()).unwrap();
+        let arm = SerialArmInstance::new(ArmId(1), arm, gripper_config).unwrap();
+        let mut simulation = Simulation::new(SimulationConfig {
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        simulation.add_serial_arm(arm).unwrap();
+        let tool_pose = simulation.serial_arm(ArmId(1)).unwrap().tool_pose();
+        let body_local_pose = Pose::new(Vec3::Z * 0.75e-3, Quat::from_axis_angle(Vec3::Y, 0.015));
+        simulation
+            .add_body(RigidBody::new(
+                BodyId(7),
+                Shape::Capsule {
+                    radius_m: 0.2e-3,
+                    half_segment_m: 0.7e-3,
+                },
+                tool_pose * body_local_pose,
+                MotionType::Dynamic,
+            ))
+            .unwrap();
+        let gripper = &mut simulation.serial_arm_mut(ArmId(1)).unwrap().gripper;
+        gripper.opening_m = 0.38e-3;
+        gripper.command_opening_m = 0.38e-3;
+
+        assert_eq!(
+            simulation.grasp_body_serial(ArmId(1), BodyId(7)),
+            Err(SimulationError::GraspRejected)
+        );
+        simulation
+            .grasp_body_serial_with_partial_axial_overlap(
+                ArmId(1),
+                BodyId(7),
+                crate::gripper::MIN_PARTIAL_GRASP_AXIAL_OVERLAP_M,
+            )
+            .unwrap();
+        assert_eq!(
+            simulation
+                .serial_arm(ArmId(1))
+                .unwrap()
+                .gripper
+                .held_minimum_axial_overlap_m,
+            Some(crate::gripper::MIN_PARTIAL_GRASP_AXIAL_OVERLAP_M)
+        );
+
+        simulation.step().unwrap();
+        assert_eq!(
+            simulation.serial_arm(ArmId(1)).unwrap().gripper.held_body,
+            Some(BodyId(7))
+        );
+        assert_eq!(
+            simulation.release_body_serial(ArmId(1)).unwrap(),
+            Some(BodyId(7))
+        );
+        assert_eq!(
+            simulation
+                .serial_arm(ArmId(1))
+                .unwrap()
+                .gripper
+                .held_minimum_axial_overlap_m,
+            None
         );
     }
 

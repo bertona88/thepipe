@@ -6,9 +6,12 @@ rigid macro metrology head, and real tools on a clamped fixture**. Do not buy or
 until that cell proves its force, travel, optical, and repeatability budgets.
 
 The current software is an F1-reduced integration scaffold. It is useful for locking interfaces,
-exercising the guarded recipe, and finding contradictions. It is not yet the normative F1
-hardware-feasibility simulator because arms do not carry the simulated parts, force and torque are
-uncalibrated surrogates, and the acceptance optics do not estimate 6D pose from CAD imagery.
+exercising guarded recipes, and finding contradictions. M1e now closes an observation/estimate/
+correction/contact loop for one modeled arm carrying a 0.40 mm calibration peg, but it is not yet
+the normative F1 hardware-feasibility simulator. The gearbox executive still does not carry parts
+through real arm trajectories, M1e observes labelled geometric features rather than detections
+from images, circular peg/socket roll is intentionally unobservable, and force/torque/compliance
+remain uncalibrated surrogates.
 
 ## 1. Freeze and measure one arm/base channel
 
@@ -56,14 +59,25 @@ contract is:
 Before hardware is frozen, select an actual camera, lens, projector/laser, wavelength, optical
 filter, and controller bandwidth. Measure intrinsics, distortion, camera/projector extrinsics,
 timestamp error, drift versus temperature, depth error versus range/incidence/material, dropout,
-and false returns through the clear tube. The acceptance controller must pause or retreat when two
-independent views cannot support its uncertainty gate.
+and false returns through the clear tube. Two independent global coupon views must validate the
+tube/world calibration. The local M1e observer is one camera/projector triangulation head with two
+calibrated rays, not two independent views; it must Stop+hold whenever its labelled feature
+geometry, covariance, age, residual, or visibility cannot support the phase gate, unless a still-
+active recovery has fresh state and a preflighted reverse corridor.
+Its executable model observes symmetric paired tool/socket targets by measured midpoint, but
+ideally retiles the head about each requested ROI without modeling an actuator, repositioning
+error/time, cables, or swept collision. The bench must qualify one rigid fixed head or separately
+survey and validate every physical head pose.
 
 The optics crate already ray-traces projector visibility, triangulation, quantization, photon/read
-noise, and covariance. M1d now propagates the same first-order geometry into a deterministic
-precision sweep and per-phase arm residual budget. The end-to-end reference run currently uses
-those rays to gate a synthetic active-feature pose sensor over sphere proxies; it is not yet a full
-image-to-CAD pose pipeline, and M1d values remain modeled until the listed coupon tests pass.
+noise, and covariance. M1d propagates the same first-order geometry into a deterministic precision
+sweep and per-phase arm residual budget. The legacy gearbox reference run uses rays only to gate a
+synthetic active-feature pose sensor over sphere proxies. M1e instead projects and triangulates
+explicit known centreline features and fits an uncertainty-bearing 5-DoF axisymmetric pose, while
+still assuming successful feature identity and omitting rendered images, transparent-wall
+refraction, and glare. Neither path is a full image-to-CAD pose pipeline, and the approximately
+3.0 µm lateral / 3.4 µm depth M1d precision and approximately 7.9 µm guarded-insertion residual
+allocation remain modeled until the M1e coupon tests pass.
 
 ## 3. Build functional tools and a repeatable coupling
 
@@ -118,23 +132,33 @@ cost more than the idealized gearbox parts.
 
 ## 6. Software gates to reach normative F1
 
-The next implementation order is:
+M1e closes the smallest useful vertical slice of the sensing/estimation/control problem: one
+feature-labelled coupon, one axisymmetric reduced estimator, one bounded arm, one guarded
+grasp/insertion sequence, and explicit injected failures. That is evidence for the architecture,
+not completion of the broader items below. The next implementation order is:
 
-1. derive runtime bodies and sensor extrinsics from the versioned manifest rather than a compiled
-   subset;
-2. couple actuator states to tendon joints, IK, arm/TCP trajectories, held-part constraints, and
-   breakable jaw/vacuum grasps;
-3. put all robot, tool, cable keep-out, fixture, and part geometry in the collision/safety query;
-4. reconstruct and fuse 3D features into timestamped 6D estimates without controller truth access;
-5. calibrate insertion force, latch signatures, mesh torque, friction, and compliance from hardware;
-6. execute the one-turn pre-cover and ten-forward/two-reverse post-cover rotary-tool tests inside
+1. run `HARDWARE_COUPON_M1E.md` on one arm, pointer/peg, socket, rigid macro head, and intended clear
+   tube material; archive raw data and replace modeled latency, bias/dropout, correction-floor,
+   hold-jitter, grasp-compliance, and insertion distributions;
+2. derive runtime bodies, feature geometry, and sensor extrinsics from the versioned manifest
+   rather than M1e/local compiled proxies;
+3. couple actuator states to constrained-orientation IK, arm/TCP trajectories, held-part
+   constraints, and calibrated breakable jaw/vacuum grasps;
+4. put all robot, tool, cable keep-out, fixture, and part geometry in the collision/safety query;
+5. extend timestamped estimation from the M1e axisymmetric coupon to roll-constrained 6D gearbox
+   parts, multiple sensors, and measured calibration correlations without controller truth access;
+6. calibrate insertion force, latch signatures, mesh torque, friction, and compliance from hardware;
+7. execute the one-turn pre-cover and ten-forward/two-reverse post-cover rotary-tool tests inside
    the task loop; and
-7. establish matching native/WASM discrete-event golden traces and measured fault tests.
+8. establish matching native/WASM discrete-event golden traces and measured fault tests.
 
 Current reports include active-part pose error, ray/uncertainty summaries, analytic clearances,
 force/torque surrogates, retries, failures, configuration hashes, and an explicit fidelity boundary.
-They do not yet include arm-driven assembly trajectories, full covariance histories, or a calibrated
-physical gearbox measurement.
+The M1e report additionally records timestamped observation and 5-DoF uncertainty/residual
+summaries, rejection outcomes, stop-and-look corrections, contact/force-proxy transitions,
+explicit truth-firewall metadata, and truth-only post-run error in a separate payload. Reports do
+not yet contain full estimator covariance/innovation histories, general arm-driven gearbox
+trajectories, calibrated physical contact measurements, or a physical gearbox measurement.
 
 ## Gate for this phase
 
@@ -146,3 +170,8 @@ names, dimensions, BREP validity, geometry hash, and per-mesh backlash contract.
 
 That software pass is permission to build and calibrate the one-arm bench—not evidence that a
 four-arm machine or 2PP gearbox is already hardware-qualified.
+
+The M1e nominal and fault-suite pass is the same kind of permission for the coupon bridge: it
+justifies running the listed bench protocol. It is not evidence that the approximately 3–8 µm
+modeled optical/control allocations, the minimum reproducible correction, the force proxy, or the
+seated tolerance have been achieved through the clear tube on hardware.
