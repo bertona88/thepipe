@@ -183,8 +183,10 @@ pub enum EstimateValidity {
     NoTargetMeasurements,
     UnknownFeature,
     NonFiniteMeasurement,
+    InvalidMeasurementConfidence,
     InvalidMeasurementCovariance,
     InvalidTimestampOrder,
+    ObservationTimestampRegression,
     MeasurementNotAvailable,
     StaleMeasurements,
     BurstSpanExceeded,
@@ -411,12 +413,27 @@ impl ObservedPoseEstimator {
     }
 
     /// Estimate an axisymmetric pose from all currently available observations.
-    /// Input order cannot affect the result.
+    /// Input order cannot affect the result. Bursts must advance beyond the
+    /// previous accepted exposures and must not predate commanded prediction.
+    /// Delayed observations are not replayed through a motion history.
     pub fn update(
         &mut self,
         controller_tick: u64,
         measurements: &[FeatureMeasurement],
     ) -> PoseEstimate {
+        if self
+            .last_state
+            .as_ref()
+            .is_some_and(|state| controller_tick < state.state_tick)
+        {
+            return self.store_invalid(invalid_report(
+                self.object_id,
+                controller_tick,
+                EstimateValidity::ObservationTimestampRegression,
+                "observation update precedes the current estimator state tick",
+                Vec::new(),
+            ));
+        }
         let mut ordered = measurements.to_vec();
         ordered.sort_by(measurement_order);
 
@@ -469,6 +486,15 @@ impl ObservedPoseEstimator {
                     controller_tick,
                     EstimateValidity::InvalidMeasurementCovariance,
                     "a target measurement covariance is non-finite or non-positive",
+                    rejected,
+                ));
+            }
+            if measurement.confidence <= 0.0 || measurement.confidence > 1.0 {
+                return self.store_invalid(invalid_report(
+                    self.object_id,
+                    controller_tick,
+                    EstimateValidity::InvalidMeasurementConfidence,
+                    "measurement confidence must lie in (0, 1]",
                     rejected,
                 ));
             }
@@ -584,6 +610,20 @@ impl ObservedPoseEstimator {
             .map(|item| item.measurement.capture_tick)
             .max()
             .expect("working is non-empty");
+        if self.last_state.as_ref().is_some_and(|state| {
+            oldest_capture_tick <= state.newest_capture_tick
+                || (state.prediction_count > 0 && oldest_capture_tick < state.state_tick)
+        }) {
+            return self.store_invalid(invalid_report_with_working(
+                self.object_id,
+                controller_tick,
+                EstimateValidity::ObservationTimestampRegression,
+                "burst reuses accepted exposures or predates commanded prediction",
+                &working,
+                rejected,
+                self.config.tick_period_s,
+            ));
+        }
         if newest_capture_tick.saturating_sub(oldest_capture_tick)
             > self.config.maximum_burst_span_ticks
         {
@@ -2144,6 +2184,92 @@ mod tests {
             serde_json::to_string(&first_report).unwrap(),
             serde_json::to_string(&second_report).unwrap()
         );
+    }
+
+    #[test]
+    fn invalid_confidence_cannot_shrink_measurement_uncertainty() {
+        for confidence in [-1.0, 0.0, 1.01, 100.0] {
+            let mut estimator =
+                ObservedPoseEstimator::new(config(), OBJECT_ID, four_feature_model()).unwrap();
+            let mut observations = nominal_measurements();
+            for observation in &mut observations {
+                observation.confidence = confidence;
+            }
+            let estimate = estimator.update(103, &observations);
+            assert_eq!(
+                estimate.validity,
+                EstimateValidity::InvalidMeasurementConfidence
+            );
+            assert!(estimate.usable_pose().is_none());
+            assert!(estimate.uncertainty.is_none());
+        }
+    }
+
+    #[test]
+    fn replayed_exposures_cannot_erase_prediction_or_restore_validity() {
+        let mut estimator =
+            ObservedPoseEstimator::new(config(), OBJECT_ID, four_feature_model()).unwrap();
+        assert!(estimator.update(103, &nominal_measurements()).is_valid());
+        let predicted = estimator.predict_commanded_translation(105, [1.0e-6, 0.0, 0.0]);
+        assert!(predicted.is_valid());
+        let mut replay = nominal_measurements();
+        for observation in &mut replay {
+            observation.available_tick = 106;
+        }
+        for tick in [106, 107] {
+            let rejected = estimator.update(tick, &replay);
+            assert_eq!(
+                rejected.validity,
+                EstimateValidity::ObservationTimestampRegression
+            );
+            assert!(rejected.usable_pose().is_none());
+            let state = estimator.last_state.as_ref().unwrap();
+            assert_eq!(Some(state.pose), predicted.pose);
+            assert_eq!(Some(state.uncertainty), predicted.uncertainty);
+            assert_eq!(state.state_tick, 105);
+        }
+        let mut fresh = nominal_measurements();
+        for observation in &mut fresh {
+            observation.capture_tick = 108;
+            observation.available_tick = 110;
+            observation.measured_point_world_m[0] += 1.0e-6;
+        }
+        assert!(estimator.update(110, &fresh).is_valid());
+    }
+
+    #[test]
+    fn delayed_new_exposures_before_motion_cannot_replace_predicted_pose() {
+        let mut estimator =
+            ObservedPoseEstimator::new(config(), OBJECT_ID, four_feature_model()).unwrap();
+        assert!(estimator.update(103, &nominal_measurements()).is_valid());
+        assert!(estimator
+            .predict_commanded_translation(105, [1.0e-6, 0.0, 0.0])
+            .is_valid());
+        let mut delayed = nominal_measurements();
+        for observation in &mut delayed {
+            observation.capture_tick = 104;
+            observation.available_tick = 106;
+        }
+        let rejected = estimator.update(106, &delayed);
+        assert_eq!(
+            rejected.validity,
+            EstimateValidity::ObservationTimestampRegression
+        );
+        assert!(rejected.usable_pose().is_none());
+    }
+
+    #[test]
+    fn observation_update_cannot_move_controller_clock_backwards() {
+        let mut estimator =
+            ObservedPoseEstimator::new(config(), OBJECT_ID, four_feature_model()).unwrap();
+        assert!(estimator.update(105, &nominal_measurements()).is_valid());
+        let rejected = estimator.update(104, &nominal_measurements());
+        assert_eq!(
+            rejected.validity,
+            EstimateValidity::ObservationTimestampRegression
+        );
+        assert!(rejected.usable_pose().is_none());
+        assert_eq!(estimator.last_state.as_ref().unwrap().state_tick, 105);
     }
 
     #[test]
