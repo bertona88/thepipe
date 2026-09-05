@@ -3,15 +3,17 @@ use std::collections::BTreeMap;
 use serde::Serialize;
 
 use super::controller::{
-    add, classify_contact_packet, decide_correction, derive_held_peg_from_tool, dot,
-    estimate_held_transform, guard_axial_grasp_overlap, guard_estimate, guard_grasp_evidence,
-    guard_jaw_socket_axial_clearance, guard_palm_peg_axial_clearance, guard_relative_estimates,
-    norm, preflight_swept_envelope, scale, sub, AxialGraspOverlapPolicy, ClassifiedContactEvidence,
-    ContactClassificationFailure, ContactClassificationPolicy, ContactState, ControlPhase,
-    CorrectionDecision, CorrectionPolicy, EstimateGate, EstimateGuardFailure, EstimateProvenance,
-    EstimateView, GraspEvidenceGate, HeldTransformEstimate, JawSocketAxialClearanceEvidence,
-    JawSocketAxialClearancePolicy, JawSocketMotionPreview, PalmPegAxialClearancePolicy,
-    RelativeEstimateUncertainty, RelativeMatingPose, SweptEnvelope, SweptPreflightFailure,
+    add, bounded_axis_correction, classify_contact_packet, decide_correction,
+    derive_held_peg_from_tool, dot, estimate_held_transform, guard_axial_grasp_overlap,
+    guard_estimate, guard_grasp_evidence, guard_jaw_socket_axial_clearance,
+    guard_palm_peg_axial_clearance, guard_relative_estimates, guard_target_rail_sweep, norm,
+    preflight_swept_envelope, scale, sub, AxialEnvelopeSweep, AxialGraspOverlapPolicy,
+    ClassifiedContactEvidence, ContactClassificationFailure, ContactClassificationPolicy,
+    ContactState, ControlPhase, CorrectionDecision, CorrectionPolicy, EstimateGate,
+    EstimateGuardFailure, EstimateProvenance, EstimateView, GraspEvidenceGate,
+    HeldTransformEstimate, JawSocketAxialClearanceEvidence, JawSocketAxialClearancePolicy,
+    JawSocketMotionPreview, PalmPegAxialClearancePolicy, RelativeEstimateUncertainty,
+    RelativeMatingPose, SweptEnvelope, SweptPreflightFailure, TargetRailDatum,
 };
 use super::estimator::{EstimateValidity, EstimatorConfig, ObservedPoseEstimator, PoseEstimate};
 use super::plant::{
@@ -416,6 +418,9 @@ impl ObservedManipulationRuntime {
                 self.scenario.estimator.grasp_position_sigma_limit_m,
                 self.scenario.estimator.axis_sigma_limit_rad,
             )?;
+            if self.correct_observed_axis(moving, target, iteration, &estimates)? {
+                continue;
+            }
             let desired = sub(
                 target.position_world_m,
                 scale(
@@ -424,7 +429,15 @@ impl ObservedManipulationRuntime {
                 ),
             );
             let policy = self.correction_policy();
-            let decision = decide_correction(moving.position_world_m, desired, policy);
+            let decision = if self.scenario.fixed_head.is_some() {
+                super::controller::decide_quantized_correction(
+                    moving.position_world_m,
+                    desired,
+                    policy,
+                )
+            } else {
+                decide_correction(moving.position_world_m, desired, policy)
+            };
             match decision {
                 CorrectionDecision::Converged { residual_m } => {
                     self.corrections.push(CorrectionIterationRecord {
@@ -536,6 +549,60 @@ impl ObservedManipulationRuntime {
             }
         }
         Err("correction_non_convergence".to_owned())
+    }
+
+    fn correct_observed_axis(
+        &mut self,
+        moving: &EstimateView,
+        target: &EstimateView,
+        iteration: u32,
+        estimates: &BTreeMap<u32, EstimateView>,
+    ) -> Result<bool, String> {
+        let Some(head) = &self.scenario.fixed_head else {
+            return Ok(false);
+        };
+        let commanded = self
+            .plant
+            .commanded_tool_axis_world()
+            .ok_or_else(|| "axis_command_state_required".to_owned())?;
+        let correction = bounded_axis_correction(
+            moving.axis_world,
+            target.axis_world,
+            commanded,
+            head.axis_convergence_rad,
+            head.maximum_axis_correction_rad,
+            head.maximum_axis_capture_error_rad,
+        )
+        .map_err(str::to_owned)?;
+        let Some(axis) = correction else {
+            return Ok(false);
+        };
+        if iteration == self.scenario.motion.maximum_correction_iterations {
+            return Err("axis_correction_non_convergence".to_owned());
+        }
+        let step = axis_angle_rad(commanded, axis);
+        if step < head.minimum_axis_correction_rad {
+            return Err("axis_correction_floor_too_large".to_owned());
+        }
+        self.plant
+            .set_axis_planning_target(axis)
+            .map_err(plant_reason)?;
+        self.record_decision("axis_correction", format!(
+            "observed axis error {:.9e} rad; bounded commanded rotation {:.9e} rad; roll unconstrained",
+            axis_angle_rad(moving.axis_world, target.axis_world), step), true,
+            None, Some(self.commanded_tool_position_world_m), estimates.values().cloned().collect(), None);
+        self.command_motion(
+            self.commanded_tool_position_world_m,
+            MotionClass::Correction,
+            true,
+            estimates.values().cloned().collect(),
+        )?;
+        self.invalidate_moving_pose_priors_before_reacquisition(
+            self.grasp_confirmed,
+            true,
+            "position-and-axis correction",
+        )?;
+        Ok(true)
     }
 
     fn perform_guarded_grasp(
@@ -698,20 +765,26 @@ impl ObservedManipulationRuntime {
         post_grasp_estimates: BTreeMap<u32, EstimateView>,
     ) -> Result<(), String> {
         let observed_peg = required_view(&post_grasp_estimates, PEG_OBJECT_ID)?;
-        let retract_distance_m = self.scenario.motion.pick_capture_start_axial_standoff_m
-            - self.scenario.grasp.tool_to_peg_axial_offset_m;
+        let retract_distance_m = self.scenario.fixed_head.as_ref().map_or(
+            self.scenario.motion.pick_capture_start_axial_standoff_m,
+            |head| head.transfer_standoff_m,
+        ) - self.scenario.grasp.tool_to_peg_axial_offset_m;
         let retract_target = sub(
             self.commanded_tool_position_world_m,
             scale(observed_peg.axis_world, retract_distance_m),
         );
         let retract_delta = sub(retract_target, self.commanded_tool_position_world_m);
-        self.command_motion(
-            retract_target,
-            MotionClass::Transit,
-            false,
-            post_grasp_estimates.values().cloned().collect(),
-        )?;
-        self.predict_after_motion(retract_delta, true)?;
+        if self.scenario.fixed_head.is_some() {
+            self.fixed_head_transfer_segments(retract_target, post_grasp_estimates)?;
+        } else {
+            self.command_motion(
+                retract_target,
+                MotionClass::Transit,
+                false,
+                post_grasp_estimates.values().cloned().collect(),
+            )?;
+            self.predict_after_motion(retract_delta, true)?;
+        }
         self.invalidate_moving_pose_priors_before_reacquisition(
             true,
             false,
@@ -779,8 +852,11 @@ impl ObservedManipulationRuntime {
         // the added axial margin keeps that unobserved motion out of the
         // socket contact region. Fresh mating-feature observations authorize
         // the subsequent local stop-and-look correction.
-        let transfer_standoff_m = self.scenario.motion.insert_approach_distance_m
-            + self.scenario.motion.maximum_correction_m;
+        let transfer_standoff_m = self.scenario.fixed_head.as_ref().map_or(
+            self.scenario.motion.insert_approach_distance_m
+                + self.scenario.motion.maximum_correction_m,
+            |head| head.transfer_standoff_m,
+        );
         let approach_target = add(
             self.scenario.coupon.socket_center_nominal_world_m,
             scale(
@@ -948,13 +1024,17 @@ impl ObservedManipulationRuntime {
             None,
         );
         self.metrics.transfer_preflight_passed = true;
-        self.command_motion(
-            approach_target,
-            MotionClass::Transit,
-            false,
-            transfer_estimates.values().cloned().collect(),
-        )?;
-        self.predict_after_motion(transfer_delta, true)?;
+        if self.scenario.fixed_head.is_some() {
+            self.fixed_head_transfer_segments(approach_target, transfer_estimates)?;
+        } else {
+            self.command_motion(
+                approach_target,
+                MotionClass::Transit,
+                false,
+                transfer_estimates.values().cloned().collect(),
+            )?;
+            self.predict_after_motion(transfer_delta, true)?;
+        }
         let propagated_peg = self
             .estimator(PEG_OBJECT_ID)?
             .last_report()
@@ -979,13 +1059,59 @@ impl ObservedManipulationRuntime {
         self.invalidate_moving_pose_priors_before_reacquisition(true, false, "socket transfer")?;
         self.record_decision(
             "begin_socket_reacquisition",
-            "translation-only plant has no calibrated axis-transition model; reset prior before fitting fresh mating features",
+            if self.scenario.fixed_head.is_some() {
+                "fresh mating features are required after transfer; command endpoints do not replace measured axes"
+            } else {
+                "translation-only plant has no calibrated axis-transition model; reset prior before fitting fresh mating features"
+            },
             false,
             None,
             None,
             Vec::new(),
             None,
         );
+        Ok(())
+    }
+
+    fn fixed_head_transfer_segments(
+        &mut self,
+        target: [f64; 3],
+        mut estimates: BTreeMap<u32, EstimateView>,
+    ) -> Result<(), String> {
+        let start = self.commanded_tool_position_world_m;
+        let full_delta = sub(target, start);
+        let segments = (norm(full_delta) / self.scenario.motion.maximum_correction_m)
+            .ceil()
+            .max(1.0) as u32;
+        if segments > 128 {
+            return Err("transfer_segment_budget_exhausted".to_owned());
+        }
+        for segment in 1..=segments {
+            let next = add(
+                start,
+                scale(full_delta, f64::from(segment) / f64::from(segments)),
+            );
+            let delta = sub(next, self.commanded_tool_position_world_m);
+            self.command_motion(
+                next,
+                MotionClass::Transit,
+                false,
+                estimates.values().cloned().collect(),
+            )?;
+            self.predict_after_motion(delta, true)?;
+            self.invalidate_moving_pose_priors_before_reacquisition(
+                true,
+                false,
+                "fixed-head transfer segment",
+            )?;
+            estimates = self.observe_required(
+                self.phase,
+                "transfer_segment",
+                next,
+                &[TOOL_OBJECT_ID, PEG_OBJECT_ID],
+                false,
+            )?;
+        }
         Ok(())
     }
 
@@ -1014,6 +1140,9 @@ impl ObservedManipulationRuntime {
                 self.scenario.estimator.insertion_position_sigma_limit_m,
                 self.scenario.estimator.axis_sigma_limit_rad,
             )?;
+            if self.correct_observed_axis(peg, socket, iteration, &estimates)? {
+                continue;
+            }
             let axis_angle = axis_angle_rad(peg.axis_world, socket.axis_world);
             if axis_angle > self.scenario.contact.seat_axis_tolerance_rad {
                 return Err("impossible_mating_axis_geometry".to_owned());
@@ -1030,7 +1159,29 @@ impl ObservedManipulationRuntime {
                 ),
                 scale(peg.axis_world, self.peg_tip_offset_m()),
             );
-            match decide_correction(peg.position_world_m, desired_peg, self.correction_policy()) {
+            let bounded_desired = if self.scenario.fixed_head.is_some() {
+                let error = sub(desired_peg, peg.position_world_m);
+                let fraction = (0.95 * self.scenario.motion.maximum_correction_m
+                    / norm(error).max(f64::EPSILON))
+                .min(1.0);
+                add(peg.position_world_m, scale(error, fraction))
+            } else {
+                desired_peg
+            };
+            let decision = if self.scenario.fixed_head.is_some() {
+                super::controller::decide_quantized_correction(
+                    peg.position_world_m,
+                    bounded_desired,
+                    self.correction_policy(),
+                )
+            } else {
+                decide_correction(
+                    peg.position_world_m,
+                    bounded_desired,
+                    self.correction_policy(),
+                )
+            };
+            match decision {
                 CorrectionDecision::Converged { residual_m } => {
                     self.corrections.push(CorrectionIterationRecord {
                         phase: self.phase,
@@ -2339,6 +2490,129 @@ impl ObservedManipulationRuntime {
                 });
             }
         }
+        if let Some(head) = &self.scenario.fixed_head {
+            let socket = socket_estimate(estimates);
+            let rail = TargetRailDatum {
+                center_world_m: socket
+                    .map_or(self.scenario.coupon.socket_center_nominal_world_m, |s| {
+                        s.position_world_m
+                    }),
+                axis_world: socket.map_or_else(
+                    || self.plant.calibrated_socket_axis_world(),
+                    |s| s.axis_world,
+                ),
+                position_bound_m: socket.map_or(head.surveyed_socket_position_bound_m, |s| {
+                    3.0 * s.position_sigma_m
+                }),
+                axis_bound_rad: socket.map_or(head.surveyed_socket_axis_bound_rad, |s| {
+                    3.0 * s.axis_sigma_rad
+                }),
+                lateral_offset_m: self.scenario.coupon.socket_fiducial_lateral_offset_m,
+                radius_m: self.scenario.coupon.socket_fiducial_radius_m,
+                half_length_m: self.scenario.coupon.socket_fiducial_axial_half_extent_m,
+            };
+            self.plant
+                .preview_arm_target_rail_clearance(target_world_m, motion_class, rail)
+                .map_err(|_| "arm_target_rail_collision_risk".to_owned())?;
+            let geometry = self.plant.jaw_socket_clearance_geometry();
+            let tool_axis = tool.map_or_else(
+                || {
+                    self.plant
+                        .commanded_tool_axis_world()
+                        .expect("fixed-head axis intent")
+                },
+                |t| t.axis_world,
+            );
+            let tool_axis_bound = if tool.is_some() {
+                3.0 * tool_axis_sigma_rad
+            } else {
+                self.scenario.motion.pick_capture_relative_axis_bound_rad
+            } + self
+                .plant
+                .preview_tool_axis_change_bound_rad(target_world_m, motion_class)
+                .map_err(plant_reason)?;
+            let tool_position_bound = 3.0 * tool_sigma_m
+                + if tool.is_none() {
+                    self.scenario.motion.pick_capture_relative_position_bound_m
+                } else {
+                    0.0
+                };
+            let tool_envelopes = [
+                (
+                    0.0,
+                    geometry.jaw_axial_half_length_m,
+                    if self.grasp_confirmed {
+                        geometry.closed_jaw_transverse_radius_m
+                    } else {
+                        geometry.open_jaw_transverse_radius_m
+                    },
+                ),
+                (
+                    0.0,
+                    geometry.side_target_forward_extent_m,
+                    geometry.side_target_transverse_radius_m,
+                ),
+                // Calibrated terminal tube ends 0.35 mm behind the TCP. Its
+                // distal collision capsule's artificial round end is excluded;
+                // the tube, jaws and side targets each have a separate bound.
+                (
+                    0.5 * (geometry.central_palm_forward_plane_tool_z_m
+                        - geometry.terminal_backing_length_m),
+                    0.5 * (geometry.terminal_backing_length_m
+                        + geometry.central_palm_forward_plane_tool_z_m),
+                    geometry.terminal_backing_radius_m * core::f64::consts::SQRT_2,
+                ),
+            ];
+            for (index, (offset, half_length, radius)) in tool_envelopes.into_iter().enumerate() {
+                guard_target_rail_sweep(
+                    AxialEnvelopeSweep {
+                        center_world_m: tool_start,
+                        axis_world: tool_axis,
+                        translation_world_m: delta,
+                        center_axial_offset_m: offset,
+                        half_length_m: half_length,
+                        radius_m: radius,
+                        position_bound_m: tool_position_bound,
+                        axis_bound_rad: tool_axis_bound,
+                        path_deviation_bound_m: tool_path_deviation_bound_m,
+                    },
+                    rail,
+                    self.scenario.safety.minimum_obstacle_clearance_m,
+                )
+                .map_err(|reason| format!("{reason}:tool_component_{index}"))?;
+            }
+            if self.grasp_confirmed {
+                let peg = estimates
+                    .iter()
+                    .find(|e| e.object_id == PEG_OBJECT_ID)
+                    .ok_or_else(|| "carried_pose_estimate_required".to_owned())?;
+                let anticipated =
+                    self.anticipated_motion_uncertainty(peg, target_world_m, motion_class)?;
+                guard_target_rail_sweep(
+                    AxialEnvelopeSweep {
+                        center_world_m: peg.position_world_m,
+                        axis_world: peg.axis_world,
+                        translation_world_m: delta,
+                        center_axial_offset_m: 0.0,
+                        half_length_m: self.scenario.coupon.peg_half_segment_m,
+                        radius_m: 0.5 * self.scenario.coupon.peg_diameter_m,
+                        position_bound_m: 3.0 * anticipated.position_sigma_m,
+                        axis_bound_rad: 3.0 * anticipated.axis_sigma_rad
+                            + commanded_tool_axis_change_bound_rad,
+                        path_deviation_bound_m: tool_path_deviation_bound_m
+                            + 2.0
+                                * self.scenario.grasp.tool_to_peg_axial_offset_m
+                                * (0.5
+                                    * commanded_tool_axis_change_bound_rad
+                                        .min(core::f64::consts::PI))
+                                .sin(),
+                    },
+                    rail,
+                    self.scenario.safety.minimum_obstacle_clearance_m,
+                )
+                .map_err(|reason| format!("{reason}:carried_peg"))?;
+            }
+        }
         if motion_class == MotionClass::Insertion || socket_estimate(estimates).is_some() {
             let tool = tool.ok_or_else(|| "tool_pose_estimate_required".to_owned())?;
             let socket = socket_estimate(estimates)
@@ -2497,10 +2771,17 @@ impl ObservedManipulationRuntime {
         self.moving_pose_reacquisition_required = true;
         self.record_decision(
             "invalidate_moving_pose_prior",
-            format!(
-                "{context}: translation/process uncertainty was propagated for motion safety, then moving TOOL{} pose priors were invalidated because point IK has no calibrated commanded-axis transition; a fresh stopped burst is mandatory",
-                if carried { "+PEG" } else { "" },
-            ),
+            if self.scenario.fixed_head.is_some() {
+                format!(
+                    "{context}: translation/process uncertainty was propagated for motion safety, then moving TOOL{} pose priors were invalidated before the next closed-loop decision; a fresh stopped burst is mandatory",
+                    if carried { "+PEG" } else { "" },
+                )
+            } else {
+                format!(
+                    "{context}: translation/process uncertainty was propagated for motion safety, then moving TOOL{} pose priors were invalidated because point IK has no calibrated commanded-axis transition; a fresh stopped burst is mandatory",
+                    if carried { "+PEG" } else { "" },
+                )
+            },
             near_contact,
             None,
             None,
@@ -2674,6 +2955,13 @@ impl ObservedManipulationRuntime {
             near_contact,
             command_sequence,
             target_world_m,
+            target_axis_world: if action == "set_tool_position_and_axis"
+                || action == "axis_correction"
+            {
+                self.plant.commanded_tool_axis_world()
+            } else {
+                None
+            },
             relevant_estimates,
             contact_evidence,
         });
@@ -2736,7 +3024,7 @@ impl ObservedManipulationRuntime {
             &gates,
         );
         ObservedManipulationReport {
-            schema_version: OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION,
+            schema_version: if self.scenario.fixed_head.is_some() { 2 } else { OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION },
             scenario_id: self.scenario.id.clone(),
             scenario_schema_version: self.scenario.schema_version,
             scenario_sha256: self.scenario_sha256.clone(),
@@ -2749,11 +3037,15 @@ impl ObservedManipulationRuntime {
             phase: self.phase,
             terminal_reason: self.terminal_reason.clone(),
             expected_outcome_observed,
-            fidelity: "F1_reduced_M1e_observed_feature_geometry_not_hardware_qualified",
+            fixed_head: self.scenario.fixed_head.clone(),
+            fidelity: if self.scenario.fixed_head.is_some() { "F1_reduced_M1f_fixed_head_axis_control_not_hardware_qualified" }
+                else { "F1_reduced_M1e_observed_feature_geometry_not_hardware_qualified" },
             hardware_qualification_status: "not_started",
             pose_state: self.scenario.pose_state.clone(),
             roll_observable: false,
-            optical_fidelity_boundary: "pinhole labelled geometric features with virtual fitted centres, opaque proxy occlusion, deterministic localization/dropout/drift, and ideal ROI head retile; no head actuator/pose error/collision model, socket target-rail mechanics bodies, images, refraction, MTF, photometric or wave optics",
+            optical_fidelity_boundary: if self.scenario.fixed_head.is_some() {
+                "fixed surveyed camera/projector and opaque body/mount/target-rail proxies; labelled geometric features with localization/dropout/drift; no images, refraction, MTF, detector ambiguity or hardware qualification"
+            } else { "pinhole labelled geometric features with virtual fitted centres, opaque proxy occlusion, deterministic localization/dropout/drift, and ideal ROI head retile; no head actuator/pose error/collision model, socket target-rail mechanics bodies, images, refraction, MTF, photometric or wave optics" },
             contact_fidelity_boundary: "raw pad/contact channels plus controller-classified observed mating geometry and an uncalibrated compliance/force proxy; no identified friction or contact dynamics",
             attachment_fidelity_boundary: "guarded acquisition followed by uncertain kinematic attachment; no breakable grasp dynamics",
             truth_firewall: TruthFirewallReport::default(),
@@ -2816,7 +3108,31 @@ impl ObservedManipulationRuntime {
             ControlPhase::Retreat,
         ];
         let phase_uncertainty_passed = !self.uncertainty_guards.is_empty()
-            && self.uncertainty_guards.iter().all(|guard| guard.passed)
+            && self.uncertainty_guards.iter().all(|guard| {
+                guard.passed
+                    || (self.scenario.fixed_head.is_some()
+                        && self
+                            .uncertainty_guards
+                            .iter()
+                            .find(|later| {
+                                later.sequence > guard.sequence
+                                    && later.phase == guard.phase
+                                    && later.kind == guard.kind
+                                    && later.object_ids == guard.object_ids
+                                    && later.passed
+                            })
+                            .is_some_and(|recovered| {
+                                !self.decisions.iter().any(|decision| {
+                                    decision.tick >= guard.tick
+                                        && decision.tick < recovered.tick
+                                        && decision.command_sequence.is_some()
+                                        && !matches!(
+                                            decision.action,
+                                            "hold_and_settle" | "fail_closed_hold"
+                                        )
+                                })
+                            }))
+            })
             && required_uncertainty_phases.iter().all(|phase| {
                 self.uncertainty_guards
                     .iter()
@@ -2870,12 +3186,21 @@ impl ObservedManipulationRuntime {
                 "estimator_phase_uncertainty",
                 nominal,
                 phase_uncertainty_passed,
-                format!(
-                    "all_per_phase_guards={phase_uncertainty_passed}; guard_count={}; accepted_position_sigma_max={:.9e} m; accepted_axis_sigma_max={:.9e} rad",
-                    self.uncertainty_guards.len(),
-                    self.metrics.maximum_accepted_position_sigma_m,
-                    self.metrics.maximum_accepted_axis_sigma_rad,
-                ),
+                if self.scenario.fixed_head.is_some() {
+                    format!(
+                        "all_phase_decisions_guarded={phase_uncertainty_passed}; rejected_bursts_require_stopped_reacquisition; guard_count={}; accepted_position_sigma_max={:.9e} m; accepted_axis_sigma_max={:.9e} rad",
+                        self.uncertainty_guards.len(),
+                        self.metrics.maximum_accepted_position_sigma_m,
+                        self.metrics.maximum_accepted_axis_sigma_rad,
+                    )
+                } else {
+                    format!(
+                        "all_per_phase_guards={phase_uncertainty_passed}; guard_count={}; accepted_position_sigma_max={:.9e} m; accepted_axis_sigma_max={:.9e} rad",
+                        self.uncertainty_guards.len(),
+                        self.metrics.maximum_accepted_position_sigma_m,
+                        self.metrics.maximum_accepted_axis_sigma_rad,
+                    )
+                },
             ),
             nominal_gate(
                 "correction_convergence",

@@ -1,0 +1,565 @@
+{
+  "schema_version": 1,
+  "baseline_scenario": "observed_manipulation_m1f_v2.json",
+  "minimum_completed_grid_cases": 15,
+  "interpretation": "Deterministic modeled test grid, not a statistical yield estimate or a certified continuous operating envelope. Explore cases may complete or safely refuse; every refusal retains its exact reason. Required nominal and injected-fault outcomes are acceptance gates.",
+  "cases": [
+    {
+      "id": "nominal",
+      "expect": "complete",
+      "patch": {},
+      "replay": true
+    },
+    {
+      "id": "grid_s0_offset-10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset-10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset-10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+0_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+0_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+0_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s0_offset+10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685525,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset-10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset-10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset-10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+0_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+0_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+0_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s1_offset+10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685526,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset-10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset-10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset-10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          5.4999999999999995e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+0_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+0_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+0_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          6.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+10_tilt-1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          -0.028,
+          0.024
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+10_tilt+0",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.0,
+          -0.0
+        ]
+      }
+    },
+    {
+      "id": "grid_s2_offset+10_tilt+1",
+      "expect": "explore",
+      "patch": {
+        "seed": 5785240692322685527,
+        "coupon.initial_peg_error_m": [
+          7.5e-05,
+          -4.5e-05,
+          3e-05
+        ],
+        "coupon.initial_socket_axis_tilt_rad": [
+          0.028,
+          -0.024
+        ]
+      }
+    },
+    {
+      "id": "backlash_0",
+      "expect": "explore",
+      "patch": {
+        "motion.differential_backlash_m": 0
+      }
+    },
+    {
+      "id": "backlash_1",
+      "expect": "explore",
+      "patch": {
+        "motion.differential_backlash_m": 9e-06
+      }
+    },
+    {
+      "id": "backlash_2",
+      "expect": "invalid_scenario",
+      "patch": {
+        "motion.differential_backlash_m": 3.6e-05
+      }
+    },
+    {
+      "id": "backlash_3",
+      "expect": "invalid_scenario",
+      "patch": {
+        "motion.differential_backlash_m": 7.2e-05
+      }
+    },
+    {
+      "id": "bias_0",
+      "expect": "explore",
+      "patch": {
+        "optics.calibration_bias_m": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "bias_1",
+      "expect": "explore",
+      "patch": {
+        "optics.calibration_bias_m": [
+          2e-06,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "bias_2",
+      "expect": "explore",
+      "patch": {
+        "optics.calibration_bias_m": [
+          6e-06,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "latency_0",
+      "expect": "explore",
+      "patch": {
+        "optics.processing_latency_s": 0
+      }
+    },
+    {
+      "id": "latency_1",
+      "expect": "explore",
+      "patch": {
+        "optics.processing_latency_s": 0.01
+      }
+    },
+    {
+      "id": "latency_2",
+      "expect": "explore",
+      "patch": {
+        "optics.processing_latency_s": 0.04
+      }
+    },
+    {
+      "id": "latency_3",
+      "expect": "explore",
+      "patch": {
+        "optics.processing_latency_s": 0.1
+      }
+    },
+    {
+      "id": "optical_dropout",
+      "fault": "optical_dropout",
+      "expect": "optical_dropout",
+      "patch": {}
+    },
+    {
+      "id": "excessive_calibration_bias",
+      "fault": "excessive_calibration_bias",
+      "expect": "excessive_calibration_bias",
+      "patch": {}
+    },
+    {
+      "id": "stale_observation",
+      "fault": "stale_observation",
+      "expect": "stale_measurement",
+      "patch": {}
+    },
+    {
+      "id": "occluded_mating_feature",
+      "fault": "occluded_mating_feature",
+      "expect": "required_mating_feature_occluded",
+      "patch": {}
+    },
+    {
+      "id": "correction_floor_too_large",
+      "fault": "correction_floor_too_large",
+      "expect": "correction_floor_too_large",
+      "patch": {}
+    }
+  ]
+}

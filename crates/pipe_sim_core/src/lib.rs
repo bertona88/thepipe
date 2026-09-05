@@ -41,8 +41,8 @@ pub use machine::{
 pub use math::{Mat3, Pose, Quat, Vec3};
 pub use serial_arm::{
     SerialArm, SerialArmConfig, SerialArmError, SerialArmKinematics, SerialJointPositions,
-    TendonJointConfig, TendonJointTelemetry, ToolPositionIkError, ToolPositionSolution,
-    TENDON_JOINT_COUNT,
+    TendonJointConfig, TendonJointTelemetry, ToolAxisSolution, ToolPositionIkError,
+    ToolPositionSolution, TENDON_JOINT_COUNT,
 };
 pub use simulation::{serial_arm_link_body_id, SERIAL_ARM_COLLISION_BODY_ID_BASE};
 pub use simulation::{

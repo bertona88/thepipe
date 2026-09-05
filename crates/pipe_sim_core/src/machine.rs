@@ -283,6 +283,12 @@ pub enum MachineCommand {
         manipulator: ManipulatorId,
         target_position_world_m: Vec3,
     },
+    /// M1f position plus directed local-Z axis. Roll remains unconstrained.
+    SetToolAxisTarget {
+        manipulator: ManipulatorId,
+        target_position_world_m: Vec3,
+        target_axis_world: Vec3,
+    },
     SetGripperOpening {
         manipulator: ManipulatorId,
         target_opening_m: f64,
@@ -298,6 +304,7 @@ impl MachineCommand {
             | Self::MoveCarriageTheta { manipulator, .. }
             | Self::SetJointTargets { manipulator, .. }
             | Self::SetToolPoseTarget { manipulator, .. }
+            | Self::SetToolAxisTarget { manipulator, .. }
             | Self::SetGripperOpening { manipulator, .. } => Some(manipulator),
             Self::Stop { manipulator } => manipulator,
         }
@@ -331,6 +338,7 @@ pub enum ToolMotionStatus {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ToolMotionPlan {
     pub target_position_world_m: Vec3,
+    pub target_axis_world: Option<Vec3>,
     pub start: SerialJointPositions,
     pub goal: SerialJointPositions,
     pub duration_s: f64,
@@ -375,6 +383,7 @@ impl ToolMotionPlan {
         };
         Self {
             target_position_world_m,
+            target_axis_world: None,
             start,
             goal,
             duration_s,
@@ -514,6 +523,19 @@ impl ManipulatorMotionState {
                     Ok(())
                 }
             }
+            MachineCommand::SetToolAxisTarget {
+                target_position_world_m,
+                target_axis_world,
+                ..
+            } => {
+                if !target_position_world_m.is_finite() || !target_axis_world.is_finite() {
+                    Err(MachineCommandError::NonFiniteTarget)
+                } else if (target_axis_world.length() - 1.0).abs() > 1.0e-6 {
+                    Err(MachineCommandError::TargetOutOfRange)
+                } else {
+                    Ok(())
+                }
+            }
             MachineCommand::SetToolPoseTarget {
                 target_position_world_m,
                 ..
@@ -560,8 +582,9 @@ impl ManipulatorMotionState {
                 self.joint_targets_rad = target_rad;
                 self.stopped = false;
             }
-            MachineCommand::SetToolPoseTarget { .. } | MachineCommand::SetGripperOpening { .. } => {
-            }
+            MachineCommand::SetToolPoseTarget { .. }
+            | MachineCommand::SetToolAxisTarget { .. }
+            | MachineCommand::SetGripperOpening { .. } => {}
             MachineCommand::Stop { .. } => self.stop(),
         }
     }

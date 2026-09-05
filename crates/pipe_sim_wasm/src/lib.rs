@@ -368,6 +368,13 @@ pub fn observed_manipulation_scenario_schema_version() -> u32 {
     M1E_SCENARIO_SCHEMA_VERSION
 }
 
+/// The historical singular getters describe the default M1e adapter. Explicit
+/// scenario JSON can select M1f; both scenario and report versions are listed.
+#[wasm_bindgen(js_name = observedManipulationSupportedSchemaVersionsJson)]
+pub fn observed_manipulation_supported_schema_versions_json() -> String {
+    "{\"scenario\":[1,2],\"report\":[1,2]}".to_owned()
+}
+
 #[wasm_bindgen(js_name = availableObservedManipulationFaultsJson)]
 pub fn available_observed_manipulation_faults_json() -> String {
     let values = M1eFault::available()

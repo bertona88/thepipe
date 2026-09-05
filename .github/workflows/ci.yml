@@ -40,6 +40,9 @@ jobs:
       - run: cargo run --locked -p pipe_sim_cli --bin pipe-observed-manipulation -- --scenario scenarios/observed_manipulation_m1e_v1.json --compact > out/m1e_observed_state.json
       - run: cargo run --locked -p pipe_sim_cli --bin pipe-observed-manipulation -- --scenario scenarios/observed_manipulation_m1e_v1.json --compact > out/m1e_observed_state_replay.json
       - run: cmp out/m1e_observed_state.json out/m1e_observed_state_replay.json
+      - run: cargo build --locked --release -p pipe_sim_cli --bin pipe-observed-manipulation
+      - run: target/release/pipe-observed-manipulation --scenario scenarios/observed_manipulation_m1f_v2.json --compact > out/m1f_observed_state.json
+      - run: python3 scripts/check_m1f_robustness.py --binary target/release/pipe-observed-manipulation --report out/m1f_robustness.json
       - uses: actions/upload-artifact@v7
         with:
           name: acceptance-report
@@ -49,6 +52,8 @@ jobs:
             out/m1d_optical_codesign.json
             out/m1e_observed_state.json
             out/m1e_observed_state_replay.json
+            out/m1f_observed_state.json
+            out/m1f_robustness.json
 
   cad:
     runs-on: ubuntu-latest
