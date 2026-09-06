@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "m1g_stationary_handoff_packet_coupon_v1",
+  "machine_config_id": "pipe_machine_m1e_coupon_v1",
+  "seed": 41,
+  "peg_radius_m": 0.0002,
+  "peg_half_segment_m": 0.0025,
+  "tool_to_peg_center_m": 0.0024,
+  "minimum_axial_overlap_m": 0.0001,
+  "closed_opening_m": 0.00039,
+  "measurement_sigma_m": 0.0000005,
+  "measurement_latency_ticks": 20,
+  "maximum_observation_age_ticks": 150,
+  "maximum_capture_error_m": 0.00004,
+  "maximum_position_sigma_m": 0.00001,
+  "maximum_axis_sigma_rad": 0.01,
+  "maximum_axis_error_rad": 0.05,
+  "minimum_force_n": 0.002,
+  "maximum_force_n": 0.15
+}

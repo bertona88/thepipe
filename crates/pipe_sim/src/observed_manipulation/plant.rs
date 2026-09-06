@@ -471,13 +471,26 @@ impl ObservedPlant {
         })
     }
 
-    pub fn enable_replay(&mut self, every_ticks: u64, maximum_frames: usize) -> Result<(), SimError> {
-        if self.now_tick() != 0 || self.replay.is_some() || every_ticks == 0
-            || maximum_frames < 2 || maximum_frames > 100_000 {
-            return Err(SimError::InvalidScenario("replay requires a fresh runtime, nonzero stride, and 2..=100000 frames".into()));
+    pub fn enable_replay(
+        &mut self,
+        every_ticks: u64,
+        maximum_frames: usize,
+    ) -> Result<(), SimError> {
+        if self.now_tick() != 0
+            || self.replay.is_some()
+            || every_ticks == 0
+            || maximum_frames < 2
+            || maximum_frames > 100_000
+        {
+            return Err(SimError::InvalidScenario(
+                "replay requires a fresh runtime, nonzero stride, and 2..=100000 frames".into(),
+            ));
         }
         self.replay = Some(super::replay::ReplayRecorder {
-            every_ticks, maximum_frames, overflowed: false, frames: Vec::new(),
+            every_ticks,
+            maximum_frames,
+            overflowed: false,
+            frames: Vec::new(),
         });
         self.record_replay_sample(true);
         Ok(())
@@ -485,23 +498,40 @@ impl ObservedPlant {
 
     pub fn record_replay_sample(&mut self, force: bool) {
         let Some(recorder) = &self.replay else { return };
-        if !force && !self.now_tick().is_multiple_of(recorder.every_ticks) { return; }
+        if !force && !self.now_tick().is_multiple_of(recorder.every_ticks) {
+            return;
+        }
         let frame = super::replay::ObservedReplayFrame {
             scene: crate::scene::build_scene_frame(&self.mechanics, &self.replay_contacts),
-            bodies: self.mechanics.bodies.iter().map(|body| crate::scene::ColliderSnapshot {
-                body_id: body.id.0,
-                geometry_id: format!("body/{}", body.id.0),
-                pose: body.pose.into(), shape: body.shape.into(),
-            }).collect(),
+            bodies: self
+                .mechanics
+                .bodies
+                .iter()
+                .map(|body| crate::scene::ColliderSnapshot {
+                    body_id: body.id.0,
+                    geometry_id: format!("body/{}", body.id.0),
+                    pose: body.pose.into(),
+                    shape: body.shape.into(),
+                })
+                .collect(),
             physical_tool_pose: self.physical_tool_pose().into(),
             socket_pose: self.socket_pose.into(),
-            physical_jaws: self.active_arm().gripper.jaw_poses(self.physical_tool_pose(), self.active_arm().gripper_config)
-                .into_iter().zip(pipe_sim_core::GripperState::jaw_shapes(self.active_arm().gripper_config))
-                .enumerate().map(|(i, (pose, shape))| crate::scene::ColliderSnapshot {
+            physical_jaws: self
+                .active_arm()
+                .gripper
+                .jaw_poses(self.physical_tool_pose(), self.active_arm().gripper_config)
+                .into_iter()
+                .zip(pipe_sim_core::GripperState::jaw_shapes(
+                    self.active_arm().gripper_config,
+                ))
+                .enumerate()
+                .map(|(i, (pose, shape))| crate::scene::ColliderSnapshot {
                     body_id: 10_030 + i as u32,
                     geometry_id: format!("physical_tool/jaw/{i}"),
-                    pose: pose.into(), shape: shape.into(),
-                }).collect(),
+                    pose: pose.into(),
+                    shape: shape.into(),
+                })
+                .collect(),
             contact_packet: self.sample_contact_packet(),
             commanded_tool_position_world_m: self.commanded_tool_position_world_m,
             commanded_tool_axis_world: self.commanded_tool_axis_world,
@@ -509,16 +539,31 @@ impl ObservedPlant {
         self.replay.as_mut().expect("enabled recorder").push(frame);
     }
 
-    pub fn finish_replay(&mut self, source_revision: &str, generation_command: &str,
-        report: super::report::ObservedManipulationReport) -> Result<super::replay::ObservedReplay, SimError> {
-        if source_revision.len() != 40 || !source_revision.bytes().all(|b| b.is_ascii_hexdigit())
-            || generation_command.trim().is_empty() || report.evaluation_only_truth.is_none() {
-            return Err(SimError::InvalidScenario("replay requires a full source revision, generation command, and terminal report".into()));
+    pub fn finish_replay(
+        &mut self,
+        source_revision: &str,
+        generation_command: &str,
+        report: super::report::ObservedManipulationReport,
+    ) -> Result<super::replay::ObservedReplay, SimError> {
+        if source_revision.len() != 40
+            || !source_revision.bytes().all(|b| b.is_ascii_hexdigit())
+            || generation_command.trim().is_empty()
+            || report.evaluation_only_truth.is_none()
+        {
+            return Err(SimError::InvalidScenario(
+                "replay requires a full source revision, generation command, and terminal report"
+                    .into(),
+            ));
         }
         self.record_replay_sample(true);
-        let recorder = self.replay.as_ref().ok_or_else(|| SimError::InvalidScenario("replay was not enabled".into()))?;
+        let recorder = self
+            .replay
+            .as_ref()
+            .ok_or_else(|| SimError::InvalidScenario("replay was not enabled".into()))?;
         if recorder.overflowed {
-            return Err(SimError::InvalidScenario("replay capacity exceeded; incomplete recording is unavailable".into()));
+            return Err(SimError::InvalidScenario(
+                "replay capacity exceeded; incomplete recording is unavailable".into(),
+            ));
         }
         Ok(super::replay::ObservedReplay {
             schema_version: super::replay::OBSERVED_REPLAY_SCHEMA_VERSION,

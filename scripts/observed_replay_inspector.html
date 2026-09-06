@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:">
+<title>The Pipe — recorded engineering state</title>
+<style>
+body{font:14px system-ui;margin:20px;color:#18202b;background:#fafafa}canvas{width:32%;max-width:580px;border:1px solid #bbb;background:white}input[type=range]{width:50%}pre{white-space:pre-wrap;overflow-wrap:anywhere}label{margin-right:12px}button{margin:8px}#error{color:#b00020}#metadata{font-size:12px} .truth{color:#2469a0}.estimate{color:#208040}.command{color:#996000}
+</style>
+<h1>Recorded peg manipulation</h1>
+<p>Exact simulation samples · SI source data, plots in mm · F1 reduced model · hardware unqualified</p>
+<p class="truth">Blue: executed geometry / simulation truth. Grey: reduced collision bodies and arm envelopes.</p>
+<p><span class="estimate">Green: available controller estimates and 3σ marginal uncertainty.</span> <span class="command">Amber: commanded TCP target.</span> No pose interpolation. No rendered camera images.</p>
+<div id="error" role="alert"></div><pre id="metadata"></pre>
+<button id="previous">Previous</button><button id="play">Play samples</button><button id="next">Next</button>
+<input id="sample" aria-label="Recorded sample" type="range" min="0" value="0" step="1">
+<label>Centre <select id="centre"><option value="socket">Socket</option><option value="tool">Tool</option><option value="world">World origin</option></select></label>
+<label>Half-width <select id="width"><option value="0.08">80 mm</option><option value="0.01" selected>10 mm</option><option value="0.002">2 mm</option><option value="0.00025">250 µm</option></select></label>
+<p><label><input id="truth" type="checkbox" checked>Truth</label><label><input id="estimates" type="checkbox" checked>Estimates</label><label><input id="commands" type="checkbox" checked>Commands</label></p>
+<div><canvas width="540" height="540"></canvas> <canvas width="540" height="540"></canvas> <canvas width="540" height="540"></canvas></div>
+<pre id="state"></pre><details><summary>Latest controller decision</summary><pre id="decision"></pre></details>
+<script id="replay-data" type="application/json">__REPLAY_JSON__</script>
+<script>
+'use strict';
+const element=id=>document.getElementById(id), canvases=[...document.querySelectorAll('canvas')];
+let replay, timer=null;
+function stop(){if(timer!==null)clearInterval(timer);timer=null;element('play').textContent='Play samples';}
+function unavailable(error){stop();for(const c of canvases)c.getContext('2d').clearRect(0,0,c.width,c.height);element('state').textContent='';element('decision').textContent='';element('error').textContent='Replay unavailable: '+error.message;}
+function rotated(q,v){const [x,y,z,w]=q,[a,b,c]=v;const t=[2*(y*c-z*b),2*(z*a-x*c),2*(x*b-y*a)];return [a+w*t[0]+y*t[2]-z*t[1],b+w*t[1]+z*t[0]-x*t[2],c+w*t[2]+x*t[1]-y*t[0]];}
+const plus=(a,b)=>a.map((x,i)=>x+b[i]);
+function availableEstimates(tick){
+ const latest=new Map();for(const update of replay.report.estimator_updates){if(update.estimate.controller_tick<=tick)latest.set(update.estimate.object_id,update);}
+ const maxAge=replay.report.timing.maximum_measurement_age_s/replay.report.timing.fixed_step_s;
+ return [10001,10002,10010].map(id=>{
+  const u=latest.get(id),e=u?.estimate;
+  let reason='not observed';
+  if(e){reason=e.validity_detail;if(e.validity==='valid'&&u.accepted_by_controller&&e.pose&&e.uncertainty){
+   if(e.oldest_capture_tick===null||e.oldest_capture_tick>tick||e.state_tick>tick||e.newest_available_tick===null||e.newest_available_tick>tick)reason='inconsistent timestamp';
+   else if(tick-e.oldest_capture_tick>maxAge)reason='stale';
+   else return {id,estimate:e,kind:u.update_kind};
+  }}return {id,reason};
+ });
+}
+function draw(){try{
+ const index=Number(element('sample').value),frame=replay.frames[index];if(!frame)throw Error('missing sample');
+ const scene=frame.scene;if(!scene.truth||scene.schema_version!==1)throw Error('missing or unsupported scene');
+ const centre=element('centre').value==='socket'?frame.socket_pose.translation_m:element('centre').value==='tool'?frame.physical_tool_pose.translation_m:[0,0,0];
+ const extent=Number(element('width').value),scale=240/extent,estimates=availableEstimates(scene.tick);
+ const latestDecision=replay.report.decisions.filter(d=>d.tick<=scene.tick).at(-1);
+ const projections=[[0,1,'X / Y'],[0,2,'X / Z'],[1,2,'Y / Z']];
+ for(let i=0;i<3;i++){
+  const c=canvases[i],ctx=c.getContext('2d'),[a,b,label]=projections[i];ctx.clearRect(0,0,540,540);
+  const point=v=>[270+(v[a]-centre[a])*scale,270-(v[b]-centre[b])*scale];
+  const line=(p,q)=>{ctx.beginPath();ctx.moveTo(...point(p));ctx.lineTo(...point(q));ctx.stroke();};
+  ctx.strokeStyle='#ddd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(30,270);ctx.lineTo(510,270);ctx.moveTo(270,30);ctx.lineTo(270,510);ctx.stroke();
+  ctx.fillStyle='#18202b';ctx.font='14px monospace';ctx.fillText(label+' (mm)',15,20);ctx.fillText('centre '+(centre[a]*1000).toFixed(3)+', '+(centre[b]*1000).toFixed(3),15,520);
+  ctx.fillText('±'+(extent*1000).toFixed(3)+' mm',390,520);
+  function collider(body,color){const {shape,pose}=body;ctx.strokeStyle=color;ctx.lineWidth=1;
+   if(shape.kind==='box'){
+    const vertices=Array.from({length:8},(_,j)=>plus(pose.translation_m,rotated(pose.rotation_xyzw,shape.half_extents_m.map((v,k)=>(j&(1<<k))?v:-v))));
+    for(let j=0;j<8;j++)for(let k=0;k<3;k++)if(!(j&(1<<k)))line(vertices[j],vertices[j|(1<<k)]);
+   }else if(shape.kind==='sphere'||shape.kind==='capsule'){
+    const half=shape.half_segment_m??0,offset=rotated(pose.rotation_xyzw,[0,0,half]);
+    const p=point(plus(pose.translation_m,offset)),q=point(plus(pose.translation_m,offset.map(v=>-v)));
+    ctx.lineWidth=2*shape.radius_m*scale;ctx.lineCap='round';ctx.globalAlpha=.28;ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke();
+    if(half===0){ctx.fillStyle=color;ctx.beginPath();ctx.arc(...p,shape.radius_m*scale,0,2*Math.PI);ctx.fill();}ctx.globalAlpha=1;ctx.lineCap='butt';
+   }else throw Error('unsupported geometry '+shape.kind);
+  }
+  if(element('truth').checked){
+   for(const body of frame.bodies)collider(body,body.body_id===10001?'#2469a0':'#66717c');
+   for(const arm of scene.truth.manipulators)for(const link of arm.link_colliders)collider(link,'#66717c');
+   for(const jaw of frame.physical_jaws)collider(jaw,'#2469a0');
+   ctx.fillStyle='#2469a0';ctx.beginPath();ctx.arc(...point(frame.physical_tool_pose.translation_m),3,0,2*Math.PI);ctx.fill();
+  }
+  if(element('estimates').checked)for(const item of estimates){if(!item.estimate)continue;const e=item.estimate,p=point(e.pose.center_world_m);ctx.strokeStyle='#208040';ctx.lineWidth=1.5;
+   ctx.beginPath();ctx.ellipse(...p,3*e.uncertainty.center_sigma_m[a]*scale,3*e.uncertainty.center_sigma_m[b]*scale,0,0,2*Math.PI);ctx.stroke();
+   ctx.fillStyle='#208040';ctx.fillText(String(item.id),p[0]+4,p[1]-4);
+   // Axis line is a direction glyph of fixed displayed length, not object geometry.
+   const axis=e.pose.axis_world_unit;ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(p[0]+20*axis[a],p[1]-20*axis[b]);ctx.stroke();
+  }
+  if(element('commands').checked){const p=point(frame.commanded_tool_position_world_m);ctx.strokeStyle='#996000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p[0]-5,p[1]);ctx.lineTo(p[0]+5,p[1]);ctx.moveTo(p[0],p[1]-5);ctx.lineTo(p[0],p[1]+5);ctx.stroke();}
+ }
+ const packet=frame.contact_packet,held=scene.truth.rigid_bodies.find(b=>b.id===10001)?.held_by_manipulator_id;
+ const descriptions=estimates.map(({id,estimate:e,reason,kind})=>e?`${id}: ${kind}, measured age ${((scene.tick-e.oldest_capture_tick)*replay.report.timing.fixed_step_s*1000).toFixed(1)} ms; centre σ [${e.uncertainty.center_sigma_m.map(s=>(s*1e6).toFixed(2)).join(', ')}] µm; axis σ [${e.uncertainty.axis_tangent_sigma_rad.map(s=>(s*1000).toFixed(2)).join(', ')}] mrad; roll unavailable`:`${id}: unavailable (${reason})`);
+ element('state').textContent=`Sample ${index+1}/${replay.frames.length} · tick ${scene.tick} · ${scene.time_s.toFixed(3)} s\nPhase: ${latestDecision?.phase??'unavailable'} · latest action: ${latestDecision?.action??'unavailable'}\nTerminal report: ${replay.report.status}; reason: ${replay.report.terminal_reason??'none'} (applies to end of run)\nPhysical peg owner: ${held===null?'none':held??'unavailable'} · grip proxy ${packet.grip_force_proxy_n.toPrecision(5)} N · insertion proxy ${packet.insertion_force_proxy_n.toPrecision(5)} N\n${descriptions.join('\n')}\nAxis glyphs indicate direction only. Estimates remain at their reported state tick; no extrapolation. Optical target meshes are not exported.`;
+ element('decision').textContent=latestDecision?JSON.stringify(latestDecision,null,2):'unavailable';
+ }catch(error){unavailable(error);}}
+try{
+ replay=JSON.parse(element('replay-data').textContent);if(replay.schema_version!==1||!Array.isArray(replay.frames)||!replay.frames.length)throw Error('unsupported or empty replay');
+ element('metadata').textContent=`Source ${replay.source_revision}\nScenario ${replay.report.scenario_id} · ${replay.report.scenario_sha256}\nMachine ${replay.report.machine_config_id} · ${replay.report.machine_config_sha256}\nController report ${replay.report.controller_report_sha256}\nGenerated by ${replay.generation_command}\n${replay.geometry_fidelity}`;
+ element('sample').max=String(replay.frames.length-1);
+ for(const id of ['sample','centre','width','truth','estimates','commands'])element(id).addEventListener('input',draw);
+ element('previous').onclick=()=>{stop();element('sample').value=Math.max(0,Number(element('sample').value)-1);draw();};
+ element('next').onclick=()=>{stop();element('sample').value=Math.min(replay.frames.length-1,Number(element('sample').value)+1);draw();};
+ element('play').onclick=()=>{if(timer!==null){stop();return;}element('play').textContent='Pause (10 samples/s)';timer=setInterval(()=>{const next=Number(element('sample').value)+1;if(next>=replay.frames.length){stop();return;}element('sample').value=next;draw();},100);};draw();
+}catch(error){unavailable(error);}
+</script></html>

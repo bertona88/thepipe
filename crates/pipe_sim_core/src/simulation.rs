@@ -860,6 +860,73 @@ impl Simulation {
         Ok(())
     }
 
+    /// Atomic stationary ownership transfer after an observed controller authorizes
+    /// handoff. This is a kinematic reduced-model transaction, not a dual-grasp
+    /// force solver. Every fallible check precedes mutation; rejection retains
+    /// the donor and the exact body pose. Collision admission belongs to the
+    /// caller's handoff corridor, just as for standalone grasp admission.
+    pub fn handoff_body_serial(
+        &mut self,
+        donor_id: ArmId,
+        receiver_id: ArmId,
+        body_id: BodyId,
+        minimum_axial_overlap_m: f64,
+    ) -> Result<(), SimulationError> {
+        if donor_id == receiver_id { return Err(SimulationError::GraspRejected); }
+        let donor_index = self.serial_arms.binary_search_by_key(&donor_id, |arm| arm.id)
+            .map_err(|_| SimulationError::ArmNotFound)?;
+        let receiver_index = self.serial_arms.binary_search_by_key(&receiver_id, |arm| arm.id)
+            .map_err(|_| SimulationError::ArmNotFound)?;
+        let donor = &self.serial_arms[donor_index];
+        let receiver = &self.serial_arms[receiver_index];
+        if donor.gripper.held_body != Some(body_id) || receiver.gripper.held_body.is_some()
+            || self.arms.iter().any(|arm| arm.gripper.held_body == Some(body_id))
+            || self.serial_arms.iter().filter(|arm| arm.gripper.held_body == Some(body_id)).count() != 1 {
+            return Err(SimulationError::GraspRejected);
+        }
+        for arm in [donor, receiver] {
+            if !arm.gripper.opening_m.is_finite() || !arm.gripper.command_opening_m.is_finite()
+                || arm.motion.joint_targets_rad.iter().zip(arm.motion.joint_positions_rad)
+                    .any(|(target,position)| !target.is_finite() || !position.is_finite() || (target-position).abs() > 1.0e-12)
+                || (arm.motion.carriage_target.z_m-arm.motion.carriage.z_m).abs() > 1.0e-12
+                || (arm.motion.carriage_target.theta_rad-arm.motion.carriage.theta_rad).abs() > 1.0e-12
+                || arm.motion.tool_motion.is_some_and(|plan| plan.status == ToolMotionStatus::Active)
+                || arm.motion.joint_velocities_rad_s.iter().any(|v| !v.is_finite() || v.abs() > 1.0e-12)
+                || !arm.motion.carriage.z_velocity_m_s.is_finite()
+                || arm.motion.carriage.z_velocity_m_s.abs() > 1.0e-12
+                || !arm.motion.carriage.theta_velocity_rad_s.is_finite()
+                || arm.motion.carriage.theta_velocity_rad_s.abs() > 1.0e-12
+                || !arm.gripper.opening_velocity_m_s.is_finite()
+                || arm.gripper.opening_velocity_m_s.abs() > 1.0e-12
+                || (arm.gripper.command_opening_m - arm.gripper.opening_m).abs() > 1.0e-12 {
+                return Err(SimulationError::GraspRejected);
+            }
+        }
+        let body = self.body(body_id).ok_or(SimulationError::BodyNotFound)?;
+        if !body.enabled || body.motion == MotionType::Static { return Err(SimulationError::GraspRejected); }
+        // Recheck donor retention as well as receiver acquisition at this tick.
+        let donor_candidate = donor.gripper.evaluate_partial_axial_overlap_candidate(
+            donor.tool_pose(), body, donor.gripper_config, minimum_axial_overlap_m);
+        let mut donor_check = donor.gripper;
+        donor_check.release();
+        if !donor_check.try_grasp(donor_candidate, donor.gripper_config) {
+            return Err(SimulationError::GraspRejected);
+        }
+        let receiver_pose = receiver.tool_pose();
+        let candidate = receiver.gripper.evaluate_partial_axial_overlap_candidate(
+            receiver_pose, body, receiver.gripper_config, minimum_axial_overlap_m);
+        let mut receiver_gripper = receiver.gripper;
+        if !receiver_gripper.try_grasp(candidate, receiver.gripper_config) {
+            return Err(SimulationError::GraspRejected);
+        }
+        let local_pose = receiver_pose.inverse() * body.pose;
+        self.serial_arms[donor_index].gripper.release();
+        self.serial_arms[donor_index].held_body_local_pose = None;
+        self.serial_arms[receiver_index].gripper = receiver_gripper;
+        self.serial_arms[receiver_index].held_body_local_pose = Some(local_pose);
+        Ok(())
+    }
+
     pub fn release_body(&mut self, arm_id: ArmId) -> Result<Option<BodyId>, SimulationError> {
         let arm = self.arm_mut(arm_id).ok_or(SimulationError::ArmNotFound)?;
         arm.held_body_local_pose = None;

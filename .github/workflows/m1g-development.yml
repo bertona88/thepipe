@@ -21,12 +21,18 @@ jobs:
         with:
           name: m1g-format
           path: /tmp/format.patch
-      - run: cargo test --locked --release -p pipe_sim --test observed_replay
+      - run: cargo test --locked --release -p pipe_sim --test observed_replay --test stationary_handoff
       - run: cargo build --locked --release -p pipe_sim_cli
       - run: |
           mkdir -p out
           target/release/pipe-observed-replay --source-revision "$GITHUB_SHA" > out/m1f_replay.json
+          target/release/pipe-handoff > out/m1g_handoff.json
+          python3 scripts/inspect_observed_replay.py out/m1f_replay.json --validate-only
       - uses: actions/upload-artifact@v7
         with:
           name: m1g-replay
-          path: out/m1f_replay.json
+          path: |
+            out/m1f_replay.json
+            out/m1g_handoff.json
+            target/release/pipe-observed-replay
+            target/release/pipe-handoff

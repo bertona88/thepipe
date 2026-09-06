@@ -153,13 +153,22 @@ impl ObservedManipulationRuntime {
     }
 
     /// Enable evaluation-only snapshots without changing any controller input.
-    pub fn enable_replay(&mut self, sample_every_ticks: u64, maximum_frames: usize) -> Result<(), SimError> {
+    pub fn enable_replay(
+        &mut self,
+        sample_every_ticks: u64,
+        maximum_frames: usize,
+    ) -> Result<(), SimError> {
         self.plant.enable_replay(sample_every_ticks, maximum_frames)
     }
 
-    pub fn replay(&mut self, source_revision: &str, generation_command: &str) -> Result<super::replay::ObservedReplay, SimError> {
+    pub fn replay(
+        &mut self,
+        source_revision: &str,
+        generation_command: &str,
+    ) -> Result<super::replay::ObservedReplay, SimError> {
         let report = self.report();
-        self.plant.finish_replay(source_revision, generation_command, report)
+        self.plant
+            .finish_replay(source_revision, generation_command, report)
     }
 
     pub fn run_cycle(&mut self) -> Result<ObservedManipulationReport, SimError> {

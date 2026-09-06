@@ -51,7 +51,11 @@ impl ReplayRecorder {
     pub fn push(&mut self, frame: ObservedReplayFrame) {
         // At a decision tick keep the final authoritative state at that tick.
         // Every individual decision remains in the report's ordered event log.
-        if self.frames.last().is_some_and(|last| last.scene.tick == frame.scene.tick) {
+        if self
+            .frames
+            .last()
+            .is_some_and(|last| last.scene.tick == frame.scene.tick)
+        {
             *self.frames.last_mut().expect("checked last frame") = frame;
         } else if self.frames.len() < self.maximum_frames {
             self.frames.push(frame);

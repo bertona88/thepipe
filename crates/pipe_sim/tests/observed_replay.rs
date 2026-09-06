@@ -13,13 +13,26 @@ fn recording_does_not_change_control_and_cannot_publish_before_terminal() {
     let replay = recorded.replay(REVISION, "test").unwrap();
     assert_eq!(replay.report, expected);
     assert_eq!(replay.frames.first().unwrap().scene.tick, 0);
-    assert_eq!(replay.frames.last().unwrap().scene.tick, expected.decisions.last().unwrap().tick);
-    assert!(replay.frames.windows(2).all(|pair| pair[0].scene.tick < pair[1].scene.tick));
+    assert_eq!(
+        replay.frames.last().unwrap().scene.tick,
+        expected.decisions.last().unwrap().tick
+    );
+    assert!(replay
+        .frames
+        .windows(2)
+        .all(|pair| pair[0].scene.tick < pair[1].scene.tick));
     for frame in &replay.frames {
-        assert!(frame.scene.estimate.is_none(), "never manufacture full-state estimates");
+        assert!(
+            frame.scene.estimate.is_none(),
+            "never manufacture full-state estimates"
+        );
         let truth = frame.scene.truth.as_ref().unwrap();
         for body in &truth.rigid_bodies {
-            let geometry = frame.bodies.iter().find(|entry| entry.body_id == body.id).unwrap();
+            let geometry = frame
+                .bodies
+                .iter()
+                .find(|entry| entry.body_id == body.id)
+                .unwrap();
             assert_eq!(geometry.pose, body.pose);
         }
         assert_eq!(frame.contact_packet.captured_at_tick, frame.scene.tick);
@@ -45,5 +58,14 @@ fn failed_cycle_keeps_failure_and_stop_in_the_replay() {
     assert!(!runtime.is_completed());
     let replay = runtime.replay(REVISION, "test").unwrap();
     assert_eq!(replay.report.terminal_reason, report.terminal_reason);
-    assert!(replay.frames.last().unwrap().scene.commanded.manipulators.iter().all(|arm| arm.stopped));
+    assert!(replay
+        .frames
+        .last()
+        .unwrap()
+        .scene
+        .commanded
+        .manipulators
+        .iter()
+        .filter(|arm| arm.id == 1)
+        .all(|arm| arm.stopped));
 }

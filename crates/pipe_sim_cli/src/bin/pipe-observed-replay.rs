@@ -22,8 +22,12 @@ fn run() -> Result<bool, String> {
             "--fault" => &mut fault,
             _ => return Err(format!("unknown argument: {key}")),
         };
-        if slot.is_some() { return Err(format!("duplicate argument: {key}")); }
-        let value = args.next().filter(|v| !v.starts_with("--"))
+        if slot.is_some() {
+            return Err(format!("duplicate argument: {key}"));
+        }
+        let value = args
+            .next()
+            .filter(|v| !v.starts_with("--"))
             .ok_or_else(|| format!("missing value for {key}"))?;
         *slot = Some(value);
     }
@@ -35,17 +39,33 @@ fn run() -> Result<bool, String> {
         Some(path) => std::fs::read_to_string(path).map_err(|e| e.to_string())?,
         None => BASELINE_M1F_SCENARIO_JSON.to_owned(),
     };
-    let fault = fault.unwrap_or_else(|| "none".into()).parse::<M1eFault>().map_err(|e| e.to_string())?;
-    let mut runtime = ObservedManipulationRuntime::from_scenario_json(&json, fault).map_err(|e| e.to_string())?;
-    runtime.enable_replay(100, 20_000).map_err(|e| e.to_string())?;
+    let fault = fault
+        .unwrap_or_else(|| "none".into())
+        .parse::<M1eFault>()
+        .map_err(|e| e.to_string())?;
+    let mut runtime =
+        ObservedManipulationRuntime::from_scenario_json(&json, fault).map_err(|e| e.to_string())?;
+    runtime
+        .enable_replay(100, 20_000)
+        .map_err(|e| e.to_string())?;
     let report = runtime.run_cycle().map_err(|e| e.to_string())?;
     let accepted = report.expected_outcome_observed
-        && report.acceptance_gates.iter().filter(|gate| gate.applicable).all(|gate| gate.passed);
+        && report
+            .acceptance_gates
+            .iter()
+            .filter(|gate| gate.applicable)
+            .all(|gate| gate.passed);
     // JSON-encoded argv preserves spaces and literal characters unambiguously.
-    let command = serde_json::to_string(&std::env::args().collect::<Vec<_>>()).map_err(|e| e.to_string())?;
-    let replay = runtime.replay(&source, &command).map_err(|e| e.to_string())?;
+    let command =
+        serde_json::to_string(&std::env::args().collect::<Vec<_>>()).map_err(|e| e.to_string())?;
+    let replay = runtime
+        .replay(&source, &command)
+        .map_err(|e| e.to_string())?;
     serde_json::to_writer(io::stdout().lock(), &replay).map_err(|e| e.to_string())?;
-    io::stdout().lock().write_all(b"\n").map_err(|e| e.to_string())?;
+    io::stdout()
+        .lock()
+        .write_all(b"\n")
+        .map_err(|e| e.to_string())?;
     Ok(accepted)
 }
 
@@ -53,6 +73,9 @@ fn main() -> ExitCode {
     match run() {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::from(2),
-        Err(error) => { eprintln!("pipe-observed-replay: {error}"); ExitCode::FAILURE }
+        Err(error) => {
+            eprintln!("pipe-observed-replay: {error}");
+            ExitCode::FAILURE
+        }
     }
 }

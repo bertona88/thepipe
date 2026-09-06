@@ -5,8 +5,8 @@ mod estimator;
 #[cfg(test)]
 mod m1f_tests;
 mod plant;
-mod report;
 mod replay;
+mod report;
 mod runtime;
 mod scenario;
 
@@ -16,9 +16,9 @@ pub use estimator::{
     ObservedPoseEstimator, PoseEstimate, PoseInnovation, ReducedPoseUncertainty,
     RejectedMeasurement, AXISYMMETRIC_POSE_DOF,
 };
+pub use replay::{ObservedReplay, ObservedReplayFrame, OBSERVED_REPLAY_SCHEMA_VERSION};
 pub use report::{ObservedManipulationReport, OBSERVED_MANIPULATION_REPORT_SCHEMA_VERSION};
 pub use runtime::ObservedManipulationRuntime;
-pub use replay::{ObservedReplay, ObservedReplayFrame, OBSERVED_REPLAY_SCHEMA_VERSION};
 pub use scenario::{
     FixedHeadConfig, M1eFault, ObservedManipulationScenario, ScenarioError,
     BASELINE_M1F_SCENARIO_JSON, M1E_SCENARIO_SCHEMA_VERSION, M1F_SCENARIO_SCHEMA_VERSION,
