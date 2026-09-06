@@ -93,28 +93,42 @@ try{
  require(/^[a-f0-9]{40}$/i.test(replay.source_revision),'missing source revision');
  require([1,2].includes(replay.report.schema_version)&&replay.report.schema_version===replay.report.scenario_schema_version,'unsupported report schema');
  require(['complete','failed_safe'].includes(replay.report.status)&&replay.report.evaluation_only_truth!==null,'nonterminal report');
+ require(replay.report.status==='complete'?replay.report.terminal_reason===null:typeof replay.report.terminal_reason==='string','terminal status/reason mismatch');
  require(replay.report.roll_observable===false,'unsupported roll');
  for(const key of ['scenario_sha256','machine_config_sha256','controller_report_sha256'])require(/^[a-f0-9]{64}$/.test(replay.report[key]),'missing source identity');
  require(replay.report.timing.fixed_step_s>0&&replay.report.timing.maximum_measurement_age_s>0,'invalid timing');
  let previous=-1;
+ const validVector=(v,n)=>Array.isArray(v)&&v.length===n&&v.every(Number.isFinite);
+ const unitAxis=v=>validVector(v,3)&&Math.abs(v.reduce((s,x)=>s+x*x,0)-1)<1e-8;
+ const validTick=t=>Number.isSafeInteger(t)&&t>=0;
  const validPose=p=>p&&Array.isArray(p.translation_m)&&p.translation_m.length===3&&p.translation_m.every(Number.isFinite)&&Array.isArray(p.rotation_xyzw)&&p.rotation_xyzw.length===4&&Math.abs(p.rotation_xyzw.reduce((a,b)=>a+b*b,0)-1)<1e-8;
  for(const f of replay.frames){
   require(f.scene?.schema_version===1&&f.scene.truth&&f.scene.estimate===null,'invalid scene state mapping');
   require(Number.isSafeInteger(f.scene.tick)&&f.scene.tick>previous&&Math.abs(f.scene.time_s-f.scene.tick*replay.report.timing.fixed_step_s)<1e-7,'invalid sample time');previous=f.scene.tick;
   require(validPose(f.physical_tool_pose)&&validPose(f.socket_pose),'invalid physical pose');
   require(f.contact_packet?.captured_at_tick===f.scene.tick,'invalid contact timestamp');
+  for(const channel of ['grip_force_proxy_n','insertion_force_proxy_n'])require(Number.isFinite(f.contact_packet[channel])&&f.contact_packet[channel]>=0,'invalid force proxy');
+  require(Array.isArray(f.physical_jaws)&&JSON.stringify(f.physical_jaws.map(c=>c.geometry_id).sort())===JSON.stringify(['physical_tool/jaw/0','physical_tool/jaw/1']),'missing or duplicate physical jaws');
   require(Array.isArray(f.commanded_tool_position_world_m)&&f.commanded_tool_position_world_m.length===3&&f.commanded_tool_position_world_m.every(Number.isFinite),'missing commanded target');
+  require(f.commanded_tool_axis_world===null||unitAxis(f.commanded_tool_axis_world),'invalid commanded axis');
   const colliders=[...f.bodies,...f.physical_jaws,...f.scene.truth.manipulators.flatMap(a=>a.link_colliders)];
   for(const c of colliders){require(validPose(c.pose),'invalid collider pose');require(['box','sphere','capsule'].includes(c.shape?.kind),'unsupported shape');
    if(c.shape.kind==='box')require(Array.isArray(c.shape.half_extents_m)&&c.shape.half_extents_m.length===3&&c.shape.half_extents_m.every(x=>Number.isFinite(x)&&x>0),'invalid box');
    else require(c.shape.radius_m>0&&(c.shape.kind!=='capsule'||c.shape.half_segment_m>=0),'invalid round shape');
   }
-  for(const b of f.scene.truth.rigid_bodies){require(typeof b.enabled==='boolean','invalid body enabled state');const c=f.bodies.find(c=>c.body_id===b.id);require(c&&JSON.stringify(c.pose)===JSON.stringify(b.pose),'geometry/state mismatch');}
+  require(new Set([...f.bodies,...f.physical_jaws].map(c=>c.geometry_id)).size===f.bodies.length+f.physical_jaws.length,'duplicate geometry identity');
+  require(new Set(f.bodies.map(c=>c.body_id)).size===f.bodies.length&&new Set(f.scene.truth.rigid_bodies.map(b=>b.id)).size===f.bodies.length&&f.scene.truth.rigid_bodies.length===f.bodies.length,'ambiguous body geometry mapping');
+  for(const b of f.scene.truth.rigid_bodies){require(typeof b.enabled==='boolean','invalid body enabled state');const c=f.bodies.find(c=>c.body_id===b.id);require(c&&c.geometry_id===b.geometry_id&&JSON.stringify(c.pose)===JSON.stringify(b.pose),'geometry/state mismatch');}
  }
  require(replay.frames[0].scene.tick===0&&replay.report.decisions.at(-1)?.tick===previous,'incomplete recording');
- for(const u of replay.report.estimator_updates){const e=u.estimate;require(Number.isSafeInteger(e.controller_tick)&&e.controller_tick>=0&&e.controller_tick<=previous,'invalid estimate timestamp');
-  if(e.pose)require(e.pose.roll_observable===false&&e.pose.center_world_m.length===3&&e.pose.center_world_m.every(Number.isFinite)&&e.pose.axis_world_unit.length===3&&e.pose.axis_world_unit.every(Number.isFinite),'invalid estimate pose');
-  if(e.uncertainty)require(e.uncertainty.center_sigma_m.length===3&&e.uncertainty.center_sigma_m.every(x=>Number.isFinite(x)&&x>=0)&&e.uncertainty.axis_tangent_sigma_rad.length===2&&e.uncertainty.axis_tangent_sigma_rad.every(x=>Number.isFinite(x)&&x>=0),'invalid uncertainty');
+ let decisionTick=-1;
+ for(const [i,d] of replay.report.decisions.entries()){require(d.sequence===i&&validTick(d.tick)&&d.tick>=decisionTick&&d.tick<=previous,'unordered decision');decisionTick=d.tick;}
+ let updateTick=-1;
+ for(const [i,u] of replay.report.estimator_updates.entries()){const e=u.estimate;require(u.sequence===i&&validTick(e.controller_tick)&&e.controller_tick>=updateTick&&e.controller_tick<=previous,'unordered estimate update');updateTick=e.controller_tick;
+  require(validTick(e.state_tick)&&e.state_tick<=e.controller_tick&&typeof u.accepted_by_controller==='boolean','invalid estimate timestamp or acceptance');
+  if(e.pose)require(e.pose.roll_observable===false&&validVector(e.pose.center_world_m,3)&&unitAxis(e.pose.axis_world_unit),'invalid estimate pose');
+  if(e.uncertainty)require(validVector(e.uncertainty.center_sigma_m,3)&&e.uncertainty.center_sigma_m.every(x=>x>=0)&&validVector(e.uncertainty.axis_tangent_sigma_rad,2)&&e.uncertainty.axis_tangent_sigma_rad.every(x=>x>=0),'invalid uncertainty');
+  if(e.validity==='valid')require(e.pose&&e.uncertainty&&validTick(e.oldest_capture_tick)&&validTick(e.newest_available_tick)&&e.oldest_capture_tick<=e.newest_available_tick&&e.newest_available_tick<=e.state_tick,'incomplete or inconsistent valid estimate');
  }
 
  element('metadata').textContent=`Source ${replay.source_revision}\nScenario ${replay.report.scenario_id} · ${replay.report.scenario_sha256}\nMachine ${replay.report.machine_config_id} · ${replay.report.machine_config_sha256}\nController report ${replay.report.controller_report_sha256}\nGenerated by ${replay.generation_command}\n${replay.geometry_fidelity}`;

@@ -886,7 +886,9 @@ impl Simulation {
         let donor = &self.serial_arms[donor_index];
         let receiver = &self.serial_arms[receiver_index];
         if donor.gripper.held_body != Some(body_id)
+            || donor.held_body_local_pose.is_none()
             || receiver.gripper.held_body.is_some()
+            || receiver.held_body_local_pose.is_some()
             || self
                 .arms
                 .iter()
@@ -903,6 +905,10 @@ impl Simulation {
         for arm in [donor, receiver] {
             if !arm.gripper.opening_m.is_finite()
                 || !arm.gripper.command_opening_m.is_finite()
+                || !arm.motion.carriage.z_m.is_finite()
+                || !arm.motion.carriage.theta_rad.is_finite()
+                || !arm.motion.carriage_target.z_m.is_finite()
+                || !arm.motion.carriage_target.theta_rad.is_finite()
                 || arm
                     .motion
                     .joint_targets_rad
@@ -941,11 +947,12 @@ impl Simulation {
             return Err(SimulationError::GraspRejected);
         }
         // Recheck donor retention as well as receiver acquisition at this tick.
-        let donor_candidate = donor.gripper.evaluate_partial_axial_overlap_candidate(
+        // Preserve the donor's acquisition policy. The receiver's requested
+        // overlap must not weaken the retention gate of the existing grasp.
+        let donor_candidate = donor.gripper.evaluate_held_candidate(
             donor.tool_pose(),
             body,
             donor.gripper_config,
-            minimum_axial_overlap_m,
         );
         let mut donor_check = donor.gripper;
         donor_check.release();

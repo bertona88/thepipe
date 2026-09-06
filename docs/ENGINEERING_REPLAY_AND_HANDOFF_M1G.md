@@ -129,7 +129,12 @@ profiles: observation loss before receiver closure, before transfer and after
 transfer; stale observations; missing receiver pad contact; inconsistent pose;
 and physical transaction rejection. Core transaction tests verify exact state
 preservation on rejection, pending-motion refusal, one owner and unchanged body
-pose on success. Evaluation frames and scores are excluded from the handoff
+pose on success. The donor retains its original acquisition overlap requirement;
+the receiver cannot weaken it. Missing attachment state and nonfinite carriage
+state also reject before mutation. Replay regression checks cover missing or
+duplicate jaws, nonunit axes, incomplete uncertainty, inconsistent estimate
+timestamps and unordered report events in both Python and JavaScript.
+Evaluation frames and scores are excluded from the handoff
 controller trace hash.
 
 The next gate is a physical fixed-head two-arm coupon: design visible target

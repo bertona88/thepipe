@@ -21,9 +21,20 @@ live.get('sample').value=String(source.frames.length-1);vm.runInContext('draw()'
 assert.equal(live.get('error').textContent,'');assert.match(live.get('state').textContent,new RegExp('tick '+source.frames.at(-1).scene.tick));
 const future=source.frames.at(-1).scene.tick+100000;
 assert(vm.runInContext(`availableEstimates(${future}).every(e=>!e.estimate)`,live.context),'stale estimates must not be replaced by truth');
-for(const mutate of [d=>d.length_unit='mm',d=>d.frames[0].scene.truth=null,d=>d.frames[1].scene.tick=0,d=>d.frames[0].bodies=[],d=>d.report.schema_version=99]){
+const validEstimate=d=>d.report.estimator_updates.find(u=>u.estimate.validity==='valid').estimate;
+const mutations=[
+ d=>d.length_unit='mm',d=>d.frames[0].scene.truth=null,d=>d.frames[1].scene.tick=0,d=>d.frames[0].bodies=[],d=>d.report.schema_version=99,
+ d=>d.frames[0].physical_jaws=[],d=>d.frames[0].physical_jaws[1]=d.frames[0].physical_jaws[0],
+ d=>validEstimate(d).pose.axis_world_unit=[0,0,0],d=>delete validEstimate(d).uncertainty.axis_tangent_sigma_rad,
+ d=>validEstimate(d).uncertainty.axis_tangent_sigma_rad=[-1,0],
+ d=>validEstimate(d).newest_available_tick=validEstimate(d).controller_tick+1,
+ d=>validEstimate(d).oldest_capture_tick=null,d=>d.report.estimator_updates[0].accepted_by_controller='true',
+ d=>d.report.estimator_updates.reverse(),d=>d.report.decisions[0].sequence=1,
+ d=>delete d.frames[0].contact_packet.grip_force_proxy_n
+];
+for(const mutate of mutations){
  const bad=structuredClone(source);mutate(bad);const rejected=boot(bad);
  assert.match(rejected.get('error').textContent,/unavailable/i);
  assert.equal(rejected.counts().draws,0,'malformed input rendered geometry');
 }
-console.log('Inspector JS: real data mapping, finite projections, stale estimates, and 5 malformed states verified');
+console.log(`Inspector JS: real data mapping, finite projections, stale estimates, and ${mutations.length} malformed states verified`);

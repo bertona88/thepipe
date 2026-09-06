@@ -65,7 +65,7 @@ fn successful_transaction_preserves_pose_and_transfers_exactly_one_owner() {
 
 #[test]
 fn every_rejected_transaction_leaves_the_complete_state_unchanged() {
-    for case in 0..7 {
+    for case in 0..9 {
         let mut sim = ownership_fixture();
         let (mut donor, mut receiver, mut overlap) = (ArmId(1), ArmId(2), 0.0001);
         match case {
@@ -89,6 +89,11 @@ fn every_rejected_transaction_leaves_the_complete_state_unchanged() {
                     .joint_targets_rad[0] += 0.001
             }
             6 => sim.serial_arm_mut(donor).unwrap().gripper.opening_m = 0.001,
+            7 => sim.serial_arm_mut(donor).unwrap().held_body_local_pose = None,
+            8 => {
+                let pose = sim.serial_arm(donor).unwrap().held_body_local_pose;
+                sim.serial_arm_mut(receiver).unwrap().held_body_local_pose = pose;
+            }
             _ => unreachable!(),
         }
         let before = sim.clone();
@@ -98,5 +103,45 @@ fn every_rejected_transaction_leaves_the_complete_state_unchanged() {
             "case {case}"
         );
         assert_eq!(sim, before, "case {case}");
+    }
+}
+
+#[test]
+fn receiver_overlap_does_not_weaken_existing_donor_retention() {
+    let mut sim = ownership_fixture();
+    sim.release_body_serial(ArmId(1)).unwrap();
+    sim.grasp_body_serial_with_partial_axial_overlap(ArmId(1), BodyId(7), 0.0003)
+        .unwrap();
+    // A displaced peg still overlaps both pads by 0.2 mm, but the donor
+    // originally required 0.3 mm. A receiver asking for 0.1 mm cannot waive it.
+    let tool = sim.serial_arm(ArmId(1)).unwrap().tool_pose();
+    sim.body_mut(BodyId(7)).unwrap().pose.translation = tool.transform_point(Vec3::Z * 0.0006);
+    let before = sim.clone();
+    assert!(sim
+        .handoff_body_serial(ArmId(1), ArmId(2), BodyId(7), 0.0001)
+        .is_err());
+    assert_eq!(sim, before);
+}
+
+#[test]
+fn nonfinite_carriage_state_cannot_authorize_stationary_transfer() {
+    for id in [ArmId(1), ArmId(2)] {
+        for field in 0..4 {
+            let mut sim = ownership_fixture();
+            let motion = &mut sim.serial_arm_mut(id).unwrap().motion;
+            match field {
+                0 => motion.carriage.z_m = f64::NAN,
+                1 => motion.carriage.theta_rad = f64::NAN,
+                2 => motion.carriage_target.z_m = f64::NAN,
+                3 => motion.carriage_target.theta_rad = f64::NAN,
+                _ => unreachable!(),
+            }
+            // Debug preserves the NaN fields; ordinary PartialEq cannot compare NaNs.
+            let before = format!("{sim:?}");
+            assert!(sim
+                .handoff_body_serial(ArmId(1), ArmId(2), BodyId(7), 0.0001)
+                .is_err());
+            assert_eq!(format!("{sim:?}"), before);
+        }
     }
 }

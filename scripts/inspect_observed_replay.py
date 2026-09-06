@@ -29,6 +29,15 @@ def vector(value, size):
     require(all(type(x) in (int, float) and math.isfinite(x) for x in value), "invalid vector element")
 
 
+def unit_vector(value):
+    vector(value, 3)
+    require(abs(sum(x*x for x in value)-1) < 1e-8, "nonunit axis")
+
+
+def tick_value(value):
+    require(type(value) is int and 0 <= value <= 2**53-1, "invalid tick")
+
+
 def pose(value):
     vector(value["translation_m"], 3)
     vector(value["rotation_xyzw"], 4)
@@ -78,7 +87,8 @@ def validate(data):
         scene = frame["scene"]
         require(scene["schema_version"] == 1, "unsupported scene schema")
         tick = scene["tick"]
-        require(type(tick) is int and tick > previous, "unordered or duplicate tick")
+        tick_value(tick)
+        require(tick > previous, "unordered or duplicate tick")
         previous = tick
         require(abs(scene["time_s"] - tick*dt) < 1e-7, "time/tick mismatch")
         require(scene["truth"] is not None and scene["estimate"] is None, "invalid truth/estimate mapping")
@@ -86,8 +96,13 @@ def validate(data):
         pose(frame["socket_pose"])
         vector(frame["commanded_tool_position_world_m"], 3)
         if frame["commanded_tool_axis_world"] is not None:
-            vector(frame["commanded_tool_axis_world"], 3)
+            unit_vector(frame["commanded_tool_axis_world"])
         require(frame["contact_packet"]["captured_at_tick"] == tick, "stale contact packet")
+        for channel in ("grip_force_proxy_n", "insertion_force_proxy_n"):
+            value = frame["contact_packet"][channel]
+            require(type(value) in (int, float) and value >= 0, "invalid force proxy")
+        require(sorted(c["geometry_id"] for c in frame["physical_jaws"])
+                == ["physical_tool/jaw/0", "physical_tool/jaw/1"], "missing or duplicate physical jaws")
         ids = set()
         for collider in frame["bodies"] + frame["physical_jaws"]:
             require(collider["geometry_id"] not in ids, "duplicate geometry identity")
@@ -95,6 +110,9 @@ def validate(data):
             pose(collider["pose"])
             shape(collider["shape"])
         body_map = {entry["body_id"]: entry for entry in frame["bodies"]}
+        truth_bodies = scene["truth"]["rigid_bodies"]
+        require(len(body_map) == len(frame["bodies"]) == len(truth_bodies)
+                and set(body_map) == {b["id"] for b in truth_bodies}, "ambiguous body geometry mapping")
         for body in scene["truth"]["rigid_bodies"]:
             require(type(body["enabled"]) is bool, "invalid body enabled state")
             require(body["id"] in body_map, "missing body geometry")
@@ -105,19 +123,36 @@ def validate(data):
                 shape(collider["shape"])
     require(frames[0]["scene"]["tick"] == 0, "missing initial state")
     require(report["decisions"] and report["decisions"][-1]["tick"] == previous, "missing terminal state")
+    previous_decision_tick = -1
+    for index, decision in enumerate(report["decisions"]):
+        tick_value(decision["tick"])
+        require(decision["sequence"] == index and previous_decision_tick <= decision["tick"] <= previous,
+                "unordered decision")
+        previous_decision_tick = decision["tick"]
     previous_update_tick = -1
     for index, update in enumerate(report["estimator_updates"]):
         estimate = update["estimate"]
+        tick_value(estimate["controller_tick"])
+        tick_value(estimate["state_tick"])
+        require(estimate["state_tick"] <= estimate["controller_tick"], "future estimate state")
+        require(type(update["accepted_by_controller"]) is bool, "invalid estimate acceptance")
         require(update["sequence"] == index, "unordered estimate update")
         require(previous_update_tick <= estimate["controller_tick"] <= previous, "estimate outside run or unordered")
         previous_update_tick = estimate["controller_tick"]
         if estimate["pose"] is not None:
             vector(estimate["pose"]["center_world_m"], 3)
-            vector(estimate["pose"]["axis_world_unit"], 3)
+            unit_vector(estimate["pose"]["axis_world_unit"])
             require(estimate["pose"]["roll_observable"] is False, "fabricated roll")
         if estimate["uncertainty"] is not None:
-            vector(estimate["uncertainty"]["center_sigma_m"], 3)
-            require(all(x >= 0 for x in estimate["uncertainty"]["center_sigma_m"]), "negative uncertainty")
+            for key, size in (("center_sigma_m", 3), ("axis_tangent_sigma_rad", 2)):
+                vector(estimate["uncertainty"][key], size)
+                require(all(x >= 0 for x in estimate["uncertainty"][key]), "negative uncertainty")
+        if estimate["validity"] == "valid":
+            require(estimate["pose"] is not None and estimate["uncertainty"] is not None, "incomplete valid estimate")
+            for key in ("oldest_capture_tick", "newest_available_tick"):
+                tick_value(estimate[key])
+            require(estimate["oldest_capture_tick"] <= estimate["newest_available_tick"] <= estimate["state_tick"],
+                    "inconsistent estimate timestamps")
     return data
 
 
