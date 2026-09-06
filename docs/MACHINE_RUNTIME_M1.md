@@ -10,7 +10,7 @@ qualification requirements in `REQUIREMENTS.md`.
 
 Rust is the sole owner of physical machine state. Any future browser viewer must receive a
 versioned description and frame projection and render the supplied poses. It must
-does not calculate rail positions, arm forward kinematics, part trajectories,
+not calculate rail positions, arm forward kinematics, part trajectories,
 contacts, or grasp ownership.
 
 The runtime path is:
