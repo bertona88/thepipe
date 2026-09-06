@@ -4,9 +4,17 @@ use serde::Serialize;
 
 use super::controller::ContactPacket;
 use super::report::ObservedManipulationReport;
-use crate::scene::{ColliderSnapshot, PoseSnapshot, SceneFrame};
+use crate::scene::{ColliderSnapshot, PoseSnapshot, SceneFrame, ShapeSnapshot};
 
 pub const OBSERVED_REPLAY_SCHEMA_VERSION: u32 = 1;
+
+/// Tool geometry has a stable string identity, not an invented mechanics BodyId.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct ReplayToolCollider {
+    pub geometry_id: String,
+    pub pose: PoseSnapshot,
+    pub shape: ShapeSnapshot,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ObservedReplayFrame {
@@ -16,7 +24,7 @@ pub struct ObservedReplayFrame {
     /// Includes the plant's distal mounting tilt; scene.tool_pose is the FK flange.
     pub physical_tool_pose: PoseSnapshot,
     pub socket_pose: PoseSnapshot,
-    pub physical_jaws: Vec<ColliderSnapshot>,
+    pub physical_jaws: Vec<ReplayToolCollider>,
     /// Timestamped reduced load channels, not calibrated force measurements.
     pub contact_packet: ContactPacket,
     pub commanded_tool_position_world_m: [f64; 3],

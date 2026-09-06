@@ -12,7 +12,7 @@ body{font:14px system-ui;margin:20px;color:#18202b;background:#fafafa}canvas{wid
 <div id="error" role="alert"></div><pre id="metadata"></pre>
 <button id="previous">Previous</button><button id="play">Play samples</button><button id="next">Next</button>
 <input id="sample" aria-label="Recorded sample" type="range" min="0" value="0" step="1">
-<label>Centre <select id="centre"><option value="socket">Socket</option><option value="tool">Tool</option><option value="world">World origin</option></select></label>
+<label>Centre <select id="centre"><option value="socket">Socket (truth)</option><option value="tool">Tool (truth)</option><option value="world">World origin</option></select></label>
 <label>Half-width <select id="width"><option value="0.08">80 mm</option><option value="0.01" selected>10 mm</option><option value="0.002">2 mm</option><option value="0.00025">250 µm</option></select></label>
 <p><label><input id="truth" type="checkbox" checked>Truth</label><label><input id="estimates" type="checkbox" checked>Estimates</label><label><input id="commands" type="checkbox" checked>Commands</label></p>
 <div><canvas width="540" height="540"></canvas> <canvas width="540" height="540"></canvas> <canvas width="540" height="540"></canvas></div>
@@ -84,7 +84,39 @@ function draw(){try{
  element('decision').textContent=latestDecision?JSON.stringify(latestDecision,null,2):'unavailable';
  }catch(error){unavailable(error);}}
 try{
- replay=JSON.parse(element('replay-data').textContent);if(replay.schema_version!==1||!Array.isArray(replay.frames)||!replay.frames.length)throw Error('unsupported or empty replay');
+ replay=JSON.parse(element('replay-data').textContent);
+ function require(ok,reason){if(!ok)throw Error(reason);}
+ function finite(value){if(typeof value==='number')require(Number.isFinite(value),'nonfinite number');else if(value&&typeof value==='object')Object.values(value).forEach(finite);}
+ finite(replay);
+ require(replay.schema_version===1&&Array.isArray(replay.frames)&&replay.frames.length>=2,'unsupported or empty replay');
+ require(replay.length_unit==='m'&&replay.angle_unit==='rad'&&replay.time_unit==='s'&&replay.coordinate_frame==='pipe_world_right_handed_Z_tube_axis','unsupported units/frame');
+ require(/^[a-f0-9]{40}$/i.test(replay.source_revision),'missing source revision');
+ require([1,2].includes(replay.report.schema_version)&&replay.report.schema_version===replay.report.scenario_schema_version,'unsupported report schema');
+ require(['complete','failed_safe'].includes(replay.report.status)&&replay.report.evaluation_only_truth!==null,'nonterminal report');
+ require(replay.report.roll_observable===false,'unsupported roll');
+ for(const key of ['scenario_sha256','machine_config_sha256','controller_report_sha256'])require(/^[a-f0-9]{64}$/.test(replay.report[key]),'missing source identity');
+ require(replay.report.timing.fixed_step_s>0&&replay.report.timing.maximum_measurement_age_s>0,'invalid timing');
+ let previous=-1;
+ const validPose=p=>p&&Array.isArray(p.translation_m)&&p.translation_m.length===3&&p.translation_m.every(Number.isFinite)&&Array.isArray(p.rotation_xyzw)&&p.rotation_xyzw.length===4&&Math.abs(p.rotation_xyzw.reduce((a,b)=>a+b*b,0)-1)<1e-8;
+ for(const f of replay.frames){
+  require(f.scene?.schema_version===1&&f.scene.truth&&f.scene.estimate===null,'invalid scene state mapping');
+  require(Number.isSafeInteger(f.scene.tick)&&f.scene.tick>previous&&Math.abs(f.scene.time_s-f.scene.tick*replay.report.timing.fixed_step_s)<1e-7,'invalid sample time');previous=f.scene.tick;
+  require(validPose(f.physical_tool_pose)&&validPose(f.socket_pose),'invalid physical pose');
+  require(f.contact_packet?.captured_at_tick===f.scene.tick,'invalid contact timestamp');
+  require(Array.isArray(f.commanded_tool_position_world_m)&&f.commanded_tool_position_world_m.length===3&&f.commanded_tool_position_world_m.every(Number.isFinite),'missing commanded target');
+  const colliders=[...f.bodies,...f.physical_jaws,...f.scene.truth.manipulators.flatMap(a=>a.link_colliders)];
+  for(const c of colliders){require(validPose(c.pose),'invalid collider pose');require(['box','sphere','capsule'].includes(c.shape?.kind),'unsupported shape');
+   if(c.shape.kind==='box')require(Array.isArray(c.shape.half_extents_m)&&c.shape.half_extents_m.length===3&&c.shape.half_extents_m.every(x=>Number.isFinite(x)&&x>0),'invalid box');
+   else require(c.shape.radius_m>0&&(c.shape.kind!=='capsule'||c.shape.half_segment_m>=0),'invalid round shape');
+  }
+  for(const b of f.scene.truth.rigid_bodies){const c=f.bodies.find(c=>c.body_id===b.id);require(c&&JSON.stringify(c.pose)===JSON.stringify(b.pose),'geometry/state mismatch');}
+ }
+ require(replay.frames[0].scene.tick===0&&replay.report.decisions.at(-1)?.tick===previous,'incomplete recording');
+ for(const u of replay.report.estimator_updates){const e=u.estimate;require(Number.isSafeInteger(e.controller_tick)&&e.controller_tick>=0&&e.controller_tick<=previous,'invalid estimate timestamp');
+  if(e.pose)require(e.pose.roll_observable===false&&e.pose.center_world_m.length===3&&e.pose.center_world_m.every(Number.isFinite)&&e.pose.axis_world_unit.length===3&&e.pose.axis_world_unit.every(Number.isFinite),'invalid estimate pose');
+  if(e.uncertainty)require(e.uncertainty.center_sigma_m.length===3&&e.uncertainty.center_sigma_m.every(x=>Number.isFinite(x)&&x>=0)&&e.uncertainty.axis_tangent_sigma_rad.length===2&&e.uncertainty.axis_tangent_sigma_rad.every(x=>Number.isFinite(x)&&x>=0),'invalid uncertainty');
+ }
+
  element('metadata').textContent=`Source ${replay.source_revision}\nScenario ${replay.report.scenario_id} · ${replay.report.scenario_sha256}\nMachine ${replay.report.machine_config_id} · ${replay.report.machine_config_sha256}\nController report ${replay.report.controller_report_sha256}\nGenerated by ${replay.generation_command}\n${replay.geometry_fidelity}`;
  element('sample').max=String(replay.frames.length-1);
  for(const id of ['sample','centre','width','truth','estimates','commands'])element(id).addEventListener('input',draw);

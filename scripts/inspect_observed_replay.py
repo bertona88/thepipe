@@ -62,6 +62,8 @@ def validate(data):
     require(report["status"] in ("complete", "failed_safe"), "nonterminal recording")
     require(report["evaluation_only_truth"] is not None, "missing terminal evaluation")
     require(report["roll_observable"] is False, "unsupported roll estimate")
+    require((report["status"] == "complete" and report["terminal_reason"] is None)
+            or (report["status"] == "failed_safe" and isinstance(report["terminal_reason"], str)), "terminal status/reason mismatch")
     dt = report["timing"]["fixed_step_s"]
     require(dt > 0 and report["timing"]["maximum_measurement_age_s"] > 0, "invalid timing")
     frames = data["frames"]
@@ -83,24 +85,26 @@ def validate(data):
         require(frame["contact_packet"]["captured_at_tick"] == tick, "stale contact packet")
         ids = set()
         for collider in frame["bodies"] + frame["physical_jaws"]:
-            require(collider["body_id"] not in ids, "duplicate geometry identity")
-            ids.add(collider["body_id"])
+            require(collider["geometry_id"] not in ids, "duplicate geometry identity")
+            ids.add(collider["geometry_id"])
             pose(collider["pose"])
             shape(collider["shape"])
         body_map = {entry["body_id"]: entry for entry in frame["bodies"]}
         for body in scene["truth"]["rigid_bodies"]:
             require(body["id"] in body_map, "missing body geometry")
-            require(body["pose"] == body_map[body["id"]]["pose"], "geometry/state mismatch")
+            require(body["pose"] == body_map[body["id"]]["pose"] and body["geometry_id"] == body_map[body["id"]]["geometry_id"], "geometry/state mismatch")
         for arm in scene["truth"]["manipulators"]:
             for collider in arm["link_colliders"]:
                 pose(collider["pose"])
                 shape(collider["shape"])
     require(frames[0]["scene"]["tick"] == 0, "missing initial state")
     require(report["decisions"] and report["decisions"][-1]["tick"] == previous, "missing terminal state")
+    previous_update_tick = -1
     for index, update in enumerate(report["estimator_updates"]):
         estimate = update["estimate"]
         require(update["sequence"] == index, "unordered estimate update")
-        require(0 <= estimate["controller_tick"] <= previous, "estimate outside run")
+        require(previous_update_tick <= estimate["controller_tick"] <= previous, "estimate outside run or unordered")
+        previous_update_tick = estimate["controller_tick"]
         if estimate["pose"] is not None:
             vector(estimate["pose"]["center_world_m"], 3)
             vector(estimate["pose"]["axis_world_unit"], 3)

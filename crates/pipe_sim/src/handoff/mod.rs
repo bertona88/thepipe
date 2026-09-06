@@ -3,11 +3,12 @@
 pub mod controller;
 mod plant;
 
-use serde::{Deserialize, Serialize};
-use controller::{Action, Controller, HandoffInput, Phase, Policy};
 use crate::scene::SceneFrame;
+use controller::{Action, Controller, HandoffInput, Phase, Policy};
+use serde::{Deserialize, Serialize};
 
-pub const SCENARIO_JSON: &str = include_str!("../../../../scenarios/stationary_handoff_m1g_v1.json");
+pub const SCENARIO_JSON: &str =
+    include_str!("../../../../scenarios/stationary_handoff_m1g_v1.json");
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -35,7 +36,8 @@ pub struct Scenario {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Fault {
-    #[default] None,
+    #[default]
+    None,
     ObservationLostBeforeClose,
     ObservationLostBeforeTransfer,
     ObservationLostAfterTransfer,
@@ -87,7 +89,8 @@ pub fn run_stationary_coupon(fault: Fault) -> Result<Report, String> {
         maximum_capture_error_m: scenario.maximum_capture_error_m,
         maximum_axis_error_rad: scenario.maximum_axis_error_rad,
         tool_to_peg_center_m: scenario.tool_to_peg_center_m,
-        minimum_force_n: scenario.minimum_force_n, maximum_force_n: scenario.maximum_force_n,
+        minimum_force_n: scenario.minimum_force_n,
+        maximum_force_n: scenario.maximum_force_n,
     };
     let mut controller = Controller::new(policy)?;
     let mut plant = plant::Plant::new(&scenario)?;
@@ -99,41 +102,82 @@ pub fn run_stationary_coupon(fault: Fault) -> Result<Report, String> {
             Err(error) => {
                 controller.stop("plant_observation_failed");
                 plant.stop()?;
-                decisions.push(Decision { phase, input: None, plant_failure: Some(error),
-                    action: Action::StopBoth, acknowledged: false,
-                    owner_after_ack: controller.owner, ack_tick: plant.tick() });
+                decisions.push(Decision {
+                    phase,
+                    input: None,
+                    plant_failure: Some(error),
+                    action: Action::StopBoth,
+                    acknowledged: false,
+                    owner_after_ack: controller.owner,
+                    ack_tick: plant.tick(),
+                });
                 plant.record();
                 break;
             }
         };
         match fault {
-            Fault::ObservationLostBeforeClose if phase == Phase::CloseReceiver => input.estimates.clear(),
-            Fault::ObservationLostBeforeTransfer if phase == Phase::Transfer => input.estimates.clear(),
-            Fault::ObservationLostAfterTransfer if phase == Phase::OpenDonor => input.estimates.clear(),
-            Fault::ReceiverContactMissing if phase == Phase::Transfer => input.receiver_contact.right_contact = false,
+            Fault::ObservationLostBeforeClose if phase == Phase::CloseReceiver => {
+                input.estimates.clear()
+            }
+            Fault::ObservationLostBeforeTransfer if phase == Phase::Transfer => {
+                input.estimates.clear()
+            }
+            Fault::ObservationLostAfterTransfer if phase == Phase::OpenDonor => {
+                input.estimates.clear()
+            }
+            Fault::ReceiverContactMissing if phase == Phase::Transfer => {
+                input.receiver_contact.right_contact = false
+            }
             Fault::StaleObservation if phase == Phase::Transfer => {
-                for estimate in &mut input.estimates { estimate.oldest_capture_tick = Some(0); }
+                for estimate in &mut input.estimates {
+                    estimate.oldest_capture_tick = Some(0);
+                }
             }
             Fault::InconsistentPose if phase == Phase::Transfer => {
-                if let Some(pose) = input.estimates[1].pose.as_mut() { pose.center_world_m[1] += 0.001; }
+                if let Some(pose) = input.estimates[1].pose.as_mut() {
+                    pose.center_world_m[1] += 0.001;
+                }
             }
             _ => {}
         }
         let action = controller.authorize(&input);
-        let plant_failure = if action == Action::StopBoth { None }
-            else { plant.apply(action, fault == Fault::TransferRejected).err() };
+        let plant_failure = if action == Action::StopBoth {
+            None
+        } else {
+            plant.apply(action, fault == Fault::TransferRejected).err()
+        };
         let accepted = action != Action::StopBoth && plant_failure.is_none();
-        if action != Action::StopBoth { controller.acknowledge(action, plant.tick(), accepted); }
-        if controller.phase == Phase::Stopped { plant.stop()?; }
-        decisions.push(Decision { phase, input: Some(input), plant_failure, action, acknowledged: accepted,
-            owner_after_ack: controller.owner, ack_tick: plant.tick() });
+        if action != Action::StopBoth {
+            controller.acknowledge(action, plant.tick(), accepted);
+        }
+        if controller.phase == Phase::Stopped {
+            plant.stop()?;
+        }
+        decisions.push(Decision {
+            phase,
+            input: Some(input),
+            plant_failure,
+            action,
+            acknowledged: accepted,
+            owner_after_ack: controller.owner,
+            ack_tick: plant.tick(),
+        });
         plant.record();
-        if matches!(controller.phase, Phase::Complete | Phase::Stopped) { break; }
+        if matches!(controller.phase, Phase::Complete | Phase::Stopped) {
+            break;
+        }
     }
     if !matches!(controller.phase, Phase::Complete | Phase::Stopped) {
-        controller.stop("protocol_budget_exhausted"); plant.stop()?;
+        controller.stop("protocol_budget_exhausted");
+        plant.stop()?;
     }
-    let trace = serde_json::to_vec(&(&decisions, controller.phase, &controller.terminal_reason, controller.owner)).map_err(|e| e.to_string())?;
+    let trace = serde_json::to_vec(&(
+        &decisions,
+        controller.phase,
+        &controller.terminal_reason,
+        controller.owner,
+    ))
+    .map_err(|e| e.to_string())?;
     Ok(Report {
         schema_version: 1, scenario_id: scenario.id,
         scenario_sha256: crate::sha256_hex(SCENARIO_JSON.as_bytes()),

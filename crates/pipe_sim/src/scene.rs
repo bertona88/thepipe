@@ -498,7 +498,7 @@ fn tool_motion_status_name(status: ToolMotionStatus) -> &'static str {
     }
 }
 
-fn body_geometry_id(body: &RigidBody) -> String {
+pub(crate) fn body_geometry_id(body: &RigidBody) -> String {
     format!("body/{}/geometry", body.id.0)
 }
 

@@ -509,7 +509,7 @@ impl ObservedPlant {
                 .iter()
                 .map(|body| crate::scene::ColliderSnapshot {
                     body_id: body.id.0,
-                    geometry_id: format!("body/{}", body.id.0),
+                    geometry_id: crate::scene::body_geometry_id(body),
                     pose: body.pose.into(),
                     shape: body.shape.into(),
                 })
@@ -525,8 +525,7 @@ impl ObservedPlant {
                     self.active_arm().gripper_config,
                 ))
                 .enumerate()
-                .map(|(i, (pose, shape))| crate::scene::ColliderSnapshot {
-                    body_id: 10_030 + i as u32,
+                .map(|(i, (pose, shape))| super::replay::ReplayToolCollider {
                     geometry_id: format!("physical_tool/jaw/{i}"),
                     pose: pose.into(),
                     shape: shape.into(),
