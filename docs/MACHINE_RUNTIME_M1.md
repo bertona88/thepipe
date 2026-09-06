@@ -42,9 +42,9 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 | M1c — simple manipulation | Pick, carry, insert, release, and retreat with a calibration peg; grasp ownership and held-part pose come from the plant | Implemented |
 | M1d — optical/robot co-design | Versioned two-scale layout, analytic precision sweep, and phase-by-phase arm residual budgets with an explicit hardware-evidence boundary | Implemented as a model; bench qualification not started |
 | M1e — observed-state single-arm manipulation | Timestamped camera/projector features feed a 5-DoF axisymmetric estimator, bounded stop-and-look motion, guarded grasp/insertion, and explicit fail-closed reports for one peg/socket coupon | Implemented as an F1-reduced model; not hardware-qualified |
-| M2 — two-arm handoff | Collision-aware dual grasp, transfer, release, and retreat | Planned |
-| M3 — general observed-state control | Extend the M1e coupon boundary to general roll-constrained parts, multiple arms/views, and the gearbox executive | Planned |
-| M4 — gearbox integration | Gearbox executive issues real machine goals after the preceding gates pass | Deferred |
+
+This table records implemented scope. See `IMPLEMENTATION_STATUS.md` for the
+M1f and stationary M1g extensions and their remaining fidelity limits.
 
 The existing gearbox scenario remains an explicitly labelled F1-reduced
 software-integration scaffold. Its logical part plant is not evidence that the
@@ -196,9 +196,9 @@ M1a is accepted when all of the following pass:
 - native and WASM point-motion runtimes expose the same scene and report data;
 - formatting, unit tests, clippy with warnings denied, WASM release build, and CAD tests pass in CI.
 
-A future browser viewer additionally requires checks that it rejects unsupported
-scene schemas and renders physical geometry and telemetry only from valid runtime
-data. These are future viewer gates, not current CI coverage.
+The recorded-state inspector's schema, geometry mapping, and unavailable-data
+checks are documented in `ENGINEERING_REPLAY_AND_HANDOFF_M1G.md`. That coverage
+does not establish a live JavaScript/WASM machine viewer.
 
 ## Explicit remaining risks
 
@@ -221,7 +221,7 @@ data. These are future viewer gates, not current CI coverage.
 - The selected rail topology and all qualification targets require physical
   prototype and calibration evidence.
 
-The next physical experiment remains a calibration peg and socket, not a gearbox. Follow
-`HARDWARE_COUPON_M1E.md` with one arm, two temporary global views, one rigid macro head, the
-intended clear-wall coupon, independent gauges, and held-out evaluation data before assigning any
-hardware meaning to the modeled M1e result.
+`HARDWARE_COUPON_M1E.md` defines calibration-peg measurement methods with one arm,
+two temporary global views, one rigid macro head, the intended clear-wall coupon,
+independent gauges, and held-out evaluation data. The modeled M1e result alone
+does not establish hardware performance.

@@ -151,28 +151,25 @@ The tightest current requirement is therefore about **7.9 µm lateral loaded con
 during guarded insertion, provided the optical and contact assumptions survive measurement. That
 does not mean an inexpensive tendon arm must repeatedly hit an absolute world coordinate to 8 µm.
 It must hold to roughly 2 µm during the 53.3 ms burst and make a correction whose residual is below
-7.9 µm in the local observed frame. If the arm cannot do that, the correct co-design response is
-not automatically a more expensive arm: first test smaller correction steps, flexure guidance,
-passive lead-ins, a tighter local field, better calibration, or more stop-and-look iterations.
+7.9 µm in the local observed frame. Possible co-design responses include smaller correction
+steps, flexure guidance, passive lead-ins, a tighter local field, better calibration, or more
+stop-and-look iterations.
 
 For transit, the 100 µm latency allocation and 41.7 ms global estimate time imply at most about
 2.4 mm/s uncompensated image-relative motion. Faster motion requires a timestamped motion model;
 it cannot simply reuse a stale pose.
 
-## Bench qualification sequence
+## Evidence for the modeled optical budget
 
-1. Build only two global views and one rigid macro camera/projector coupon head.
-2. Verify common exposure timing and measure the actual capture-to-estimate latency distribution.
-3. Focus on a traceable gauge at 10, 15, 20 and 25 mm; measure object sampling and slanted-edge MTF.
-4. Calibrate on one target, then report held-out 3D residuals on a separate gauge over the declared
-   field, angle, material, lighting and temperature envelope.
-5. Repeat through the clear tube and record false return, dropout and bias—not only accepted points.
-6. Observe a loaded calibration pointer while each tendon arm holds for a coded burst; measure
-   drift, vibration and minimum repeatable correction in lateral and axial directions.
-7. Feed those measured distributions back into this scenario and rerun every phase allocation.
-8. Permit near-contact motion only after all phase budgets remain feasible and two-view loss causes
-   the configured hold/retreat action.
+The candidate's hardware claims depend on measured exposure timing and
+capture-to-estimate latency; object sampling and slanted-edge MTF at 10, 15, 20,
+and 25 mm; and held-out 3D residuals on a gauge independent of the calibration
+target across the declared field, angle, material, lighting, and temperature range.
+Clear-tube measurements include false returns, dropout, and bias. Loaded-arm
+measurements cover drift, vibration, and minimum repeatable lateral and axial
+correction during a coded burst.
 
-The first downselect is therefore a **two-view global coupon plus one macro head**, run alongside a
-loaded one-arm repeatability coupon. Six-camera replication, the final projector, and wrist CAD
-freeze come only after those measurements close the same executable budget.
+Measured distributions belong back in the scenario and its phase allocations.
+Near-contact qualification depends on feasible phase budgets and the configured
+hold/retreat response to loss of the required views. `HARDWARE_COUPON_M1E.md`
+describes a measurement protocol; the current modeled values are not hardware evidence.

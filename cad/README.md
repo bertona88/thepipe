@@ -11,36 +11,24 @@ macro stereo head, and a micro-gearbox assembly benchmark**. The cell hardware i
 kept DIY-friendly; the ideal nominal benchmark parts are intentionally much smaller
 and target eventual two-photon polymerization (2PP), which is not simulated here.
 
-## What is needed first
+## Model inputs and boundaries
 
-1. Python 3.11+ and `build123d` 0.10 or 0.11 (OpenCascade is pulled in by it).
-2. A CAD-dimension source of truth: `pipe_cad/params.py`.  The checked-in
-   acceptance scenario points to its exported metadata JSON; the Rust CLI validates
-   its schema/hash/BREP flags and an enumerated dimensional subset before starting
-   the separately compiled reduced-order model.
-3. Build and instrument one rail/base/arm channel first; the four-arm export is
-   a replication target, not a procurement instruction. Each carriage deck places
-   its shoulder datum at 72.0 mm radius while the rail body is at 76.9 mm.
-4. The first arm needs four measured actuator channels with 3.0 mm capstans,
-   1.65 mm joint moment arms, 12 mm usable payout, encoders/current/temperature
-   sensing, tensioners, and opposed 0.20 mm UHMWPE line winding. Replicate to
-   sixteen channels only after its travel/force/repeatability gates pass.
-5. Six triggerable global-shutter board cameras, two close-focus wrist cameras,
-   one shared calibrated coded-projector or laser-line module, matte
-   fiducials, a sync pulse source, and stable camera mounts.
-6. For the later physical benchmark, not for the current ideal-part software gate:
-   select and independently qualify a 2PP vendor/process against the current 8-20
-   micrometre design-rule assumptions, add three 0.35 x 1.55 mm dowel shafts, and
-   inspect gear bores and shaft center distance.  The nominal gearbox is
-   6.00 x 4.00 x 1.83 mm closed.
-7. Prototype the current loose-pocket gearbox carrier and insertion-order parts
-   tray; the carrier still needs explicit restraint contacts and a clamp before
-   it is a fixture. Fit the arms with a vacuum micro-pick, compliant insertion
-   probe, replaceable rotary drive blade, and three-point calibration pointer
-   from `tooling.py`.
-8. Before physical assembly, calibrate camera intrinsics, global extrinsics,
-   wrist-camera extrinsics, each rail's theta axis, each carriage's z scale, and
-   the arm joint/tendon maps.  The visual tracker remains the absolute reference.
+The package uses Python 3.11+ and `build123d` 0.10 or 0.11, with OpenCascade.
+`pipe_cad/params.py` owns the CAD dimensions. The checked-in acceptance scenario
+points to exported metadata; the Rust CLI validates its schema/hash/BREP flags
+and an enumerated dimensional subset against a separately compiled reduced model.
+That check does not establish agreement between every CAD solid and runtime body.
+
+The four-arm export is nominal design geometry. Each carriage deck places its
+shoulder datum at 72.0 mm radius while the rail body is at 76.9 mm. Actuator travel,
+force, repeatability, calibration, and sensing performance remain unqualified.
+The loose-pocket gearbox carrier lacks the restraint contacts and clamp needed
+for a physical fixture; tool solids alone do not establish runtime tool behavior.
+
+The gearbox parts are idealized. Physical fabrication, inspection, and machine
+qualification have separate evidence requirements in `../docs/REQUIREMENTS.md`.
+Work on this geometry alongside its articulated motion and sensing models, as
+described in `../AGENTS.md`.
 
 ## Nominal mechanism snapshot
 

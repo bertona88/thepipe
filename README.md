@@ -18,9 +18,21 @@ predictor of a particular manufacturing process or actuator. Every pass/fail res
 fidelity and assumptions. Replace nominal machine parameters with measured coupon and calibration
 data before using it to release hardware.
 
-## Start here
+## Goal and way of working
 
-- [What is needed first](docs/NEEDS_FIRST.md)
+The goal is a low-cost tube-shaped cell that assembles and checks a miniature
+gearbox, with precision coming primarily from optical observation and local
+feedback. We develop CAD, mechanics, sensing, and control together: articulate
+the proposed mechanism, inspect reach, contact, clearance and visibility, and
+use those results to revise the design. Small tasks are experiments within that
+loop, with explicit assumptions about how they represent the complete machine.
+
+[AGENTS.md](AGENTS.md) describes the working style. The documents below record
+design intent, implemented behavior, evidence, and limitations, rather than a
+prescribed sequence of future milestones.
+
+## Reference documents
+
 - [Engineering requirements](docs/REQUIREMENTS.md)
 - [Architecture and fidelity boundaries](docs/ARCHITECTURE.md)
 - [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
@@ -30,7 +42,7 @@ data before using it to release hardware.
 - [M1e one-arm hardware coupon qualification](docs/HARDWARE_COUPON_M1E.md)
 - [M1f fixed-head observation and position/axis control](docs/FIXED_HEAD_MANIPULATION_M1F.md)
 - [Engineering replay and stationary handoff gate](docs/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md)
-- [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
+- [Implementation status and fidelity limits](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
 ## Repository map
@@ -142,7 +154,7 @@ predict global/macro precision, sweep macro field width versus baseline, and sol
 loaded arm-control allocation for every manipulation phase. A feasible report is explicitly
 `model_feasible_hardware_qualification_required`; it is not measured accuracy. See the M1d note
 for the proposed camera/projector layout, current 7.9 µm tightest lateral residual allocation, and
-the coupon sequence required before camera replication or arm architecture freeze.
+the measurements needed to qualify those modeled budgets.
 
 ## M1e observed-state single-arm manipulation
 
@@ -224,7 +236,7 @@ It starts with prepositioned arms and injects metrology packets into the 5-DoF
 estimator. It does **not** establish fixed-head optical visibility, execute
 approach/retreat trajectories, or model dual-grasp load sharing. See the
 [engineering contract](docs/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md) for reproduction,
-validation, fault behavior and the next two-arm gate.
+validation, fault behavior and fidelity limits.
 
 ## Safety boundary
 

@@ -465,7 +465,7 @@ round the measured result down to 53.3 ms.
 Install the final coupon jaw, pad, fiducial, and peg/pointer. Record the full moving payload mass,
 centre of mass, and arm extension. At minimum test the real peg payload and a versioned worst-case
 ballast up to the current 2 g manipulation envelope at 60 mm extension; the 5 g structural hold
-test in `NEEDS_FIRST.md` remains a separate strength gate.
+test in `REQUIREMENTS.md` section 5.3 remains a separate strength gate.
 
 For each of at least five arm poses spanning the macro approach and transfer workspace:
 
