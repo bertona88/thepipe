@@ -50,6 +50,21 @@ at the labelled measurement-packet boundary. It is F0 protocol evidence, not a
 fixed-head two-arm optical or trajectory result. See
 [the replay and handoff contract](ENGINEERING_REPLAY_AND_HANDOFF_M1G.md).
 
+## Calibrated cylindrical metrology
+
+The [optical metrology subsystem](OPTICAL_METROLOGY.md) adds a parameterized
+100 mm ID / 25 mm-zone candidate, six-view distorted-pixel triangulation,
+six-DOF rigid distal fiducials and TCP covariance, timed hybrid Gray/phase
+decoding, reduced defocus/diffraction, explicit calibration/thermal/reference
+health, separate occupancy and surface APIs, independent geometry verification
+and a stopped acquisition/precision-admission adapter over the existing machine.
+It does not replace M1e/M1f sensing or qualify the legacy CAD. The 160 mm runtime
+scale is explicitly distinguished from the standalone candidate. Incomplete
+structured-light coverage and repeatability above target are reported as failures,
+even where accepted points have micrometre-scale error. Physical accuracy,
+intrinsic/extrinsic calibration fitting, full optical image formation and complete
+cell occlusion geometry remain unvalidated or outside this implementation.
+
 ## Fidelity labels
 
 - **F0 geometry:** kinematics, reach, conservative collision envelopes and visibility.

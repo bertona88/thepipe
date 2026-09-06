@@ -391,12 +391,12 @@ impl SerialArm {
                     }
                 }
                 let mut normal = [[0.0; 6]; 5];
-                for i in 0..5 {
-                    for j in 0..5 {
-                        normal[i][j] = (0..6).map(|k| jacobian[k][i] * jacobian[k][j]).sum::<f64>()
+                for (i, row) in normal.iter_mut().enumerate() {
+                    for (j, entry) in row.iter_mut().enumerate().take(5) {
+                        *entry = (0..6).map(|k| jacobian[k][i] * jacobian[k][j]).sum::<f64>()
                             + if i == j { 1.0e-8 } else { 0.0 };
                     }
-                    normal[i][5] = -(0..6).map(|k| jacobian[k][i] * r[k]).sum::<f64>();
+                    row[5] = -(0..6).map(|k| jacobian[k][i] * r[k]).sum::<f64>();
                 }
                 let Some(mut step) = solve_ik_system(normal) else {
                     break;

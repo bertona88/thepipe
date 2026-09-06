@@ -38,6 +38,7 @@ prescribed sequence of future milestones.
 - [Machine runtime M1 decision and implementation contract](docs/MACHINE_RUNTIME_M1.md)
 - [M1c simple-manipulation acceptance contract](docs/MACHINE_RUNTIME_M1C.md)
 - [M1d optical/robot co-design and precision budget](docs/OPTICAL_CODESIGN_M1D.md)
+- [Calibrated cylindrical optical metrology and independent verification](docs/OPTICAL_METROLOGY.md)
 - [M1e observed-state single-arm manipulation](docs/OBSERVED_STATE_MANIPULATION_M1E.md)
 - [M1e one-arm hardware coupon qualification](docs/HARDWARE_COUPON_M1E.md)
 - [M1f fixed-head observation and position/axis control](docs/FIXED_HEAD_MANIPULATION_M1F.md)

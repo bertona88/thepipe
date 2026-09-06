@@ -1,9 +1,19 @@
 # pipe_optics
 
-Dependency-free optical metrology simulation for native Rust and
+Deterministic optical metrology simulation (Serde provides configuration/report serialization) for native Rust and
 `wasm32-unknown-unknown`.
 
-The physical path is explicit:
+The new `metrology` module adds observation-only multi-view point and 6-DoF rigid
+tool/TCP reconstruction, Jacobian covariance, timed hybrid Gray/phase decoding,
+separate occupancy/feature/tool/surface products, calibration and thermal health,
+precision-operation contracts, and independent verification. Its synthetic
+frontend models extracted features/intensities and reduced defocus/diffraction,
+not complete rendered images or physical calibration. See
+[the metrology contract](../../docs/OPTICAL_METROLOGY.md) for executable interfaces,
+candidate parameters, evidence and fidelity boundaries. The legacy paths below
+retain their existing semantics.
+
+The legacy raster physical path is explicit:
 
 1. A detector pixel is unprojected through the **drifted physical camera**.
 2. The closest primitive surface is ray-traced.

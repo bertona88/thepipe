@@ -1,6 +1,8 @@
 use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Vec2 {
     pub x: f64,
     pub y: f64,
@@ -58,7 +60,8 @@ impl Div<f64> for Vec2 {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -175,7 +178,8 @@ impl Neg for Vec3 {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Mat3 {
     /// Row-major elements.
     pub m: [[f64; 3]; 3],
@@ -360,7 +364,8 @@ impl Mul<Mat3> for Mat3 {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct RigidTransform {
     /// Rotation from local coordinates into world/parent coordinates.
     pub rotation: Mat3,
@@ -410,7 +415,8 @@ impl RigidTransform {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Ray {
     pub origin: Vec3,
     /// Unit direction.

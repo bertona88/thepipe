@@ -169,6 +169,69 @@ impl PointMotionRuntime {
             .is_some_and(|plan| plan.status == ToolMotionStatus::Active)
     }
 
+    pub fn metrology_candidate(&self) -> Result<crate::metrology::MachineMetrology, SimError> {
+        crate::metrology::MachineMetrology::for_machine(self.cell_config)
+            .map_err(|e| SimError::InvalidScenario(e.to_string()))
+    }
+
+    pub fn acquire_metrology(
+        &mut self,
+        optics: &mut crate::metrology::MachineMetrology,
+    ) -> Result<crate::metrology::MachineMetrologyFrame, SimError> {
+        optics.acquire(&mut self.mechanics, self.cell_config)
+    }
+
+    /// Optical admission is additional to the authoritative collision and
+    /// command gates. It is checked at submission time, never cached as a bool.
+    pub fn submit_precision_target(
+        &mut self,
+        optics: &mut crate::metrology::MachineMetrology,
+        policy: &pipe_optics::metrology::PrecisionContract,
+        tool_id: u32,
+        target_id: u32,
+        manipulator: ManipulatorId,
+        target_position_world_m: Vec3,
+    ) -> Result<u64, SimError> {
+        optics.require_current_capture(self.mechanics.machine_command_sequence)?;
+        if !optics
+            .config
+            .precision_volume
+            .contains(pipe_optics::Vec3::new(
+                target_position_world_m.x,
+                target_position_world_m.y,
+                target_position_world_m.z,
+            ))
+        {
+            return Err(SimError::InvalidScenario(
+                "precision command outside the measured precision zone".into(),
+            ));
+        }
+        let attached = optics
+            .tools
+            .iter()
+            .any(|t| t.object_id == tool_id && t.arm_id == Some(manipulator.0));
+        if !attached {
+            return Err(SimError::InvalidScenario(
+                "precision tool does not belong to commanded arm".into(),
+            ));
+        }
+        optics
+            .world
+            .require_operation(
+                &optics.config,
+                policy,
+                tool_id,
+                target_id,
+                self.mechanics.time_s,
+            )
+            .map_err(|e| {
+                SimError::InvalidScenario(format!("precision operation rejected: {e:?}"))
+            })?;
+        let sequence = self.submit_tool_target(manipulator, target_position_world_m)?;
+        optics.consume_capture();
+        Ok(sequence)
+    }
+
     pub fn scene_description(&self) -> SceneDescription {
         scene::build_scene_description(
             &self.machine_config_id,

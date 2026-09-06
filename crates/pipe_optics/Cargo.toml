@@ -11,3 +11,4 @@ readme = "README.md"
 default = []
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
