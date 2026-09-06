@@ -29,6 +29,7 @@ data before using it to release hardware.
 - [M1e observed-state single-arm manipulation](docs/OBSERVED_STATE_MANIPULATION_M1E.md)
 - [M1e one-arm hardware coupon qualification](docs/HARDWARE_COUPON_M1E.md)
 - [M1f fixed-head observation and position/axis control](docs/FIXED_HEAD_MANIPULATION_M1F.md)
+- [Engineering replay and stationary handoff gate](docs/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md)
 - [Implemented fidelity versus future work](docs/IMPLEMENTATION_STATUS.md)
 - [CAD package](cad/README.md)
 
@@ -50,8 +51,9 @@ data before using it to release hardware.
 ## Visualization policy
 
 The previous website and its synthetic UI-preview telemetry have been removed.
-There is currently no browser frontend. The Rust scene contracts, WASM bindings,
-headless reports, and build123d CAD generators remain available.
+A minimal offline engineering inspector now reads recorded M1e/M1f runtime output.
+There is no hosted application. The Rust scene contracts, WASM bindings, headless
+reports, and build123d CAD generators remain available.
 
 Future visuals must consume versioned runtime frames/reports or generated CAD
 with explicit source provenance, units, and fidelity limits. Missing or invalid
@@ -206,6 +208,23 @@ not estimate hardware yield. The wider fixed optical field has its own sampling,
 floors, contact forces, and precision remain unqualified. See the [M1f contract](docs/FIXED_HEAD_MANIPULATION_M1F.md)
 for geometry, acceptance, interfaces and remaining fidelity limits. M1e remains the
 default regression scenario, including its explicitly declared ROI-retile shortcut.
+
+## Engineering inspector and stationary handoff
+
+`python3 scripts/record_observed_replay.py` builds a clean revision and produces
+`out/observed-inspection/inspector.html`. It shows exact executed geometry,
+separate controller estimates/uncertainty, command targets and decision history.
+Missing or invalid data is unavailable. It is an offline diagnostic, with no
+synthetic preview mode and no displayed interpolation.
+
+`cargo run --locked --release -p pipe_sim_cli --bin pipe-handoff` executes the
+stationary M1g ownership-exchange coupon: observed authorization, receiver
+closure, atomic ownership transfer, donor opening and fresh retention checks.
+It starts with prepositioned arms and injects metrology packets into the 5-DoF
+estimator. It does **not** establish fixed-head optical visibility, execute
+approach/retreat trajectories, or model dual-grasp load sharing. See the
+[engineering contract](docs/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md) for reproduction,
+validation, fault behavior and the next two-arm gate.
 
 ## Safety boundary
 

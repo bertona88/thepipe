@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod handoff;
 mod machine_config;
 pub mod observed_manipulation;
 pub mod optical_codesign;

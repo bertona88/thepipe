@@ -58,6 +58,7 @@ struct CaptureEntryGeometry {
 pub struct ObservedManipulationRuntime {
     scenario: ObservedManipulationScenario,
     scenario_sha256: String,
+    scenario_source_json: String,
     fault: M1eFault,
     plant: ObservedPlant,
     estimators: BTreeMap<u32, ObservedPoseEstimator>,
@@ -83,19 +84,25 @@ impl ObservedManipulationRuntime {
     pub fn new(fault: M1eFault) -> Result<Self, SimError> {
         let (scenario, hash) = ObservedManipulationScenario::baseline()
             .map_err(|error| SimError::InvalidScenario(error.to_string()))?;
-        Self::from_validated_scenario(scenario, hash, fault)
+        Self::from_validated_scenario(
+            scenario,
+            hash,
+            fault,
+            super::scenario::BASELINE_M1E_SCENARIO_JSON.to_owned(),
+        )
     }
 
     pub fn from_scenario_json(json: &str, fault: M1eFault) -> Result<Self, SimError> {
         let (scenario, hash) = ObservedManipulationScenario::from_json(json)
             .map_err(|error| SimError::InvalidScenario(error.to_string()))?;
-        Self::from_validated_scenario(scenario, hash, fault)
+        Self::from_validated_scenario(scenario, hash, fault, json.to_owned())
     }
 
     fn from_validated_scenario(
         scenario: ObservedManipulationScenario,
         scenario_sha256: String,
         fault: M1eFault,
+        scenario_source_json: String,
     ) -> Result<Self, SimError> {
         if fault != M1eFault::None && scenario.expected_failure_reason(fault).is_none() {
             return Err(SimError::InvalidScenario(format!(
@@ -120,6 +127,7 @@ impl ObservedManipulationRuntime {
         let mut runtime = Self {
             scenario,
             scenario_sha256,
+            scenario_source_json,
             fault,
             plant,
             estimators,
@@ -150,6 +158,29 @@ impl ObservedManipulationRuntime {
             None,
         );
         Ok(runtime)
+    }
+
+    /// Enable evaluation-only snapshots without changing any controller input.
+    pub fn enable_replay(
+        &mut self,
+        sample_every_ticks: u64,
+        maximum_frames: usize,
+    ) -> Result<(), SimError> {
+        self.plant.enable_replay(sample_every_ticks, maximum_frames)
+    }
+
+    pub fn replay(
+        &mut self,
+        source_revision: &str,
+        generation_command: &str,
+    ) -> Result<super::replay::ObservedReplay, SimError> {
+        let report = self.report();
+        self.plant.finish_replay(
+            source_revision,
+            generation_command,
+            &self.scenario_source_json,
+            report,
+        )
     }
 
     pub fn run_cycle(&mut self) -> Result<ObservedManipulationReport, SimError> {
@@ -2957,6 +2988,7 @@ impl ObservedManipulationRuntime {
             .into_iter()
             .filter(|estimate| estimate.valid)
             .collect();
+        self.plant.record_replay_sample(true);
         self.decisions.push(DecisionRecord {
             sequence: self.decisions.len() as u32,
             tick: self.plant.now_tick(),
