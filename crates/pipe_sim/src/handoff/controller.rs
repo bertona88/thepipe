@@ -50,7 +50,7 @@ pub struct Controller {
     pub owner: Option<u32>,
     pub terminal_reason: Option<String>,
     policy: Policy,
-    pending: Option<Action>,
+    pending: Option<(Action, u64)>,
     last_sequence: Option<u64>,
     after_tick: u64,
 }
@@ -78,7 +78,7 @@ impl Controller {
     pub fn authorize(&mut self, input: &HandoffInput) -> Action {
         if self.phase == Phase::Stopped { return Action::StopBoth; }
         match self.check(input) {
-            Ok(action) => { self.last_sequence = Some(input.sequence); self.pending = Some(action); action }
+            Ok(action) => { self.last_sequence = Some(input.sequence); self.pending = Some((action, input.tick)); action }
             Err(reason) => self.stop(reason),
         }
     }
@@ -148,7 +148,8 @@ impl Controller {
 
     /// Ownership changes only after the plant acknowledges its atomic operation.
     pub fn acknowledge(&mut self, action: Action, tick: u64, accepted: bool) {
-        if self.pending != Some(action) || tick < self.after_tick || !accepted {
+        if !self.pending.is_some_and(|(expected, authorized_at)| expected == action && tick >= authorized_at)
+            || tick < self.after_tick || !accepted {
             self.stop("plant_transaction_rejected"); return;
         }
         self.pending = None;

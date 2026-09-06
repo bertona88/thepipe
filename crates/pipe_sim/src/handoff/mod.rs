@@ -48,7 +48,8 @@ pub enum Fault {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Decision {
     pub phase: Phase,
-    pub input: HandoffInput,
+    pub input: Option<HandoffInput>,
+    pub plant_failure: Option<String>,
     pub action: Action,
     pub acknowledged: bool,
     pub owner_after_ack: Option<u32>,
@@ -93,7 +94,18 @@ pub fn run_stationary_coupon(fault: Fault) -> Result<Report, String> {
     let mut decisions = Vec::new();
     for sequence in 0..8 {
         let phase = controller.phase;
-        let mut input = plant.observe(sequence)?;
+        let mut input = match plant.observe(sequence) {
+            Ok(input) => input,
+            Err(error) => {
+                controller.stop("plant_observation_failed");
+                plant.stop()?;
+                decisions.push(Decision { phase, input: None, plant_failure: Some(error),
+                    action: Action::StopBoth, acknowledged: false,
+                    owner_after_ack: controller.owner, ack_tick: plant.tick() });
+                plant.record();
+                break;
+            }
+        };
         match fault {
             Fault::ObservationLostBeforeClose if phase == Phase::CloseReceiver => input.estimates.clear(),
             Fault::ObservationLostBeforeTransfer if phase == Phase::Transfer => input.estimates.clear(),
@@ -108,11 +120,12 @@ pub fn run_stationary_coupon(fault: Fault) -> Result<Report, String> {
             _ => {}
         }
         let action = controller.authorize(&input);
-        let accepted = if action == Action::StopBoth { false }
-            else { plant.apply(action, fault == Fault::TransferRejected).is_ok() };
+        let plant_failure = if action == Action::StopBoth { None }
+            else { plant.apply(action, fault == Fault::TransferRejected).err() };
+        let accepted = action != Action::StopBoth && plant_failure.is_none();
         if action != Action::StopBoth { controller.acknowledge(action, plant.tick(), accepted); }
         if controller.phase == Phase::Stopped { plant.stop()?; }
-        decisions.push(Decision { phase, input, action, acknowledged: accepted,
+        decisions.push(Decision { phase, input: Some(input), plant_failure, action, acknowledged: accepted,
             owner_after_ack: controller.owner, ack_tick: plant.tick() });
         plant.record();
         if matches!(controller.phase, Phase::Complete | Phase::Stopped) { break; }
