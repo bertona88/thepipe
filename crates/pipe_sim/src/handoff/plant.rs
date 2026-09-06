@@ -30,20 +30,34 @@ impl Plant {
         if scenario.schema_version != 1 || scenario.machine_config_id != loaded.id {
             return Err("unsupported handoff scenario".into());
         }
-        let values = [scenario.peg_radius_m, scenario.peg_half_segment_m,
-            scenario.tool_to_peg_center_m, scenario.minimum_axial_overlap_m,
-            scenario.closed_opening_m, scenario.measurement_sigma_m];
-        let palm_plane = loaded.tool_geometry.ok_or("missing palm geometry")?.palm_forward_plane_tool_z_m;
+        let values = [
+            scenario.peg_radius_m,
+            scenario.peg_half_segment_m,
+            scenario.tool_to_peg_center_m,
+            scenario.minimum_axial_overlap_m,
+            scenario.closed_opening_m,
+            scenario.measurement_sigma_m,
+        ];
+        let palm_plane = loaded
+            .tool_geometry
+            .ok_or("missing palm geometry")?
+            .palm_forward_plane_tool_z_m;
         let palm_clearance = scenario.tool_to_peg_center_m
-            - scenario.peg_half_segment_m - scenario.peg_radius_m - palm_plane;
+            - scenario.peg_half_segment_m
+            - scenario.peg_radius_m
+            - palm_plane;
         if values.iter().any(|x| !x.is_finite() || *x <= 0.0)
             || scenario.measurement_latency_ticks == 0
             || scenario.measurement_latency_ticks > scenario.maximum_observation_age_ticks
             || scenario.maximum_observation_age_ticks > 10_000
-            || !(loaded.cell.gripper.min_opening_m..=loaded.cell.gripper.max_opening_m).contains(&scenario.closed_opening_m)
+            || !(loaded.cell.gripper.min_opening_m..=loaded.cell.gripper.max_opening_m)
+                .contains(&scenario.closed_opening_m)
             || scenario.maximum_force_n > loaded.cell.gripper.max_grip_force_n
-            || scenario.maximum_capture_error_m >= palm_clearance {
-            return Err("handoff scenario violates timing, gripper or palm-clearance admission".into());
+            || scenario.maximum_capture_error_m >= palm_clearance
+        {
+            return Err(
+                "handoff scenario violates timing, gripper or palm-clearance admission".into(),
+            );
         }
         let mut simulation =
             crate::machine_config::build_baseline_machine(&loaded).map_err(|e| e.to_string())?;

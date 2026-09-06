@@ -65,7 +65,7 @@ function draw(){try{
    }else throw Error('unsupported geometry '+shape.kind);
   }
   if(element('truth').checked){
-   for(const body of frame.bodies)collider(body,body.body_id===10001?'#2469a0':'#66717c');
+   for(const body of frame.bodies)if(scene.truth.rigid_bodies.find(b=>b.id===body.body_id).enabled)collider(body,body.body_id===10001?'#2469a0':'#66717c');
    for(const arm of scene.truth.manipulators)for(const link of arm.link_colliders)collider(link,'#66717c');
    for(const jaw of frame.physical_jaws)collider(jaw,'#2469a0');
    ctx.fillStyle='#2469a0';ctx.beginPath();ctx.arc(...point(frame.physical_tool_pose.translation_m),3,0,2*Math.PI);ctx.fill();
@@ -109,7 +109,7 @@ try{
    if(c.shape.kind==='box')require(Array.isArray(c.shape.half_extents_m)&&c.shape.half_extents_m.length===3&&c.shape.half_extents_m.every(x=>Number.isFinite(x)&&x>0),'invalid box');
    else require(c.shape.radius_m>0&&(c.shape.kind!=='capsule'||c.shape.half_segment_m>=0),'invalid round shape');
   }
-  for(const b of f.scene.truth.rigid_bodies){const c=f.bodies.find(c=>c.body_id===b.id);require(c&&JSON.stringify(c.pose)===JSON.stringify(b.pose),'geometry/state mismatch');}
+  for(const b of f.scene.truth.rigid_bodies){require(typeof b.enabled==='boolean','invalid body enabled state');const c=f.bodies.find(c=>c.body_id===b.id);require(c&&JSON.stringify(c.pose)===JSON.stringify(b.pose),'geometry/state mismatch');}
  }
  require(replay.frames[0].scene.tick===0&&replay.report.decisions.at(-1)?.tick===previous,'incomplete recording');
  for(const u of replay.report.estimator_updates){const e=u.estimate;require(Number.isSafeInteger(e.controller_tick)&&e.controller_tick>=0&&e.controller_tick<=previous,'invalid estimate timestamp');

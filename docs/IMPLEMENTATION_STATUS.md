@@ -14,7 +14,7 @@ being mistaken for a higher-fidelity claim.
 | Estimation and observed control | M1e implements deterministic weighted least-squares fusion for axisymmetric peg/socket/tool 5-DoF states, timestamp/age tracking, explicit covariance, view/head/ray counts, residual and innovation gates, deterministic outlier rejection, command-only prediction, uncertainty growth, bounded stop-and-look correction, phase-specific fail-closed guards, and truth-firewall/replay tests. It does not label unobservable roll as estimated | Hardware-backed feature extraction and calibration provenance, cross-object/camera correlation, angular tool control, identified process noise and bias distributions, continuous tracking between stopped bursts, more general 6D objects, and estimator-driven gearbox execution |
 | Assembly executive | The legacy gearbox executive runs logical guarded locate/pick/handoff/align/insert/mesh/verify over a reduced observed-part/force surrogate; its bounded arm state remains diagnostic rather than the owner of held-part motion. Separately, M1e executes one observed-state peg acquire/transfer/reacquire/guarded-insert/release/retreat cycle through the authoritative single-arm runtime. Recoverable contact may use a fresh preflighted reverse move; terminal faults issue Stop+hold with explicit reasons across ten injected profiles | Real task-space held-part trajectories in the gearbox executive, a general collision-free planner, multi-arm space-time reservations/handoff, calibrated physical force-loop integration, and estimator-driven hardware commands |
 | Gearbox article | Ideal nominal 0.10-module 12/18/24-tooth train, three shafts, housing and cover; the reported forward/reverse ratio and backlash acceptance is calculated analytically after the task loop | A modeled rotary-tool/vision measurement in the task loop, optional metrology-driven perturbation sweeps, external 2PP feasibility/cleaning/metrology and measured friction/wear/stiction data |
-| Interfaces | One headless compiled-baseline gearbox run; standalone native/WASM M1b point-motion and M1c simple-manipulation runtimes; native/WASM M1d optical co-design report; native M1e scenario/fault CLI plus a full-cycle WASM `ObservedManipulationSimulator` using the same structured decision report and controller hash; fixed-step Cartesian and phase-boundary replay; strict CLI manifest/scenario gates; and independently versioned static `SceneDescription` plus dynamic truth/estimate/commanded `SceneFrame`; no browser frontend (the legacy website and synthetic preview have been removed) | General direct machine-command controls, file-backed manifest loading in WASM, M1e stepwise scene visualization and browser golden comparison, batch/robustness tools, compact binary replay/telemetry, and estimator population in the general scene contract |
+| Interfaces | One headless compiled-baseline gearbox run; standalone native/WASM M1b point-motion and M1c simple-manipulation runtimes; native/WASM M1d optical co-design report; native M1e scenario/fault CLI plus a full-cycle WASM `ObservedManipulationSimulator` using the same structured decision report and controller hash; fixed-step Cartesian and phase-boundary replay; strict CLI manifest/scenario gates; and independently versioned static `SceneDescription` plus dynamic truth/estimate/commanded `SceneFrame`; offline recorded-state inspector (the legacy website and synthetic preview remain removed) | General direct machine-command controls, file-backed manifest loading in WASM, M1e stepwise scene visualization and browser golden comparison, batch/robustness tools, compact binary replay/telemetry, and estimator population in the general scene contract |
 
 ## M1f fixed-head extension
 
@@ -33,6 +33,22 @@ image-derived detections, hardware timing, calibrated contact and breakable gras
 remain open. The new camera field and burst timing are a separate modeled candidate;
 M1d precision values are not inherited. M1f accepts scenario/report schema 2 through
 the same native and WASM runtime, while M1e remains schema 1 and the default.
+
+## Engineering replay and stationary M1g handoff gate
+
+An opt-in recorder now exports exact M1e/M1f geometry and command samples with the
+unchanged controller report. The offline inspector displays three orthographic
+projections, separates truth/estimates/commands, gates stale or invalid estimates,
+and rejects broken replay mappings. General `SceneFrame.estimate` remains empty;
+5-DoF estimates retain their own report schema rather than becoming full poses.
+
+The isolated stationary handoff coupon now executes receiver closure, an atomic
+single-owner exchange, donor opening and fresh receiver-retention checks. It
+preserves the current owner on observation loss and tests physical transaction
+rejection without donor release. Its arms start prepositioned; sensing is injected
+at the labelled measurement-packet boundary. It is F0 protocol evidence, not a
+fixed-head two-arm optical or trajectory result. See
+[the replay and handoff contract](ENGINEERING_REPLAY_AND_HANDOFF_M1G.md).
 
 ## Fidelity labels
 

@@ -479,8 +479,7 @@ impl ObservedPlant {
         if self.now_tick() != 0
             || self.replay.is_some()
             || every_ticks == 0
-            || maximum_frames < 2
-            || maximum_frames > 100_000
+            || !(2..=100_000).contains(&maximum_frames)
         {
             return Err(SimError::InvalidScenario(
                 "replay requires a fresh runtime, nonzero stride, and 2..=100000 frames".into(),
@@ -498,7 +497,7 @@ impl ObservedPlant {
 
     pub fn record_replay_sample(&mut self, force: bool) {
         let Some(recorder) = &self.replay else { return };
-        if !force && !self.now_tick().is_multiple_of(recorder.every_ticks) {
+        if !force && self.now_tick() % recorder.every_ticks != 0 {
             return;
         }
         let frame = super::replay::ObservedReplayFrame {
@@ -542,6 +541,7 @@ impl ObservedPlant {
         &mut self,
         source_revision: &str,
         generation_command: &str,
+        scenario_source_json: &str,
         report: super::report::ObservedManipulationReport,
     ) -> Result<super::replay::ObservedReplay, SimError> {
         if source_revision.len() != 40
@@ -567,6 +567,8 @@ impl ObservedPlant {
         Ok(super::replay::ObservedReplay {
             schema_version: super::replay::OBSERVED_REPLAY_SCHEMA_VERSION,
             source_revision: source_revision.to_owned(), generation_command: generation_command.to_owned(),
+            scenario_source_json: scenario_source_json.to_owned(),
+            machine_source_json: crate::machine_config::M1E_COUPON_MACHINE_CONFIG_JSON,
             coordinate_frame: "pipe_world_right_handed_Z_tube_axis", length_unit: "m", angle_unit: "rad", time_unit: "s",
             sample_every_ticks: recorder.every_ticks,
             sampling: "fixed_tick_stride_plus_decisions; exact_samples_only; no_interpolation",

@@ -10,7 +10,7 @@ use crate::{sha256_hex, SimError};
 
 const BASELINE_MACHINE_CONFIG_JSON: &str =
     include_str!("../../../scenarios/machine_baseline_v1.json");
-const M1E_COUPON_MACHINE_CONFIG_JSON: &str =
+pub(crate) const M1E_COUPON_MACHINE_CONFIG_JSON: &str =
     include_str!("../../../scenarios/machine_m1e_coupon_v1.json");
 
 #[derive(Clone, Debug)]

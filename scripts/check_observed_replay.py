@@ -15,6 +15,7 @@ def main():
     validate(data)
     mutations = {
         "unsupported schema": lambda d: d.update(schema_version=99),
+        "configuration mismatch": lambda d: d.update(scenario_source_json="{}"),
         "wrong units": lambda d: d.update(length_unit="mm"),
         "missing truth": lambda d: d["frames"][0]["scene"].update(truth=None),
         "truth in estimate": lambda d: d["frames"][0]["scene"].update(estimate=d["frames"][0]["scene"]["truth"]),

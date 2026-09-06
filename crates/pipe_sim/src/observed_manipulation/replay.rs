@@ -36,6 +36,8 @@ pub struct ObservedReplay {
     pub schema_version: u32,
     pub source_revision: String,
     pub generation_command: String,
+    pub scenario_source_json: String,
+    pub machine_source_json: &'static str,
     pub coordinate_frame: &'static str,
     pub length_unit: &'static str,
     pub angle_unit: &'static str,

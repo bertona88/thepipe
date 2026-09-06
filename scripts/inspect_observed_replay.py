@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate a Rust replay and create an offline engineering inspector (stdlib only)."""
 import argparse
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -59,6 +60,10 @@ def validate(data):
     require(report["schema_version"] == report["scenario_schema_version"], "mismatched report/scenario schema")
     for key in ("scenario_sha256", "machine_config_sha256", "controller_report_sha256"):
         require(re.fullmatch(r"[0-9a-f]{64}", report[key]), "missing configuration identity")
+    for source, hash_key in (("scenario_source_json", "scenario_sha256"), ("machine_source_json", "machine_config_sha256")):
+        require(isinstance(data[source], str), "missing configuration source")
+        require(hashlib.sha256(data[source].encode()).hexdigest() == report[hash_key], "configuration hash mismatch")
+        json.loads(data[source])
     require(report["status"] in ("complete", "failed_safe"), "nonterminal recording")
     require(report["evaluation_only_truth"] is not None, "missing terminal evaluation")
     require(report["roll_observable"] is False, "unsupported roll estimate")
@@ -91,6 +96,7 @@ def validate(data):
             shape(collider["shape"])
         body_map = {entry["body_id"]: entry for entry in frame["bodies"]}
         for body in scene["truth"]["rigid_bodies"]:
+            require(type(body["enabled"]) is bool, "invalid body enabled state")
             require(body["id"] in body_map, "missing body geometry")
             require(body["pose"] == body_map[body["id"]]["pose"] and body["geometry_id"] == body_map[body["id"]]["geometry_id"], "geometry/state mismatch")
         for arm in scene["truth"]["manipulators"]:
