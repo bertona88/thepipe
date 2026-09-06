@@ -115,7 +115,7 @@ must not inherit M1f's fixed-head feasibility or precision claims.
 Concurrent bilateral pad evidence does not model dual-grasp load sharing.
 Gravity, friction, slip, breakaway and calibrated forces remain absent.
 
-## Verification and next gate
+## Verification
 
 `observed_replay` tests compare full controller reports with recording enabled
 and disabled, verify geometry/state mapping, terminal failure capture, deterministic
@@ -137,8 +137,7 @@ timestamps and unordered report events in both Python and JavaScript.
 Evaluation frames and scores are excluded from the handoff
 controller trace hash.
 
-The next gate is a physical fixed-head two-arm coupon: design visible target
-geometry, observe both tools and the peg through the actual optics boundary,
-execute bounded collision-checked approach and separation trajectories, and
-retain these ownership and visibility-loss guarantees. This stationary coupon
-does not close that milestone or execute the gearbox assembly.
+The stationary coupon does not demonstrate physical fixed-head observation of
+both tools and the peg, executed approach/separation trajectories, or gearbox
+assembly. Its ownership and visibility-loss tests establish the stated protocol
+behavior within the injected-metrology model.

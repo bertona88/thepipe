@@ -81,14 +81,10 @@ Acceptance requires:
 The nanometre numerical gate checks deterministic ideal kinematics; it is not a hardware accuracy
 claim.
 
-## Fidelity boundary and next gate
+## Fidelity boundary
 
 M1c is **F0 geometry with a reduced compliant grasp**, not normative F1. It does not yet model jaw
 or terminal-tool collision solids, gravity-sensitive fixturing, breakable grasp dynamics,
 contact-derived insertion force, constrained-orientation IK, estimator input, calibration drift,
 or hardware timing. `SceneFrame::truth` is available for evaluation and `SceneFrame::estimate`
 remains `null`; the controller uses configured coupon datums rather than hidden truth.
-
-M2 may begin after this cycle remains green in native tests, strict clippy, the WASM release build,
-and the headless CI acceptance run. M2 must add explicit dual ownership/handoff semantics and
-space-time collision reservation before the optical estimator is allowed to drive control.

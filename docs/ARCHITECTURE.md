@@ -6,7 +6,8 @@ Normative companion: `docs/REQUIREMENTS.md`
 This document describes the intended qualified system. Present-tense descriptions of target
 interfaces are not an implementation-status claim; see `IMPLEMENTATION_STATUS.md` for the
 executable subset. The current end-to-end simulator is an **F1-reduced integration scaffold**,
-not the normative F1 milestone specified below.
+not the normative F1 fidelity described below. These are design and evidence
+boundaries, not a prescribed build order; the working style is in `../AGENTS.md`.
 
 ## 1. Architecture principles
 
@@ -408,7 +409,8 @@ artifacts.
 
 The current `pipe_sim_wasm` adapter constructs compiled gearbox/M1b/M1c scenarios, advances one or
 many bounded cycles, and returns JSON snapshots/reports. It also exposes the versioned static
-machine description and current truth/estimate/commanded scene frame for future consumers; no browser renderer is currently shipped.
+machine description and current truth/estimate/commanded scene frame. The offline
+recorded-state inspector consumes native M1e/M1f replays; it is not a live WASM viewer.
 For M1e it exports `ObservedManipulationSimulator`, which accepts the embedded baseline or strict
 scenario JSON plus an optional named fault, runs the same Rust executive to a terminal state, and
 is designed to return the same report and controller hash as native execution. Host-side adapter
@@ -484,23 +486,3 @@ For F1 on a current laptop-class CPU:
 - batch mode may disable rendered optics but not geometric visibility, timing, noise, or estimator logic.
 
 F2 tooth-resolved contact and rendered optics are allowed to run slower than real time. Reports include wall time, physics step, solver iterations, mesh level, and dropped sensor frames.
-
-## 14. Initial build order
-
-This remains the order for the normative gearbox simulator. M1e deliberately advances parts of
-steps 5–7 only for a one-arm calibration coupon: explicit geometric feature observations, a
-truth-separated reduced estimator, bounded visual corrections, guarded grasp/insertion, and named
-fault outcomes. It does not imply that those steps are complete for the multi-arm gearbox.
-
-1. Freeze schemas, frames, units, scenario seed, and report gates.
-2. Generate build123d gearbox, fixture, simple arm solids, and collision metadata.
-3. Implement fixed-step `pipe-sim`, kinematics, F0 collision, trace, and CLI.
-4. Add tendon transmission and F1 rigid contact; validate on small golden scenes.
-5. Add geometric cameras, latency/noise, calibration, estimator, and truth firewall.
-6. Implement guarded pick/insert/mesh primitives and the deterministic task graph.
-7. Pass the canonical F1 assembly and fault-injection suite natively.
-8. Compile the same core to WebAssembly and compare event traces.
-9. Add F2 tooth contacts, compliant insertion refinements, rendered optical diagnostics, and convergence tests.
-10. Send the nominal gearbox through external 2PP process qualification, inspect delivered parts, and feed metrology/contact measurements into the F3 correlation layer before physical assembly trials.
-
-This order deliberately puts the gearbox, collision bodies, sensor error, and task gates ahead of visualization. A later frontend can consume stable replay and state interfaces without changing the engineering result.

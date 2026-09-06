@@ -1,5 +1,30 @@
 # The Pipe engineering rules
 
+## Goal and way of working
+
+Build a low-cost tube-shaped micro-assembly cell whose precision comes primarily
+from optical observation, local feedback, and guarded contact. The reference
+demonstration is assembling and checking a miniature gearbox with mobile
+tendon-driven arms. Gearbox parts are idealized; the cell is the design problem.
+
+Work on one evolving machine. CAD, mechanics, optics, controls, and software are
+different views of that machine, and changes should be considered across them.
+
+- Design by articulating and observing the proposed mechanism. Use motion,
+  clearance, contact, and visibility studies to revise geometry as well as control.
+  Rough CAD and reduced models are useful when their assumptions are clear.
+- Keep runtime dimensions, joints, frames, tools, and sensor mounts connected to
+  the intended mechanical design. Reuse shared definitions where practical, and
+  call out discrepancies and their consequences instead of letting models drift.
+- Use small operations such as a peg insertion as integrated experiments. Explain
+  what each result establishes and what its approximations leave unanswered about
+  the complete machine.
+- Let simulation and physical measurements inform each other. Treat unmeasured
+  performance as a hypothesis, and revise the design or model when evidence disagrees.
+- Keep documentation focused on the goal, current decisions, evidence, and open
+  questions. Choose work around the uncertainty that matters to the machine;
+  keep planning lightweight rather than accumulating prescribed milestone sequences.
+
 Prioritize physical correctness, deterministic simulation, explicit units,
 collision safety, testability, and honest fidelity boundaries.
 

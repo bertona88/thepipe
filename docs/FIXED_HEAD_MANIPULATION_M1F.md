@@ -185,7 +185,7 @@ of 36/72 µm exceed the declared pickup-capture budget; processing latencies of
 refusals do not provide runtime recovery evidence. The five injected fault
 profiles stop for their exact declared reasons.
 
-## Remaining fidelity boundaries and next gate
+## Remaining fidelity boundaries
 
 Features are labelled geometric observations, not detections from images.
 Lens MTF, focus, correspondence errors, transparent-tube refraction/glare,
@@ -201,5 +201,4 @@ versus native golden execution parity. M1f does not yet populate the general
 browser scene with estimates. Hardware claims still require the independent
 measurements in `HARDWARE_COUPON_M1E.md`, extended with loaded angular correction,
 fixed-field visibility, and acquisition-throughput measurements for this
-candidate. The next software milestone is observed two-arm handoff, with
-explicit grasp ownership and loss-of-observation handling.
+candidate.
