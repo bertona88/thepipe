@@ -8,8 +8,8 @@ qualification requirements in `REQUIREMENTS.md`.
 
 ## Decision
 
-Rust is the sole owner of physical machine state. The browser receives a
-versioned description and frame projection and renders the supplied poses. It
+Rust is the sole owner of physical machine state. Any future browser viewer must receive a
+versioned description and frame projection and render the supplied poses. It must
 does not calculate rail positions, arm forward kinematics, part trajectories,
 contacts, or grasp ownership.
 
@@ -37,7 +37,7 @@ and a browser viewer. They are split so each claim has a clean acceptance gate.
 
 | Milestone | Evidence | Status |
 | --- | --- | --- |
-| M1a — authoritative machine state | Canonical configuration, bounded direct-axis commands, named FK poses, collision capsules, versioned scene export, snapshot-driven browser | Implemented |
+| M1a — authoritative machine state | Canonical configuration, bounded direct-axis commands, named FK poses, collision capsules, versioned scene export | Runtime implemented; legacy browser removed |
 | M1b — one-arm point motion | Dedicated calibration target, tool-position IK, time-parameterized path, numeric target error, replay trace | Implemented |
 | M1c — simple manipulation | Pick, carry, insert, release, and retreat with a calibration peg; grasp ownership and held-part pose come from the plant | Implemented |
 | M1d — optical/robot co-design | Versioned two-scale layout, analytic precision sweep, and phase-by-phase arm residual budgets with an explicit hardware-evidence boundary | Implemented as a model; bench qualification not started |
@@ -169,10 +169,12 @@ joint positions. The final sample lands exactly on the solved state.
 
 ## Browser boundary
 
-The operator console fetches `SceneDescription` once at reset and consumes the
-`SceneFrame` attached to each Rust step. The active renderer maps supplied
-poses to drawing primitives. If the WASM runtime or scene schema is absent, it
-shows the machine scene as unavailable instead of inventing a physical pose.
+The legacy operator console and synthetic preview have been removed. The Rust
+`SceneDescription` and `SceneFrame` contracts remain. A future viewer must fetch
+the description once at reset and consume authoritative sampled frames, mapping
+supplied poses to drawing primitives. If runtime data or a supported scene schema
+is absent, geometry and telemetry must be unavailable. No synthetic fallback is
+permitted. See `../AGENTS.md` for the repository-wide visualization rule.
 
 Display interpolation is allowed later if it is clearly a visual interpolation
 between authoritative frames. It must never feed back into contacts, task
@@ -187,14 +189,16 @@ M1a is accepted when all of the following pass:
 - command validation, sequencing, stop behavior, and fixed-step projection;
 - named FK frames, jaw poses, collision geometry, bodies, contacts, and stable IDs in the scene;
 - native and WASM code compile against the same scene types;
-- browser bridge rejects unknown scene schema versions;
-- the browser renders machine geometry only when Rust scene state is present;
 - Cartesian targets reject non-finite, unreachable, joint-limited, and
   collision-bearing requests without changing command sequence or targets;
 - the calibration target completes under synchronized velocity/acceleration
   bounds with a deterministic trace and numeric final TCP error;
 - native and WASM point-motion runtimes expose the same scene and report data;
-- formatting, unit tests, clippy with warnings denied, WASM release build, web verification, and CAD tests pass in CI.
+- formatting, unit tests, clippy with warnings denied, WASM release build, and CAD tests pass in CI.
+
+A future browser viewer additionally requires checks that it rejects unsupported
+scene schemas and renders physical geometry and telemetry only from valid runtime
+data. These are future viewer gates, not current CI coverage.
 
 ## Explicit remaining risks
 
