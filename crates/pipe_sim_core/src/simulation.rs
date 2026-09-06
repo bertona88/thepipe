@@ -949,11 +949,10 @@ impl Simulation {
         // Recheck donor retention as well as receiver acquisition at this tick.
         // Preserve the donor's acquisition policy. The receiver's requested
         // overlap must not weaken the retention gate of the existing grasp.
-        let donor_candidate = donor.gripper.evaluate_held_candidate(
-            donor.tool_pose(),
-            body,
-            donor.gripper_config,
-        );
+        let donor_candidate =
+            donor
+                .gripper
+                .evaluate_held_candidate(donor.tool_pose(), body, donor.gripper_config);
         let mut donor_check = donor.gripper;
         donor_check.release();
         if !donor_check.try_grasp(donor_candidate, donor.gripper_config) {
