@@ -1,0 +1,32 @@
+name: m1g-development
+on:
+  push:
+    branches: [feature/m1g-engineering-replay-handoff-20260906]
+permissions:
+  contents: read
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Export formatting patch
+        run: |
+          cargo fmt --all
+          git diff > /tmp/format.patch
+      - uses: actions/upload-artifact@v7
+        with:
+          name: m1g-format
+          path: /tmp/format.patch
+      - run: cargo test --locked --release -p pipe_sim --test observed_replay
+      - run: cargo build --locked --release -p pipe_sim_cli
+      - run: |
+          mkdir -p out
+          target/release/pipe-observed-replay --source-revision "$GITHUB_SHA" > out/m1f_replay.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: m1g-replay
+          path: out/m1f_replay.json
