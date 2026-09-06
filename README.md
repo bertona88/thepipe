@@ -4,7 +4,7 @@ This repository is the engineering core for a tube-shaped robotic micro-assembly
 contains low-cost tendon-arm models, printable machine fixtures, idealized gearbox parts,
 reduced collision checks, structured-light/multi-camera primitives, and a deterministic guarded
 gearbox task. Rust now also owns a canonical machine configuration, bounded carriage/arm command
-state, and a versioned physical scene consumed by the WebAssembly operator console. M1e adds a
+state, and a versioned physical scene exposed through the WebAssembly API. M1e adds a
 separate observed-state single-arm coupon runtime: timestamped macro camera/projector feature
 measurements feed an uncertainty-bearing axisymmetric pose estimator, bounded stop-and-look
 corrections, guarded grasp/contact transitions, incremental insertion, and fail-closed recovery.
@@ -42,29 +42,25 @@ data before using it to release hardware.
 | `crates/pipe_planner` | guarded gearbox assembly state machine, recovery and acceptance metrics |
 | `crates/pipe_sim` | reduced gearbox plant plus the isolated M1c and observed-state M1e single-arm runtimes |
 | `crates/pipe_sim_cli` | deterministic headless run and machine-readable report |
-| `crates/pipe_sim_wasm` | browser-neutral WebAssembly boundary consumed by the operator console |
-| `web` | engineering operator console, viewport, telemetry and report export |
+| `crates/pipe_sim_wasm` | browser-neutral WebAssembly boundary for runtime state and reports |
 | `cad` | build123d source models, printable exports and dimension manifest |
 | `scenarios` | versioned machine, gearbox, optical co-design, and M1e coupon acceptance inputs |
 | `scripts` | reproducible build, CAD and verification entry points |
 
-## Browser operator console
+## Visualization policy
 
-The dependency-free operator console lives in `web/`. It connects to the generated
-Rust/WASM wrapper and renders the versioned Rust `SceneDescription`/`SceneFrame` contract.
-Without that wrapper it can preview controls and telemetry, but it marks the physical machine
-scene unavailable instead of synthesizing rail, arm, or part poses.
+The previous website and its synthetic UI-preview telemetry have been removed.
+There is currently no browser frontend. The Rust scene contracts, WASM bindings,
+headless reports, and build123d CAD generators remain available.
 
-```bash
-./scripts/build_wasm.sh
-cd web
-npm run check
-npm test
-npm run build
-npm run preview
-```
+Future visuals must consume versioned runtime frames/reports or generated CAD
+with explicit source provenance, units, and fidelity limits. Missing or invalid
+runtime data must appear as unavailable; never substitute invented poses,
+telemetry, sensor views, progress, or success. Keep simulation truth, estimated
+state, and commanded targets distinct. M1e/M1f estimates currently live in their
+structured reports and are not populated in the general `SceneFrame`.
 
-Open `http://localhost:4173/web/` after starting the preview server.
+See [AGENTS.md](AGENTS.md) for the repository-wide implementation rule.
 
 ## Quick verification
 

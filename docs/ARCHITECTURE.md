@@ -16,7 +16,7 @@ not the normative F1 milestone specified below.
 4. **Precision is closed-loop.** The target tendon mechanisms are compliant and hysteretic; optics and local force evidence correct them near the work. M1e closes that loop for one modeled arm/peg/socket coupon through executed bounded arm commands. The gearbox executive still does not execute real held-part task-space trajectories.
 5. **Determinism is designed in.** Fixed steps, stable iteration order, seeded streams, hashed assets, and replay logs are first-class requirements.
 6. **Fidelity is selectable and declared.** Fast kinematic studies, default engineering runs, and slow tooth/contact validation share scene data but never masquerade as each other.
-7. **The core is headless.** The operator console is an adapter over a versioned Rust scene contract, not the owner of simulation state.
+7. **The core is headless.** Any future viewer must be an adapter over a versioned Rust scene contract. The legacy website and synthetic preview have been removed; see `../AGENTS.md` for visualization requirements.
 
 ## 2. Proposed repository boundaries
 
@@ -408,7 +408,7 @@ artifacts.
 
 The current `pipe_sim_wasm` adapter constructs compiled gearbox/M1b/M1c scenarios, advances one or
 many bounded cycles, and returns JSON snapshots/reports. It also exposes the versioned static
-machine description and current truth/estimate/commanded scene frame used by the browser renderer.
+machine description and current truth/estimate/commanded scene frame for future consumers; no browser renderer is currently shipped.
 For M1e it exports `ObservedManipulationSimulator`, which accepts the embedded baseline or strict
 scenario JSON plus an optional named fault, runs the same Rust executive to a terminal state, and
 is designed to return the same report and controller hash as native execution. Host-side adapter
