@@ -568,8 +568,8 @@ fn pose_system(
             let mut j = [0.0; 6];
             j[..3].copy_from_slice(&jp[axis]);
             for c in 0..3 {
-                for k in 0..3 {
-                    j[c + 3] -= jp[axis][k] * cross.m[k][c];
+                for (derivative, row) in jp[axis].iter().zip(cross.m.iter()) {
+                    j[c + 3] -= derivative * row[c];
                 }
             }
             accumulate(&mut h, &mut g, j, *r, 1.0 / sigma.powi(2));
@@ -744,8 +744,8 @@ pub(crate) fn invert_spd<const N: usize>(a: [[f64; N]; N]) -> Option<[[f64; N]; 
                 return None;
             }
             let mut s = a[i][j] / scale[i] / scale[j];
-            for k in 0..j {
-                s -= l[i][k] * l[j][k];
+            for (left, right) in l[i][..j].iter().zip(l[j][..j].iter()) {
+                s -= left * right;
             }
             if i == j {
                 if !s.is_finite() || s <= 1e-10 {
