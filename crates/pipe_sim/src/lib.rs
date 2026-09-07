@@ -7,8 +7,10 @@
 
 #![forbid(unsafe_code)]
 
+pub mod gear_observability;
 pub mod handoff;
 mod machine_config;
+pub mod metrology;
 pub mod observed_manipulation;
 pub mod optical_codesign;
 pub mod point_motion;

@@ -1,7 +1,9 @@
 use crate::math::{Mat3, Ray, RigidTransform, Vec2, Vec3};
 use crate::noise::{keyed_seed, DeterministicRng};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct ImageSize {
     pub width: u32,
     pub height: u32,
@@ -21,7 +23,8 @@ impl ImageSize {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct CameraIntrinsics {
     pub fx_px: f64,
     pub fy_px: f64,
@@ -54,7 +57,8 @@ impl CameraIntrinsics {
 }
 
 /// OpenCV-compatible Brown-Conrady radial/tangential lens distortion.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct BrownConrady {
     pub k1: f64,
     pub k2: f64,
@@ -122,14 +126,16 @@ impl BrownConrady {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct ProjectedPoint {
     pub pixel: Vec2,
     /// Positive optical-axis distance in camera coordinates, not Euclidean range.
     pub optical_depth_m: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct PinholeCamera {
     pub image_size: ImageSize,
     pub intrinsics: CameraIntrinsics,
@@ -209,7 +215,8 @@ impl PinholeCamera {
 }
 
 /// Difference between calibration values used by reconstruction and physical optics.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct CalibrationDrift {
     /// Sensor motion in its nominal local axes.
     pub translation_m: Vec3,
@@ -245,7 +252,8 @@ impl CalibrationDrift {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct CalibratedCamera {
     pub id: u32,
     /// Calibration used for ray reconstruction.
@@ -269,7 +277,8 @@ impl CalibratedCamera {
 }
 
 /// One-sigma, per-frame calibration drift random walk.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct DriftRandomWalk {
     pub translation_sigma_m: Vec3,
     pub rotation_sigma_rad: Vec3,

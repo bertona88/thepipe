@@ -31,6 +31,23 @@ pub fn optical_codesign_report_json(pretty: bool) -> Result<String, JsValue> {
         .map_err(js_error)
 }
 
+/// Inspectable cylindrical metrology candidate, with explicit SI units and
+/// synthetic calibration provenance. Does not qualify a hardware system.
+#[wasm_bindgen(js_name = opticalMetrologyConfigJson)]
+pub fn optical_metrology_config_json() -> Result<String, JsValue> {
+    pipe_sim::metrology::configuration_json().map_err(js_error)
+}
+
+/// Same independent geometry verification and failure metrics as the CLI.
+#[wasm_bindgen(js_name = opticalMetrologyReportJson)]
+pub fn optical_metrology_report_json(
+    config_json: &str,
+    source_revision: &str,
+    repeats: u32,
+) -> Result<String, JsValue> {
+    pipe_sim::metrology::verification_json(config_json, source_revision, repeats).map_err(js_error)
+}
+
 /// Browser-safe wrapper around the same deterministic simulator used by the
 /// headless CLI. JSON is used intentionally so the website can retain report
 /// snapshots across WASM schema upgrades without exposing Rust object layouts.

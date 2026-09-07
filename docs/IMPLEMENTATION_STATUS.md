@@ -50,6 +50,21 @@ at the labelled measurement-packet boundary. It is F0 protocol evidence, not a
 fixed-head two-arm optical or trajectory result. See
 [the replay and handoff contract](ENGINEERING_REPLAY_AND_HANDOFF_M1G.md).
 
+## Calibrated cylindrical metrology
+
+The [optical metrology subsystem](OPTICAL_METROLOGY.md) adds a parameterized
+100 mm ID / 25 mm-zone candidate, six-view distorted-pixel triangulation,
+six-DOF rigid distal fiducials and TCP covariance, timed hybrid Gray/phase
+decoding, reduced defocus/diffraction, explicit calibration/thermal/reference
+health, separate occupancy and surface APIs, independent geometry verification
+and a stopped acquisition/precision-admission adapter over the existing machine.
+It does not replace M1e/M1f sensing or qualify the legacy CAD. The 160 mm runtime
+scale is explicitly distinguished from the standalone candidate. Incomplete
+structured-light coverage and repeatability above target are reported as failures,
+even where accepted points have micrometre-scale error. Physical accuracy,
+intrinsic/extrinsic calibration fitting, full optical image formation and complete
+cell occlusion geometry remain unvalidated or outside this implementation.
+
 ## Fidelity labels
 
 - **F0 geometry:** kinematics, reach, conservative collision envelopes and visibility.
@@ -75,3 +90,13 @@ feasibility of the multi-arm motion. In particular, the modeled M1d values of ap
 3.0 µm lateral RMS and 3.4 µm depth RMS and the approximately 7.9 µm guarded-insertion
 closed-loop residual allocation are hypotheses until the M1e hardware coupon replaces the
 scenario distributions with held-out measurements.
+
+## Transparent-part observability experiment
+
+The [gear/shaft study](GEAR_OBSERVABILITY.md) adds marker-inferred feature geometry
+with independent relation uncertainty and provenance, 16 camera/projector/marker
+candidates, static articulated visibility/contact checks and an actual bounded
+command probe. No candidate passes the precision contract. The first approach is
+collision-rejected; sampled optical endpoints are not an executed assembly.
+Transparent surface reconstruction, physical marker supports, distal clearance
+and contact insertion remain unqualified.

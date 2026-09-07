@@ -1,0 +1,5925 @@
+{
+  "candidates": [
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7419878098151846e-6,
+      "camera_axial_m": 0.01,
+      "config_sha256": "2efde0bd68fd69465dc554d8af95c835a915d5b3d7c058428db45fccfcd5ba5e",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.1420958640187035e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.1779660338168945e-6,
+          "bore_repeatability_3d_rms_m": 9.098646182740009e-7,
+          "marker_occlusion_fraction": 0.26666666666666666,
+          "maximum_alignment_rms_bound_m": 7.024490521517196e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 2.8965235865048557e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.9297302236172957e-6,
+          "bore_repeatability_3d_rms_m": 1.1536730183977675e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 7.023718048576392e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.815015503622369e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.342120990764186e-6,
+          "bore_repeatability_3d_rms_m": 1.2043341219303861e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.058459429160342e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.052388566088109e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2020390527533153e-6,
+          "bore_repeatability_3d_rms_m": 1.021700451182771e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.010419268094525e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.4847555362578005e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.7512274076685915e-6,
+          "bore_repeatability_3d_rms_m": 1.2399044616147617e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.008533953818806e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013068040707666668,
+      "camera_axial_m": 0.01,
+      "config_sha256": "2efde0bd68fd69465dc554d8af95c835a915d5b3d7c058428db45fccfcd5ba5e",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014103328150974855,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.558339330405638e-6,
+          "bore_repeatability_3d_rms_m": 9.098646182740009e-7,
+          "marker_occlusion_fraction": 0.26666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000017359251995404708,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013545807020886075,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.96418153968893e-6,
+          "bore_repeatability_3d_rms_m": 1.1536730183977675e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000017358938921753794,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012760605189852274,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.620190655535865e-6,
+          "bore_repeatability_3d_rms_m": 1.2043341219303861e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.0000173730484367004,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.00001178078543563149,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.928390836681466e-6,
+          "bore_repeatability_3d_rms_m": 1.021700451182771e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017353562758001177,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013032871387891758,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.39741908876432e-6,
+          "bore_repeatability_3d_rms_m": 1.2399044616147617e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017352800043800413,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7313430912148926e-6,
+      "camera_axial_m": 0.01,
+      "config_sha256": "2efde0bd68fd69465dc554d8af95c835a915d5b3d7c058428db45fccfcd5ba5e",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.4154941252450766e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3567091024353544e-6,
+          "bore_repeatability_3d_rms_m": 9.122277538132214e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000011328703669155046,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.2889713373110456e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3696601479973877e-6,
+          "bore_repeatability_3d_rms_m": 1.455964965111839e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000011320218194816493,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.105936806748372e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.4054961037972335e-6,
+          "bore_repeatability_3d_rms_m": 1.5749848009308844e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000011297929209864615,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.850808816095929e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.1309195409874754e-6,
+          "bore_repeatability_3d_rms_m": 1.1195821688138008e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.00001129791144306931,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.92991452138786e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.11084481922638e-6,
+          "bore_repeatability_3d_rms_m": 1.280642794729516e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000011299791467397498,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013061509188926286,
+      "camera_axial_m": 0.01,
+      "config_sha256": "2efde0bd68fd69465dc554d8af95c835a915d5b3d7c058428db45fccfcd5ba5e",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014417197736173465,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.751318897976607e-6,
+          "bore_repeatability_3d_rms_m": 9.122277538132214e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000019502297373098575,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013827851757265322,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.236454911482627e-6,
+          "bore_repeatability_3d_rms_m": 1.455964965111839e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000019497367597640302,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012256032657008956,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.562420675484201e-6,
+          "bore_repeatability_3d_rms_m": 1.5749848009308844e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000019484435532255055,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.00001159247250072078,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.723835020685709e-6,
+          "bore_repeatability_3d_rms_m": 1.1195821688138008e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000019484425226744006,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013013619078010564,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.450998601806693e-6,
+          "bore_repeatability_3d_rms_m": 1.280642794729516e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.0000194855158475021,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7344200364787316e-6,
+      "camera_axial_m": 0.025,
+      "config_sha256": "17ca28f6db81f83ed85b624595c50038a5912127ebe8291da27d4c3f88f72888",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.186536938531357e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2772099199520687e-6,
+          "bore_repeatability_3d_rms_m": 9.164400193664732e-7,
+          "marker_occlusion_fraction": 0.2,
+          "maximum_alignment_rms_bound_m": 7.016523164149667e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 2.8691833917797785e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.9239960069376375e-6,
+          "bore_repeatability_3d_rms_m": 1.1221796581704702e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 7.0207756197289756e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.564874009473322e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3121374047873237e-6,
+          "bore_repeatability_3d_rms_m": 1.2103443234119105e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 7.047025012412378e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.289352412991635e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.092452195712359e-6,
+          "bore_repeatability_3d_rms_m": 1.0250238695065784e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 7.0116453499068665e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.4794561648017846e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.89002950655678e-6,
+          "bore_repeatability_3d_rms_m": 1.229675771209044e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.008153802082505e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013054287861222964,
+      "camera_axial_m": 0.025,
+      "config_sha256": "17ca28f6db81f83ed85b624595c50038a5912127ebe8291da27d4c3f88f72888",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014107488840965878,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.533554838422365e-6,
+          "bore_repeatability_3d_rms_m": 9.164400193664732e-7,
+          "marker_occlusion_fraction": 0.2,
+          "maximum_alignment_rms_bound_m": 0.000017356026460787264,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.0000135350655470516,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.933971595152681e-6,
+          "bore_repeatability_3d_rms_m": 1.1221796581704702e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000017357748167796176,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012556194509212937,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.627657745409236e-6,
+          "bore_repeatability_3d_rms_m": 1.2103443234119105e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000017368396331064044,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000011865917148676325,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.929552745584894e-6,
+          "bore_repeatability_3d_rms_m": 1.0250238695065784e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000017354054931105214,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.0000130917877589337,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.583399197172611e-6,
+          "bore_repeatability_3d_rms_m": 1.229675771209044e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017352647243541812,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.6494863530293187e-6,
+      "camera_axial_m": 0.025,
+      "config_sha256": "17ca28f6db81f83ed85b624595c50038a5912127ebe8291da27d4c3f88f72888",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.2442351709034793e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2483237000446622e-6,
+          "bore_repeatability_3d_rms_m": 8.766083671355888e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000011325746451027121,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.251202671636395e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.335839250934498e-6,
+          "bore_repeatability_3d_rms_m": 1.4237953688663472e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000011318393539157427,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.955564541560543e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3490989839119238e-6,
+          "bore_repeatability_3d_rms_m": 1.5070809852147863e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000011294785395676826,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.77416090032959e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.052686253945172e-6,
+          "bore_repeatability_3d_rms_m": 1.1892869487835197e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000011295074851813,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.950644403705007e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.132830894774051e-6,
+          "bore_repeatability_3d_rms_m": 1.3279720513881225e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000011303162389027553,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000012987415307070544,
+      "camera_axial_m": 0.025,
+      "config_sha256": "17ca28f6db81f83ed85b624595c50038a5912127ebe8291da27d4c3f88f72888",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": -0.7853981633974483,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.00001421830933195191,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.611806658241746e-6,
+          "bore_repeatability_3d_rms_m": 8.766083671355888e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000019500579632849808,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013785649960810412,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.16609090633893e-6,
+          "bore_repeatability_3d_rms_m": 1.4237953688663472e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.00001949630834126023,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012191458461848277,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.589296754104336e-6,
+          "bore_repeatability_3d_rms_m": 1.5070809852147863e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000019482612453863636,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000011589425630291973,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.690333354956411e-6,
+          "bore_repeatability_3d_rms_m": 1.1892869487835197e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000019482780305150254,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012969729018894256,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.480875433861401e-6,
+          "bore_repeatability_3d_rms_m": 1.3279720513881225e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000019487472450557522,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7419878098151846e-6,
+      "camera_axial_m": 0.01,
+      "config_sha256": "948fb448769f6d3ac566e016173e4d60566d10e7798770b2ef918631ba584318",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.1420958640187035e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.1779660338168945e-6,
+          "bore_repeatability_3d_rms_m": 9.098646182740009e-7,
+          "marker_occlusion_fraction": 0.26666666666666666,
+          "maximum_alignment_rms_bound_m": 7.024490521517196e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 2.8965235865048557e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.9297302236172957e-6,
+          "bore_repeatability_3d_rms_m": 1.1536730183977675e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 7.023718048576392e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.815015503622369e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.342120990764186e-6,
+          "bore_repeatability_3d_rms_m": 1.2043341219303861e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.058459429160342e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.052388566088109e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2020390527533153e-6,
+          "bore_repeatability_3d_rms_m": 1.021700451182771e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.010419268094525e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.4847555362578005e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.7512274076685915e-6,
+          "bore_repeatability_3d_rms_m": 1.2399044616147617e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.008533953818806e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013068040707666668,
+      "camera_axial_m": 0.01,
+      "config_sha256": "948fb448769f6d3ac566e016173e4d60566d10e7798770b2ef918631ba584318",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014103328150974855,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.558339330405638e-6,
+          "bore_repeatability_3d_rms_m": 9.098646182740009e-7,
+          "marker_occlusion_fraction": 0.26666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000017359251995404708,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013545807020886075,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.96418153968893e-6,
+          "bore_repeatability_3d_rms_m": 1.1536730183977675e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000017358938921753794,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012760605189852274,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.620190655535865e-6,
+          "bore_repeatability_3d_rms_m": 1.2043341219303861e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.0000173730484367004,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.00001178078543563149,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.928390836681466e-6,
+          "bore_repeatability_3d_rms_m": 1.021700451182771e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017353562758001177,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013032871387891758,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.39741908876432e-6,
+          "bore_repeatability_3d_rms_m": 1.2399044616147617e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017352800043800413,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7313430912148926e-6,
+      "camera_axial_m": 0.01,
+      "config_sha256": "948fb448769f6d3ac566e016173e4d60566d10e7798770b2ef918631ba584318",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.4154941252450766e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3567091024353544e-6,
+          "bore_repeatability_3d_rms_m": 9.122277538132214e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000011328703669155046,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.2889713373110456e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3696601479973877e-6,
+          "bore_repeatability_3d_rms_m": 1.455964965111839e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000011320218194816493,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.105936806748372e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.4054961037972335e-6,
+          "bore_repeatability_3d_rms_m": 1.5749848009308844e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000011297929209864615,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.850808816095929e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.1309195409874754e-6,
+          "bore_repeatability_3d_rms_m": 1.1195821688138008e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.00001129791144306931,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.92991452138786e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.11084481922638e-6,
+          "bore_repeatability_3d_rms_m": 1.280642794729516e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000011299791467397498,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013061509188926286,
+      "camera_axial_m": 0.01,
+      "config_sha256": "948fb448769f6d3ac566e016173e4d60566d10e7798770b2ef918631ba584318",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014417197736173465,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.751318897976607e-6,
+          "bore_repeatability_3d_rms_m": 9.122277538132214e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000019502297373098575,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013827851757265322,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.236454911482627e-6,
+          "bore_repeatability_3d_rms_m": 1.455964965111839e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000019497367597640302,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012256032657008956,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.562420675484201e-6,
+          "bore_repeatability_3d_rms_m": 1.5749848009308844e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000019484435532255055,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.00001159247250072078,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.723835020685709e-6,
+          "bore_repeatability_3d_rms_m": 1.1195821688138008e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000019484425226744006,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013013619078010564,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.450998601806693e-6,
+          "bore_repeatability_3d_rms_m": 1.280642794729516e-6,
+          "marker_occlusion_fraction": 0.03333333333333333,
+          "maximum_alignment_rms_bound_m": 0.0000194855158475021,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.7344200364787316e-6,
+      "camera_axial_m": 0.025,
+      "config_sha256": "8fc276ffe0a280edcc56cd9e2bd198e9381d6b52e3cbe8e37c3396a80c5a1268",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.186536938531357e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2772099199520687e-6,
+          "bore_repeatability_3d_rms_m": 9.164400193664732e-7,
+          "marker_occlusion_fraction": 0.2,
+          "maximum_alignment_rms_bound_m": 7.016523164149667e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 2.8691833917797785e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.9239960069376375e-6,
+          "bore_repeatability_3d_rms_m": 1.1221796581704702e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 7.0207756197289756e-6,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.564874009473322e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3121374047873237e-6,
+          "bore_repeatability_3d_rms_m": 1.2103443234119105e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 7.047025012412378e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 4.289352412991635e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.092452195712359e-6,
+          "bore_repeatability_3d_rms_m": 1.0250238695065784e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 7.0116453499068665e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.4794561648017846e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 2.89002950655678e-6,
+          "bore_repeatability_3d_rms_m": 1.229675771209044e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 7.008153802082505e-6,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "relative_alignment_uncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000013054287861222964,
+      "camera_axial_m": 0.025,
+      "config_sha256": "8fc276ffe0a280edcc56cd9e2bd198e9381d6b52e3cbe8e37c3396a80c5a1268",
+      "marker_offset_m": 0.003,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.000014107488840965878,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.533554838422365e-6,
+          "bore_repeatability_3d_rms_m": 9.164400193664732e-7,
+          "marker_occlusion_fraction": 0.2,
+          "maximum_alignment_rms_bound_m": 0.000017356026460787264,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.0000135350655470516,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.933971595152681e-6,
+          "bore_repeatability_3d_rms_m": 1.1221796581704702e-6,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000017357748167796176,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012556194509212937,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.627657745409236e-6,
+          "bore_repeatability_3d_rms_m": 1.2103443234119105e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000017368396331064044,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000011865917148676325,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.929552745584894e-6,
+          "bore_repeatability_3d_rms_m": 1.0250238695065784e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000017354054931105214,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.0000130917877589337,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.583399197172611e-6,
+          "bore_repeatability_3d_rms_m": 1.229675771209044e-6,
+          "marker_occlusion_fraction": 0.13333333333333333,
+          "maximum_alignment_rms_bound_m": 0.000017352647243541812,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 3.6494863530293187e-6,
+      "camera_axial_m": 0.025,
+      "config_sha256": "8fc276ffe0a280edcc56cd9e2bd198e9381d6b52e3cbe8e37c3396a80c5a1268",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 1e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 3.2442351709034793e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.2483237000446622e-6,
+          "bore_repeatability_3d_rms_m": 8.766083671355888e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000011325746451027121,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.251202671636395e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.335839250934498e-6,
+          "bore_repeatability_3d_rms_m": 1.4237953688663472e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.000011318393539157427,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.955564541560543e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.3490989839119238e-6,
+          "bore_repeatability_3d_rms_m": 1.5070809852147863e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000011294785395676826,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.77416090032959e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.052686253945172e-6,
+          "bore_repeatability_3d_rms_m": 1.1892869487835197e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000011295074851813,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 3.950644403705007e-6,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 3.132830894774051e-6,
+          "bore_repeatability_3d_rms_m": 1.3279720513881225e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000011303162389027553,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    },
+    {
+      "accepted_alignment_3d_rms_m": null,
+      "accepted_alignment_count": 0,
+      "all_states_optically_supported": false,
+      "available_estimate_alignment_3d_rms_m": 0.000012987415307070544,
+      "camera_axial_m": 0.025,
+      "config_sha256": "8fc276ffe0a280edcc56cd9e2bd198e9381d6b52e3cbe8e37c3396a80c5a1268",
+      "marker_offset_m": 0.006,
+      "projector_angle_rad": 2.356194490192345,
+      "rejected_design_states": [],
+      "relation_rms_m": 8e-6,
+      "state_summaries": [
+        {
+          "alignment_3d_rms_error_m": 0.00001421830933195191,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.611806658241746e-6,
+          "bore_repeatability_3d_rms_m": 8.766083671355888e-7,
+          "marker_occlusion_fraction": 0.23333333333333334,
+          "maximum_alignment_rms_bound_m": 0.000019500579632849808,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "approach",
+          "static_contact_pairs": [],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000013785649960810412,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.16609090633893e-6,
+          "bore_repeatability_3d_rms_m": 1.4237953688663472e-6,
+          "marker_occlusion_fraction": 0.16666666666666666,
+          "maximum_alignment_rms_bound_m": 0.00001949630834126023,
+          "minimum_part_camera_count": 5,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "grasp",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.0015399999999999988
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012191458461848277,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 9.589296754104336e-6,
+          "bore_repeatability_3d_rms_m": 1.5070809852147863e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000019482612453863636,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "insertion_geometry",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.002049999999999999
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000011589425630291973,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.690333354956411e-6,
+          "bore_repeatability_3d_rms_m": 1.1892869487835197e-6,
+          "marker_occlusion_fraction": 0.0,
+          "maximum_alignment_rms_bound_m": 0.000019482780305150254,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "precontact",
+          "static_contact_pairs": [
+            [
+              700,
+              701,
+              0.0003308823529411752
+            ],
+            [
+              700,
+              3221225478,
+              0.00154
+            ],
+            [
+              701,
+              3221225478,
+              0.0011308823529411756
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        },
+        {
+          "alignment_3d_rms_error_m": 0.000012969729018894256,
+          "attempts": 4,
+          "bore_3d_rms_error_m": 8.480875433861401e-6,
+          "bore_repeatability_3d_rms_m": 1.3279720513881225e-6,
+          "marker_occlusion_fraction": 0.1,
+          "maximum_alignment_rms_bound_m": 0.000019487472450557522,
+          "minimum_part_camera_count": 6,
+          "opaque_witness_structured_count": 0,
+          "part_pose_count": 4,
+          "rejection_counts": {
+            "bore: ExcessiveUncertainty": 4,
+            "relative_alignment_uncertainty": 4,
+            "shaft: ExcessiveUncertainty": 4
+          },
+          "shaft_pose_count": 4,
+          "state": "reorient",
+          "static_contact_pairs": [
+            [
+              700,
+              3221225478,
+              0.00154
+            ]
+          ],
+          "tool_pose_count": 4,
+          "transparent_passive_count": 0,
+          "transparent_structured_count": 0
+        }
+      ],
+      "static_states_with_contact": 4,
+      "stop_or_reposition_count": 20
+    }
+  ],
+  "config_sha256": "a8766d5e907993084ae17ad6f34ebab4f4d667d1d2838791da7623101e391a7d",
+  "configuration": {
+    "approach_distance_m": 0.003,
+    "bore_radius_m": 0.00026,
+    "camera_axial_candidates_m": [
+      0.01,
+      0.025
+    ],
+    "gear_half_thickness_m": 0.0004,
+    "gear_radius_m": 0.001,
+    "insertion_world_m": {
+      "x": 0.004,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "marker_offset_candidates_m": [
+      0.003,
+      0.006
+    ],
+    "maximum_alignment_rms_m": 5e-6,
+    "pick_world_m": {
+      "x": -0.004,
+      "y": 0.004,
+      "z": 0.0
+    },
+    "projector_angle_candidates_rad": [
+      -0.7853981633974483,
+      2.356194490192345
+    ],
+    "relation_axis_rms_rad": 0.0002,
+    "relation_rms_candidates_m": [
+      1e-6,
+      8e-6
+    ],
+    "repeats": 4,
+    "seed": 73,
+    "shaft_length_m": 0.002,
+    "shaft_radius_m": 0.00025,
+    "transfer_world_m": {
+      "x": 0.0,
+      "y": 0.004,
+      "z": 0.003
+    }
+  },
+  "execution_probe": {
+    "assembly_completed": false,
+    "events": [
+      {
+        "command_sequence": 1,
+        "held_body_id": null,
+        "machine_tick": 0,
+        "phase": "stop_requested",
+        "time_s": 0.0,
+        "truth_tool_pose": {
+          "rotation": {
+            "m": [
+              [
+                0.0,
+                0.0,
+                -1.0
+              ],
+              [
+                -1.0,
+                2.220446049250313e-16,
+                0.0
+              ],
+              [
+                3.3306690738754696e-16,
+                1.0,
+                0.0
+              ]
+            ]
+          },
+          "translation": {
+            "x": -0.00500000000000001,
+            "y": 0.0,
+            "z": -5.204170427930421e-18
+          }
+        }
+      }
+    ],
+    "fidelity": "Actual bounded plant commands and collision checks; nominal targets, no optical servo or contact insertion. Gear annular collision envelope, capsule shaft, rigid grasp model. Stop request is recorded; deceleration is not executed after abort.",
+    "stopped_reason": "approach: command rejected: InvalidMachineCommand(ToolPathCollision)"
+  },
+  "fidelity": [
+    "Articulated static design states from authoritative runtime FK, not executed motion, grasp, contact, or assembly completion. Acquisition times are synthetic stop-and-measure exposures, not machine elapsed time.",
+    "Legacy machine is 160 mm ID. Camera candidates adapt explicitly to that geometry. Other arms remain at runtime home poses.",
+    "2 mm gear is an annular envelope without teeth; 0.52 mm bore and 0.50 mm shaft. Transparent bulk blocks rays conservatively; refraction, internal reflections and silhouette-edge extraction are not implemented.",
+    "Transparent direct measurements fail under the reduced surface model. Opaque witness uses identical geometry to isolate material observability; success is not a direct transparent-bore measurement.",
+    "Part and shaft markers are nominal rigid handling-tab constellations. Tab supports, camera housings and rails are absent; mounting clearance and marker manufacturability are unvalidated.",
+    "Relation errors are fixed independent dimensional offsets and axis perturbations, excluded from pose fitting. Marginal alignment RMS bounds sum conservatively because shared calibration covariance is unavailable.",
+    "Precision admission here evaluates optical support only. Static contact pairs are reported against shared arm/part envelopes; they are not collision-certified trajectories. Guarded contact is required for seating, but is not executed by this study.",
+    "Extracted-feature simulation assumes known marker identities and correspondences; no raster images or identity-tag decoder. Diffuse marker illumination and structured patterns are modeled; transparent silhouette extraction is not.",
+    "No physical micron-accuracy claim. No automatic camera-layout selection from one sampled task; rejected states count against complete coverage."
+  ],
+  "machine_config_sha256": "bb4b3516fb17194bc9c9109f4c31bc66cdf8b8197ffb461d494b701d2281fbfb",
+  "optical_configurations_by_sha256": {
+    "17ca28f6db81f83ed85b624595c50038a5912127ebe8291da27d4c3f88f72888": {
+      "acquisition": {
+        "exposure_s": 0.0002,
+        "max_exposure_motion_m": 1e-6,
+        "max_sequence_motion_m": 5e-7,
+        "max_trigger_skew_s": 5e-6,
+        "processing_latency_s": 0.005,
+        "tracking_rate_hz": 60.0,
+        "trigger_sigma_s": 1e-6
+      },
+      "calibration": {
+        "id": "synthetic_calibration_v1",
+        "provenance": "synthetic_nominal",
+        "records": [
+          {
+            "child_frame": "Sensor",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "sensor",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "WorldFrame",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "world_frame",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "TubeReferences",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "tube_references",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialGeometry",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_geometry",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialToTcp",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_to_tcp",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "PartFeatures",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "part_features",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          }
+        ],
+        "reference_temperature_k": 293.15,
+        "world_from_tube": {
+          "rotation": {
+            "m": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "devices": [
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 1,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.2588190451025207,
+                    0.28811151920620554,
+                    -0.9219568614598579
+                  ],
+                  [
+                    0.9659258262890682,
+                    0.07719924890140666,
+                    -0.24703759648450135
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.07727406610312547,
+                "y": 0.02070552360820166,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 2,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.9659258262890682,
+                    -0.07719924890140666,
+                    -0.24703759648450135
+                  ],
+                  [
+                    0.2588190451025207,
+                    -0.28811151920620554,
+                    -0.9219568614598579
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.02070552360820166,
+                "y": 0.07727406610312547,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 3,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865476,
+                    -0.21091227030479887,
+                    0.6749192649753564
+                  ],
+                  [
+                    -0.7071067811865475,
+                    0.21091227030479892,
+                    -0.6749192649753565
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 4,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.25881904510252074,
+                    0.28811151920620554,
+                    0.9219568614598579
+                  ],
+                  [
+                    -0.9659258262890682,
+                    0.07719924890140668,
+                    0.2470375964845014
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.07727406610312547,
+                "y": -0.020705523608201663,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 5,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.9659258262890683,
+                    -0.07719924890140664,
+                    0.24703759648450124
+                  ],
+                  [
+                    -0.25881904510252063,
+                    -0.2881115192062056,
+                    0.9219568614598579
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.02070552360820165,
+                "y": -0.07727406610312547,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.027938424357067025,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 6,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022342,
+              "fy_px": 9312.808119022342,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865477,
+                    -0.21091227030479887,
+                    -0.6749192649753563
+                  ],
+                  [
+                    0.7071067811865475,
+                    0.21091227030479895,
+                    0.6749192649753565
+                  ],
+                  [
+                    -0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492379,
+                "y": -0.05656854249492381,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0096,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 101,
+          "kind": "projector",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 1200,
+              "width": 1920
+            },
+            "intrinsics": {
+              "cx_px": 959.5,
+              "cy_px": 599.5,
+              "fx_px": 3200.0,
+              "fy_px": 3200.0,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865475,
+                    -0.0,
+                    -0.7071067811865476
+                  ],
+                  [
+                    0.7071067811865476,
+                    0.0,
+                    0.7071067811865475
+                  ],
+                  [
+                    -0.0,
+                    -1.0,
+                    0.0
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492381,
+                "y": -0.056568542494923796,
+                "z": 0.0
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.008571428571428572,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        }
+      ],
+      "errors": {
+        "camera_calibration_rms_m": 1e-6,
+        "correspondence_sigma_px": 0.03,
+        "distortion_residual_rms_m": 5e-7,
+        "fiducial_manufacturing_rms_m": 5e-7,
+        "localization_sigma_px": 0.075,
+        "phase_intensity_sigma": 0.003,
+        "photon_localization_coefficient_px": 2.0,
+        "projector_calibration_rms_m": 1e-6,
+        "reconstruction_rms_m": 8e-7,
+        "residual_thermal_rms_m": 1e-6,
+        "structural_drift_rms_m": 7e-7,
+        "surface_interaction_rms_m": 1e-6,
+        "tcp_calibration_rms_m": 1e-6,
+        "tcp_rotation_rms_rad": 0.00005,
+        "tracking_localization_sigma_px": 1.8
+      },
+      "id": "metrology_adapted_to_machine_geometry_v1",
+      "illumination": {
+        "kind": "diffuse",
+        "polarization": "none",
+        "source_id": 101,
+        "wavelength_m": 4.5e-7
+      },
+      "maximum_normalized_residual": 6.0,
+      "minimum_angle_rad": 0.17453292519943295,
+      "patterns": {
+        "frame_rate_hz": 2000.0,
+        "maximum_gray_phase_disagreement_px": 0.75,
+        "minimum_modulation": 0.05,
+        "phase_period_px": 16.0,
+        "phase_steps": 4,
+        "projector_size": {
+          "height": 1200,
+          "width": 1920
+        },
+        "saturation_level": 0.995
+      },
+      "precision_volume": {
+        "center_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size_m": {
+          "x": 0.025,
+          "y": 0.025,
+          "z": 0.025
+        }
+      },
+      "references": [
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 1,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": -0.008,
+            "z": -0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 2,
+          "point_tube_m": {
+            "x": 0.008,
+            "y": -0.006,
+            "z": 0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 3,
+          "point_tube_m": {
+            "x": 0.001,
+            "y": 0.008,
+            "z": -0.007
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 4,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": 0.006,
+            "z": 0.006
+          }
+        }
+      ],
+      "schema_version": 1,
+      "seed": 73,
+      "thermal": {
+        "anchor_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "maximum_calibrated_delta_k": 2.0,
+        "reference_expansion_per_k": 5e-7,
+        "reference_temperature_k": 293.15,
+        "structure_expansion_per_k": 0.000023,
+        "structure_temperature_k": 293.15,
+        "tube_temperature_k": 293.15
+      },
+      "tube_id_m": 0.16,
+      "tube_working_length_m": 0.32
+    },
+    "2efde0bd68fd69465dc554d8af95c835a915d5b3d7c058428db45fccfcd5ba5e": {
+      "acquisition": {
+        "exposure_s": 0.0002,
+        "max_exposure_motion_m": 1e-6,
+        "max_sequence_motion_m": 5e-7,
+        "max_trigger_skew_s": 5e-6,
+        "processing_latency_s": 0.005,
+        "tracking_rate_hz": 60.0,
+        "trigger_sigma_s": 1e-6
+      },
+      "calibration": {
+        "id": "synthetic_calibration_v1",
+        "provenance": "synthetic_nominal",
+        "records": [
+          {
+            "child_frame": "Sensor",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "sensor",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "WorldFrame",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "world_frame",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "TubeReferences",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "tube_references",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialGeometry",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_geometry",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialToTcp",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_to_tcp",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "PartFeatures",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "part_features",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          }
+        ],
+        "reference_temperature_k": 293.15,
+        "world_from_tube": {
+          "rotation": {
+            "m": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "devices": [
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 1,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.25881904510252074,
+                    0.11980835349662645,
+                    -0.9584668279730116
+                  ],
+                  [
+                    0.9659258262890683,
+                    0.03210255156592353,
+                    -0.25682041252738824
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.07727406610312547,
+                "y": 0.02070552360820166,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 2,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.9659258262890683,
+                    -0.03210255156592353,
+                    -0.25682041252738824
+                  ],
+                  [
+                    0.25881904510252074,
+                    -0.11980835349662645,
+                    -0.9584668279730116
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.02070552360820166,
+                "y": 0.07727406610312547,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 3,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865477,
+                    -0.08770580193070292,
+                    0.7016464154456232
+                  ],
+                  [
+                    -0.7071067811865475,
+                    0.08770580193070295,
+                    -0.7016464154456235
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136677,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 4,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.2588190451025208,
+                    0.11980835349662645,
+                    0.9584668279730116
+                  ],
+                  [
+                    -0.9659258262890683,
+                    0.03210255156592354,
+                    0.2568204125273883
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.07727406610312547,
+                "y": -0.020705523608201663,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 5,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.9659258262890683,
+                    -0.032102551565923516,
+                    0.25682041252738813
+                  ],
+                  [
+                    -0.25881904510252063,
+                    -0.11980835349662645,
+                    0.9584668279730116
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136675,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.02070552360820165,
+                "y": -0.07727406610312547,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.026874192494328503,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 6,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776168,
+              "fy_px": 8958.064164776168,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865477,
+                    -0.08770580193070292,
+                    -0.7016464154456232
+                  ],
+                  [
+                    0.7071067811865475,
+                    0.08770580193070295,
+                    0.7016464154456235
+                  ],
+                  [
+                    -0.0,
+                    -0.9922778767136677,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492379,
+                "y": -0.05656854249492381,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.02015564437074638,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0096,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 101,
+          "kind": "projector",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 1200,
+              "width": 1920
+            },
+            "intrinsics": {
+              "cx_px": 959.5,
+              "cy_px": 599.5,
+              "fx_px": 3200.0,
+              "fy_px": 3200.0,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865475,
+                    -0.0,
+                    -0.7071067811865476
+                  ],
+                  [
+                    0.7071067811865476,
+                    0.0,
+                    0.7071067811865475
+                  ],
+                  [
+                    -0.0,
+                    -1.0,
+                    0.0
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492381,
+                "y": -0.056568542494923796,
+                "z": 0.0
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.008571428571428572,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        }
+      ],
+      "errors": {
+        "camera_calibration_rms_m": 1e-6,
+        "correspondence_sigma_px": 0.03,
+        "distortion_residual_rms_m": 5e-7,
+        "fiducial_manufacturing_rms_m": 5e-7,
+        "localization_sigma_px": 0.075,
+        "phase_intensity_sigma": 0.003,
+        "photon_localization_coefficient_px": 2.0,
+        "projector_calibration_rms_m": 1e-6,
+        "reconstruction_rms_m": 8e-7,
+        "residual_thermal_rms_m": 1e-6,
+        "structural_drift_rms_m": 7e-7,
+        "surface_interaction_rms_m": 1e-6,
+        "tcp_calibration_rms_m": 1e-6,
+        "tcp_rotation_rms_rad": 0.00005,
+        "tracking_localization_sigma_px": 1.8
+      },
+      "id": "metrology_adapted_to_machine_geometry_v1",
+      "illumination": {
+        "kind": "diffuse",
+        "polarization": "none",
+        "source_id": 101,
+        "wavelength_m": 4.5e-7
+      },
+      "maximum_normalized_residual": 6.0,
+      "minimum_angle_rad": 0.17453292519943295,
+      "patterns": {
+        "frame_rate_hz": 2000.0,
+        "maximum_gray_phase_disagreement_px": 0.75,
+        "minimum_modulation": 0.05,
+        "phase_period_px": 16.0,
+        "phase_steps": 4,
+        "projector_size": {
+          "height": 1200,
+          "width": 1920
+        },
+        "saturation_level": 0.995
+      },
+      "precision_volume": {
+        "center_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size_m": {
+          "x": 0.025,
+          "y": 0.025,
+          "z": 0.025
+        }
+      },
+      "references": [
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 1,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": -0.008,
+            "z": -0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 2,
+          "point_tube_m": {
+            "x": 0.008,
+            "y": -0.006,
+            "z": 0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 3,
+          "point_tube_m": {
+            "x": 0.001,
+            "y": 0.008,
+            "z": -0.007
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 4,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": 0.006,
+            "z": 0.006
+          }
+        }
+      ],
+      "schema_version": 1,
+      "seed": 73,
+      "thermal": {
+        "anchor_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "maximum_calibrated_delta_k": 2.0,
+        "reference_expansion_per_k": 5e-7,
+        "reference_temperature_k": 293.15,
+        "structure_expansion_per_k": 0.000023,
+        "structure_temperature_k": 293.15,
+        "tube_temperature_k": 293.15
+      },
+      "tube_id_m": 0.16,
+      "tube_working_length_m": 0.32
+    },
+    "8fc276ffe0a280edcc56cd9e2bd198e9381d6b52e3cbe8e37c3396a80c5a1268": {
+      "acquisition": {
+        "exposure_s": 0.0002,
+        "max_exposure_motion_m": 1e-6,
+        "max_sequence_motion_m": 5e-7,
+        "max_trigger_skew_s": 5e-6,
+        "processing_latency_s": 0.005,
+        "tracking_rate_hz": 60.0,
+        "trigger_sigma_s": 1e-6
+      },
+      "calibration": {
+        "id": "synthetic_calibration_v1",
+        "provenance": "synthetic_nominal",
+        "records": [
+          {
+            "child_frame": "Sensor",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "sensor",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "WorldFrame",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "world_frame",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "TubeReferences",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "tube_references",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialGeometry",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_geometry",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialToTcp",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_to_tcp",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "PartFeatures",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "part_features",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          }
+        ],
+        "reference_temperature_k": 293.15,
+        "world_from_tube": {
+          "rotation": {
+            "m": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "devices": [
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 1,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.2588190451025207,
+                    0.28811151920620554,
+                    -0.9219568614598579
+                  ],
+                  [
+                    0.9659258262890682,
+                    0.07719924890140666,
+                    -0.24703759648450135
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.07727406610312547,
+                "y": 0.02070552360820166,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 2,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.9659258262890682,
+                    -0.07719924890140666,
+                    -0.24703759648450135
+                  ],
+                  [
+                    0.2588190451025207,
+                    -0.28811151920620554,
+                    -0.9219568614598579
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.02070552360820166,
+                "y": 0.07727406610312547,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 3,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865476,
+                    -0.21091227030479887,
+                    0.6749192649753564
+                  ],
+                  [
+                    -0.7071067811865475,
+                    0.21091227030479892,
+                    -0.6749192649753565
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 4,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.25881904510252074,
+                    0.28811151920620554,
+                    0.9219568614598579
+                  ],
+                  [
+                    -0.9659258262890682,
+                    0.07719924890140668,
+                    0.2470375964845014
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.07727406610312547,
+                "y": -0.020705523608201663,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.02793842435706702,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 5,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022338,
+              "fy_px": 9312.808119022338,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.9659258262890683,
+                    -0.07719924890140664,
+                    0.24703759648450124
+                  ],
+                  [
+                    -0.25881904510252063,
+                    -0.2881115192062056,
+                    0.9219568614598579
+                  ],
+                  [
+                    0.0,
+                    -0.9544799780350297,
+                    -0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.02070552360820165,
+                "y": -0.07727406610312547,
+                "z": 0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.027938424357067025,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08381527307120105,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 6,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 9312.808119022342,
+              "fy_px": 9312.808119022342,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865477,
+                    -0.21091227030479887,
+                    -0.6749192649753563
+                  ],
+                  [
+                    0.7071067811865475,
+                    0.21091227030479895,
+                    0.6749192649753565
+                  ],
+                  [
+                    -0.0,
+                    -0.9544799780350297,
+                    0.2982749931359468
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492379,
+                "y": -0.05656854249492381,
+                "z": -0.025
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020953818267800267,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0096,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 101,
+          "kind": "projector",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 1200,
+              "width": 1920
+            },
+            "intrinsics": {
+              "cx_px": 959.5,
+              "cy_px": 599.5,
+              "fx_px": 3200.0,
+              "fy_px": 3200.0,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865476,
+                    0.0,
+                    0.7071067811865475
+                  ],
+                  [
+                    -0.7071067811865475,
+                    -0.0,
+                    -0.7071067811865476
+                  ],
+                  [
+                    0.0,
+                    -1.0,
+                    0.0
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.0
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.008571428571428572,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        }
+      ],
+      "errors": {
+        "camera_calibration_rms_m": 1e-6,
+        "correspondence_sigma_px": 0.03,
+        "distortion_residual_rms_m": 5e-7,
+        "fiducial_manufacturing_rms_m": 5e-7,
+        "localization_sigma_px": 0.075,
+        "phase_intensity_sigma": 0.003,
+        "photon_localization_coefficient_px": 2.0,
+        "projector_calibration_rms_m": 1e-6,
+        "reconstruction_rms_m": 8e-7,
+        "residual_thermal_rms_m": 1e-6,
+        "structural_drift_rms_m": 7e-7,
+        "surface_interaction_rms_m": 1e-6,
+        "tcp_calibration_rms_m": 1e-6,
+        "tcp_rotation_rms_rad": 0.00005,
+        "tracking_localization_sigma_px": 1.8
+      },
+      "id": "metrology_adapted_to_machine_geometry_v1",
+      "illumination": {
+        "kind": "diffuse",
+        "polarization": "none",
+        "source_id": 101,
+        "wavelength_m": 4.5e-7
+      },
+      "maximum_normalized_residual": 6.0,
+      "minimum_angle_rad": 0.17453292519943295,
+      "patterns": {
+        "frame_rate_hz": 2000.0,
+        "maximum_gray_phase_disagreement_px": 0.75,
+        "minimum_modulation": 0.05,
+        "phase_period_px": 16.0,
+        "phase_steps": 4,
+        "projector_size": {
+          "height": 1200,
+          "width": 1920
+        },
+        "saturation_level": 0.995
+      },
+      "precision_volume": {
+        "center_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size_m": {
+          "x": 0.025,
+          "y": 0.025,
+          "z": 0.025
+        }
+      },
+      "references": [
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 1,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": -0.008,
+            "z": -0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 2,
+          "point_tube_m": {
+            "x": 0.008,
+            "y": -0.006,
+            "z": 0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 3,
+          "point_tube_m": {
+            "x": 0.001,
+            "y": 0.008,
+            "z": -0.007
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 4,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": 0.006,
+            "z": 0.006
+          }
+        }
+      ],
+      "schema_version": 1,
+      "seed": 73,
+      "thermal": {
+        "anchor_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "maximum_calibrated_delta_k": 2.0,
+        "reference_expansion_per_k": 5e-7,
+        "reference_temperature_k": 293.15,
+        "structure_expansion_per_k": 0.000023,
+        "structure_temperature_k": 293.15,
+        "tube_temperature_k": 293.15
+      },
+      "tube_id_m": 0.16,
+      "tube_working_length_m": 0.32
+    },
+    "948fb448769f6d3ac566e016173e4d60566d10e7798770b2ef918631ba584318": {
+      "acquisition": {
+        "exposure_s": 0.0002,
+        "max_exposure_motion_m": 1e-6,
+        "max_sequence_motion_m": 5e-7,
+        "max_trigger_skew_s": 5e-6,
+        "processing_latency_s": 0.005,
+        "tracking_rate_hz": 60.0,
+        "trigger_sigma_s": 1e-6
+      },
+      "calibration": {
+        "id": "synthetic_calibration_v1",
+        "provenance": "synthetic_nominal",
+        "records": [
+          {
+            "child_frame": "Sensor",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "sensor",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "CameraExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "camera_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorIntrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_intrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorDistortion",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_distortion",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "ProjectorExtrinsics",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "projector_extrinsics",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "WorldFrame",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "world_frame",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "TubeReferences",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "tube_references",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialGeometry",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_geometry",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "FiducialToTcp",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "fiducial_to_tcp",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          },
+          {
+            "child_frame": "PartFeatures",
+            "fit_artifact_ids": [
+              "calibration_grid"
+            ],
+            "layer": "part_features",
+            "parent_frame": "world",
+            "revision": "synthetic_nominal_not_hardware_calibrated",
+            "valid": true,
+            "valid_until_s": 86400.0
+          }
+        ],
+        "reference_temperature_k": 293.15,
+        "world_from_tube": {
+          "rotation": {
+            "m": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          "translation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          }
+        }
+      },
+      "devices": [
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 1,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.25881904510252074,
+                    0.11980835349662645,
+                    -0.9584668279730116
+                  ],
+                  [
+                    0.9659258262890683,
+                    0.03210255156592353,
+                    -0.25682041252738824
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.07727406610312547,
+                "y": 0.02070552360820166,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 2,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.9659258262890683,
+                    -0.03210255156592353,
+                    -0.25682041252738824
+                  ],
+                  [
+                    0.25881904510252074,
+                    -0.11980835349662645,
+                    -0.9584668279730116
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.02070552360820166,
+                "y": 0.07727406610312547,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 3,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865477,
+                    -0.08770580193070292,
+                    0.7016464154456232
+                  ],
+                  [
+                    -0.7071067811865475,
+                    0.08770580193070295,
+                    -0.7016464154456235
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136677,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 4,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.2588190451025208,
+                    0.11980835349662645,
+                    0.9584668279730116
+                  ],
+                  [
+                    -0.9659258262890683,
+                    0.03210255156592354,
+                    0.2568204125273883
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136676,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.07727406610312547,
+                "y": -0.020705523608201663,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0268741924943285,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 5,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776166,
+              "fy_px": 8958.064164776166,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.9659258262890683,
+                    -0.032102551565923516,
+                    0.25682041252738813
+                  ],
+                  [
+                    -0.25881904510252063,
+                    -0.11980835349662645,
+                    0.9584668279730116
+                  ],
+                  [
+                    0.0,
+                    -0.9922778767136675,
+                    -0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.02070552360820165,
+                "y": -0.07727406610312547,
+                "z": 0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.020155644370746375,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.026874192494328503,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.0806225774829855,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 6,
+          "kind": "camera",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 3000,
+              "width": 4096
+            },
+            "intrinsics": {
+              "cx_px": 2047.5,
+              "cy_px": 1499.5,
+              "fx_px": 8958.064164776168,
+              "fy_px": 8958.064164776168,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    0.7071067811865477,
+                    -0.08770580193070292,
+                    -0.7016464154456232
+                  ],
+                  [
+                    0.7071067811865475,
+                    0.08770580193070295,
+                    0.7016464154456235
+                  ],
+                  [
+                    -0.0,
+                    -0.9922778767136677,
+                    0.12403473458920845
+                  ]
+                ]
+              },
+              "translation": {
+                "x": 0.05656854249492379,
+                "y": -0.05656854249492381,
+                "z": -0.01
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.02015564437074638,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        },
+        {
+          "aperture_diameter_m": 0.002,
+          "autofocus": false,
+          "bit_depth": 12,
+          "deterministic_exposure": true,
+          "effective_focal_length_m": 0.0096,
+          "electronic_stabilization": false,
+          "focal_fraction_per_k": 2e-6,
+          "focus_locked": true,
+          "focus_working_distance_m": 0.08,
+          "global_shutter": true,
+          "hardware_trigger": true,
+          "housing_radius_m": 0.008,
+          "id": 101,
+          "kind": "projector",
+          "lens_model": "perspective",
+          "model": {
+            "distortion": {
+              "k1": -0.025,
+              "k2": 0.003,
+              "k3": 0.0,
+              "p1": 0.0002,
+              "p2": -0.0001
+            },
+            "far_m": 10.0,
+            "image_size": {
+              "height": 1200,
+              "width": 1920
+            },
+            "intrinsics": {
+              "cx_px": 959.5,
+              "cy_px": 599.5,
+              "fx_px": 3200.0,
+              "fy_px": 3200.0,
+              "skew_px": 0.0
+            },
+            "near_m": 0.001,
+            "world_from_camera": {
+              "rotation": {
+                "m": [
+                  [
+                    -0.7071067811865476,
+                    0.0,
+                    0.7071067811865475
+                  ],
+                  [
+                    -0.7071067811865475,
+                    -0.0,
+                    -0.7071067811865476
+                  ],
+                  [
+                    0.0,
+                    -1.0,
+                    0.0
+                  ]
+                ]
+              },
+              "translation": {
+                "x": -0.056568542494923796,
+                "y": 0.05656854249492381,
+                "z": 0.0
+              }
+            }
+          },
+          "monochrome": true,
+          "nominal_lens_focal_length_m": 0.008571428571428572,
+          "pixel_pitch_m": [
+            3e-6,
+            3e-6
+          ],
+          "raw_access": true,
+          "temperature_k": 293.15,
+          "usable_depth_of_field_m": 0.03
+        }
+      ],
+      "errors": {
+        "camera_calibration_rms_m": 1e-6,
+        "correspondence_sigma_px": 0.03,
+        "distortion_residual_rms_m": 5e-7,
+        "fiducial_manufacturing_rms_m": 5e-7,
+        "localization_sigma_px": 0.075,
+        "phase_intensity_sigma": 0.003,
+        "photon_localization_coefficient_px": 2.0,
+        "projector_calibration_rms_m": 1e-6,
+        "reconstruction_rms_m": 8e-7,
+        "residual_thermal_rms_m": 1e-6,
+        "structural_drift_rms_m": 7e-7,
+        "surface_interaction_rms_m": 1e-6,
+        "tcp_calibration_rms_m": 1e-6,
+        "tcp_rotation_rms_rad": 0.00005,
+        "tracking_localization_sigma_px": 1.8
+      },
+      "id": "metrology_adapted_to_machine_geometry_v1",
+      "illumination": {
+        "kind": "diffuse",
+        "polarization": "none",
+        "source_id": 101,
+        "wavelength_m": 4.5e-7
+      },
+      "maximum_normalized_residual": 6.0,
+      "minimum_angle_rad": 0.17453292519943295,
+      "patterns": {
+        "frame_rate_hz": 2000.0,
+        "maximum_gray_phase_disagreement_px": 0.75,
+        "minimum_modulation": 0.05,
+        "phase_period_px": 16.0,
+        "phase_steps": 4,
+        "projector_size": {
+          "height": 1200,
+          "width": 1920
+        },
+        "saturation_level": 0.995
+      },
+      "precision_volume": {
+        "center_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "size_m": {
+          "x": 0.025,
+          "y": 0.025,
+          "z": 0.025
+        }
+      },
+      "references": [
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 1,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": -0.008,
+            "z": -0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 2,
+          "point_tube_m": {
+            "x": 0.008,
+            "y": -0.006,
+            "z": 0.008
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 3,
+          "point_tube_m": {
+            "x": 0.001,
+            "y": 0.008,
+            "z": -0.007
+          }
+        },
+        {
+          "artifact_id": "online_reference_cage",
+          "characterized_rms_m": 5e-7,
+          "feature_id": 4,
+          "point_tube_m": {
+            "x": -0.008,
+            "y": 0.006,
+            "z": 0.006
+          }
+        }
+      ],
+      "schema_version": 1,
+      "seed": 73,
+      "thermal": {
+        "anchor_world_m": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "maximum_calibrated_delta_k": 2.0,
+        "reference_expansion_per_k": 5e-7,
+        "reference_temperature_k": 293.15,
+        "structure_expansion_per_k": 0.000023,
+        "structure_temperature_k": 293.15,
+        "tube_temperature_k": 293.15
+      },
+      "tube_id_m": 0.16,
+      "tube_working_length_m": 0.32
+    }
+  },
+  "sample_details_omitted": true,
+  "schema_version": 1,
+  "source_revision": "07c68ad093769a38a6d23d804fc1c4b6bebcac5b"
+}

@@ -1,7 +1,6 @@
 //! Low-cost optical metrology simulation for the Pipe assembly cell.
 //!
-//! The crate deliberately uses no external dependencies, which keeps native and
-//! `wasm32-unknown-unknown` builds small and reproducible.  Units are SI unless a
+//! Native and `wasm32-unknown-unknown` share the deterministic model. Units are SI unless a
 //! field name explicitly says otherwise (pixels and radians are called out).
 
 #![forbid(unsafe_code)]
@@ -36,3 +35,6 @@ pub use sensing::{
     FiducialObservation, MissingFeaturePoint, MissingReturn, ScanConfig, ScanFrame, ScanStats,
     StructuredLightRig, TriangulationHead,
 };
+
+/// Calibrated observation-only metrology and explicit synthetic sensor boundary.
+pub mod metrology;
