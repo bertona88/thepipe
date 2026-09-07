@@ -336,7 +336,7 @@ pub fn machine_optical_scene(s: &Simulation) -> Scene {
 fn optical_vec(v: pipe_sim_core::Vec3) -> Vec3 {
     Vec3::new(v.x, v.y, v.z)
 }
-fn optical_pose(p: Pose) -> RigidTransform {
+pub(crate) fn optical_pose(p: Pose) -> RigidTransform {
     let x = optical_vec(p.transform_vector(pipe_sim_core::Vec3::X));
     let y = optical_vec(p.transform_vector(pipe_sim_core::Vec3::Y));
     let z = optical_vec(p.transform_vector(pipe_sim_core::Vec3::Z));

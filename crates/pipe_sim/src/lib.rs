@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod gear_observability;
 pub mod handoff;
 mod machine_config;
 pub mod metrology;

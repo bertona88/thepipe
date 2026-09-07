@@ -3,7 +3,9 @@
 //! explicitly reduced, seeded image-feature/intensity acquisition model.
 mod config;
 mod contract;
+mod part;
 mod products;
+pub use part::*;
 mod solve;
 mod structured;
 pub mod synthetic;
