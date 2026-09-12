@@ -19,6 +19,25 @@ boundaries, not a prescribed build order; the working style is in `../AGENTS.md`
 6. **Fidelity is selectable and declared.** Fast kinematic studies, default engineering runs, and slow tooth/contact validation share scene data but never masquerade as each other.
 7. **The core is headless.** Any future viewer must be an adapter over a versioned Rust scene contract. The legacy website and synthetic preview have been removed; see `../AGENTS.md` for visualization requirements.
 
+### Current integration boundary
+
+The active design problem is the [gear-on-shaft operation](GEAR_OBSERVABILITY.md)
+in the existing 160 mm ID machine. Reuse the authoritative command runtime,
+existing guards and replay machinery. Connect cylindrical metrology to the
+manipulation loop through a common observation boundary; this integration has
+not yet replaced the separate M1e/M1f optical pipeline.
+
+The controller cycle is observe relevant geometry, evaluate uncertainty and
+clearance, execute bounded motion, reobserve, then assess contact and retention.
+Keep the sensor frontend replaceable by actual image detections. Preserve
+timestamps, calibration/configuration identity, covariance, validity, measured
+versus inferred features and five-degree-of-freedom states when roll is
+unobservable. Simulation truth remains evaluation-only.
+
+The proposed crate map below is descriptive, not a request for a rewrite or new
+demonstration runtime. The standalone 100 mm optical arrangement remains a
+separate candidate; its precision results cannot qualify the integration machine.
+
 ## 2. Proposed repository boundaries
 
 The following layout is a target boundary map; it does not require all crates to exist on day one.

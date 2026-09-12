@@ -8,6 +8,30 @@ features already implemented. The executable subset and its exclusions are recor
 `IMPLEMENTATION_STATUS.md`. The current end-to-end result is labeled **F1-reduced** and does not
 yet satisfy the normative F1 requirements below.
 
+## Current design emphasis and interpretation
+
+The active common experiment is one observed gear-on-shaft acquire/carry/align/
+guarded-seat/release/withdraw/verify operation in the existing 160 mm ID machine,
+initially with one active arm and a fixed fixture. See
+[GEAR_OBSERVABILITY.md](GEAR_OBSERVABILITY.md) for evidence and its explicit
+differences from the reference gearbox. This coupon does not satisfy full
+gearbox acceptance.
+
+Tool assignments, fixture orientation and structured-light steps below describe
+the reference concept; they do not freeze the tool or illumination choice for
+the integrated experiment. Change them through explicit co-design with reach,
+visibility, retention, release and contact evidence. Preserve task gates,
+collision protection, honest uncertainty and the final executed functional
+gearbox check. Broader tooling and multi-arm work are justified when they address
+the active operation's limiting uncertainty.
+
+The current local 3D measurement objective is **3–5 µm RMS**, as specified in
+[OPTICAL_METROLOGY.md](OPTICAL_METROLOGY.md). The older macro values in section 7.2
+are reference-layout targets, not a substitute for this objective or an achieved
+result. Report point, TCP, mating-feature and relative-alignment uncertainties
+separately, including bias, tilt, post-observation motion and held-part error.
+Do not transfer precision claims from the separate 100 mm optical candidate.
+
 ## 1. Purpose and success claim
 
 The simulator shall answer a concrete question: **can inexpensive, tendon-driven manipulators mounted inside a cylindrical cell assemble a two-photon-polymerization-scale spur gearbox when precision comes primarily from continuous optical observation?**

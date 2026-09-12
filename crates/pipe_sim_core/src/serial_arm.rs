@@ -176,6 +176,8 @@ pub struct SerialArmConfig {
     pub upper_arm_length_m: f64,
     pub forearm_length_m: f64,
     pub wrist_length_m: f64,
+    /// Distal wrist endpoint to pad-centre TCP along local +Z; zero preserves legacy tools.
+    pub tool_standoff_m: f64,
     pub link_collision_radii_m: [f64; 3],
     /// Yaw, shoulder pitch, elbow pitch, wrist roll limits.
     pub joint_limits_rad: [[f64; 2]; TENDON_JOINT_COUNT],
@@ -198,6 +200,7 @@ impl Default for SerialArmConfig {
             upper_arm_length_m: 32.0e-3,
             forearm_length_m: 30.0e-3,
             wrist_length_m: 15.0e-3,
+            tool_standoff_m: 0.0,
             link_collision_radii_m: [3.2e-3, 2.8e-3, 1.8e-3],
             joint_limits_rad: [
                 [-100.0_f64.to_radians(), 100.0_f64.to_radians()],
@@ -220,6 +223,8 @@ impl SerialArmConfig {
             && self.upper_arm_length_m > 0.0
             && self.forearm_length_m > 0.0
             && self.wrist_length_m > 0.0
+            && self.tool_standoff_m.is_finite()
+            && self.tool_standoff_m >= 0.0
             && self
                 .link_collision_radii_m
                 .iter()
@@ -235,7 +240,7 @@ impl SerialArmConfig {
     }
 
     pub fn maximum_reach_m(self) -> f64 {
-        self.upper_arm_length_m + self.forearm_length_m + self.wrist_length_m
+        self.upper_arm_length_m + self.forearm_length_m + self.wrist_length_m + self.tool_standoff_m
     }
 
     pub fn clamp_positions(self, mut positions: SerialJointPositions) -> SerialJointPositions {
@@ -538,13 +543,16 @@ impl SerialArm {
                 Vec3::ZERO,
                 Quat::from_axis_angle(Vec3::Z, positions.wrist_roll_rad),
             );
-        let tool_pose = wrist_pose * Pose::from_translation(Vec3::Z * self.config.wrist_length_m);
+        let wrist_endpoint =
+            wrist_pose * Pose::from_translation(Vec3::Z * self.config.wrist_length_m);
+        let tool_pose =
+            wrist_endpoint * Pose::from_translation(Vec3::Z * self.config.tool_standoff_m);
 
         let points = [
             shoulder_pose.translation,
             elbow_origin_pose.translation,
             wrist_origin_pose.translation,
-            tool_pose.translation,
+            wrist_endpoint.translation,
         ];
         let collision_capsules = (0..3)
             .map(|index| {
@@ -598,7 +606,8 @@ impl SerialArm {
         let upper_m = self.config.upper_arm_length_m;
         // There is no wrist-pitch actuator, so the forearm and wrist are one
         // collinear second link for point-position IK.
-        let distal_m = self.config.forearm_length_m + self.config.wrist_length_m;
+        let distal_m =
+            self.config.forearm_length_m + self.config.wrist_length_m + self.config.tool_standoff_m;
         let reach_squared_m2 = axial_m * axial_m + inward_m * inward_m;
         let minimum_reach_m = (upper_m - distal_m).abs();
         let maximum_reach_m = upper_m + distal_m;
@@ -956,5 +965,46 @@ mod tests {
         {
             assert!(*angle >= limits[0] && *angle <= limits[1]);
         }
+    }
+    #[test]
+    fn distal_standoff_changes_tcp_without_extending_wrist_collision() {
+        let base = SerialArm::new(SerialArmConfig::default()).unwrap();
+        let mut candidate = base.clone();
+        candidate.config.tool_standoff_m = 0.005;
+        let a = base.forward_kinematics();
+        let b = candidate.forward_kinematics();
+        assert_eq!(a.collision_capsules, b.collision_capsules);
+        assert!(
+            (b.tool_pose.translation
+                - a.tool_pose.translation
+                - a.tool_pose.transform_vector(Vec3::Z) * 0.005)
+                .length()
+                < 1e-12
+        );
+        for target in [
+            Vec3::new(0.010, 0.0, 0.010),
+            Vec3::new(0.015, 0.005, -0.020),
+        ] {
+            let solution = candidate
+                .solve_tool_position(target, candidate.positions)
+                .unwrap();
+            candidate.set_positions(solution.positions).unwrap();
+            assert!(
+                (candidate.forward_kinematics().tool_pose.translation - target).length() < 1e-9
+            );
+        }
+        let pose = candidate.forward_kinematics().tool_pose;
+        let solution = candidate
+            .solve_tool_axis(
+                pose.translation,
+                pose.transform_vector(Vec3::Z),
+                base.positions,
+            )
+            .unwrap();
+        candidate.set_positions(solution.positions).unwrap();
+        assert!(
+            (candidate.forward_kinematics().tool_pose.translation - pose.translation).length()
+                < 1e-7
+        );
     }
 }

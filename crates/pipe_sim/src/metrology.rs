@@ -7,6 +7,7 @@ use pipe_optics::{
 };
 use pipe_sim_core::{PipeCellConfig, Pose, Shape, Simulation, ToolMotionStatus};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 pub fn baseline_config() -> MetrologyConfig {
     MetrologyConfig::baseline()
@@ -37,13 +38,25 @@ pub struct RegisteredPartFeature {
     pub normal_body: Option<Vec3>,
     pub surface: SurfaceResponse,
 }
+/// A physical body-mounted constellation, observed independently of the tool.
+/// `tcp_from_fiducial` is interpreted as body-from-fiducial for this registration.
+/// The relation describes a separately characterized mating feature; the solver
+/// never receives the body's truth pose or that feature's evaluation geometry.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RegisteredBodyFiducial {
+    pub body_id: u32,
+    pub fiducial: RigidFiducial,
+    pub relation: PartFeatureRelation,
+}
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct MachineMetrologyFrame {
     pub schema_version: u32,
     pub machine_tick: u64,
     pub time_s: f64,
     pub config_sha256: String,
+    pub observation_config_sha256: String,
     pub world: ObservedWorld,
+    pub inferred_features: BTreeMap<u32, InferredPartFeature>,
     pub visibility: Vec<VisibilityAttempt>,
     pub rejected_entities: Vec<(u32, MetrologyError)>,
     pub occluder_count: usize,
@@ -53,6 +66,8 @@ pub struct MachineMetrology {
     pub config: MetrologyConfig,
     pub tools: Vec<RigidFiducial>,
     pub part_features: Vec<RegisteredPartFeature>,
+    pub body_fiducials: Vec<RegisteredBodyFiducial>,
+    pub surface_attached_fiducials: std::collections::BTreeSet<u32>,
     pub extra_occluders: Scene,
     pub world: ObservedWorld,
     captured_command_sequence: Option<u64>,
@@ -85,6 +100,8 @@ impl MachineMetrology {
             config,
             tools,
             part_features,
+            body_fiducials: Vec::new(),
+            surface_attached_fiducials: std::collections::BTreeSet::new(),
             extra_occluders: Scene::default(),
             world: ObservedWorld::default(),
             captured_command_sequence: None,
@@ -93,9 +110,16 @@ impl MachineMetrology {
     }
 
     fn configuration_stamp(&self) -> Result<String, SimError> {
-        serde_json::to_string(&(&self.config, &self.tools, &self.part_features))
-            .map(|s| sha256_hex(s.as_bytes()))
-            .map_err(|e| SimError::InvalidScenario(e.to_string()))
+        serde_json::to_string(&(
+            &self.config,
+            &self.tools,
+            &self.part_features,
+            &self.body_fiducials,
+            &self.surface_attached_fiducials,
+            format!("{:?}", self.extra_occluders),
+        ))
+        .map(|s| sha256_hex(s.as_bytes()))
+        .map_err(|e| SimError::InvalidScenario(e.to_string()))
     }
 
     pub(crate) fn require_current_capture(&self, command_sequence: u64) -> Result<(), SimError> {
@@ -152,6 +176,42 @@ impl MachineMetrology {
         self.consume_capture();
         self.world.begin_acquisition(mechanics.step_index + 1);
         self.config.validate().map_err(metrology_error)?;
+        // Public registration/configuration fields are checked at acquisition,
+        // rather than allowing duplicate entities to overwrite measured state.
+        let mut ids = std::collections::BTreeSet::new();
+        for tool in &self.tools {
+            tool.validate().map_err(metrology_error)?;
+            if tool.arm_id.is_none()
+                || !ids.insert(tool.object_id)
+                || !mechanics
+                    .serial_arms
+                    .iter()
+                    .any(|a| Some(a.id.0) == tool.arm_id)
+            {
+                return Err(metrology_error(MetrologyError::InvalidObservation));
+            }
+        }
+        for feature in &self.part_features {
+            if !ids.insert(feature.entity_id)
+                || !feature.point_body_m.is_finite()
+                || !mechanics
+                    .body(pipe_sim_core::BodyId(feature.body_id))
+                    .is_some_and(|b| b.enabled)
+            {
+                return Err(metrology_error(MetrologyError::InvalidObservation));
+            }
+        }
+        for body in &self.body_fiducials {
+            body.fiducial.validate().map_err(metrology_error)?;
+            if body.fiducial.arm_id.is_some()
+                || !ids.insert(body.fiducial.object_id)
+                || !mechanics
+                    .body(pipe_sim_core::BodyId(body.body_id))
+                    .is_some_and(|b| b.enabled)
+            {
+                return Err(metrology_error(MetrologyError::InvalidObservation));
+            }
+        }
         if (self.config.tube_id_m - 2.0 * cell.tube.inner_radius_m).abs() > 1e-9
             || (self.config.tube_working_length_m - cell.tube.working_length_m).abs() > 1e-9
         {
@@ -174,13 +234,18 @@ impl MachineMetrology {
         );
         let mut visibility = Vec::new();
         let mut rejected = Vec::new();
+        let mut inferred_features = BTreeMap::new();
         for tool in &self.tools {
             let arm = mechanics
                 .serial_arms
                 .iter()
                 .find(|a| Some(a.id.0) == tool.arm_id)
                 .ok_or_else(|| metrology_error(MetrologyError::InvalidObservation))?;
-            let acquisition = acquire_tool(
+            let acquisition = if self.surface_attached_fiducials.contains(&tool.object_id) {
+                acquire_surface_markers
+            } else {
+                acquire_tool
+            }(
                 &self.config,
                 &scene,
                 tool,
@@ -243,6 +308,45 @@ impl MachineMetrology {
                 Err(e) => rejected.push((feature.entity_id, e)),
             }
         }
+        for registered in &self.body_fiducials {
+            let body = mechanics
+                .body(pipe_sim_core::BodyId(registered.body_id))
+                .filter(|b| b.enabled)
+                .ok_or_else(|| metrology_error(MetrologyError::InvalidObservation))?;
+            let model = &registered.fiducial;
+            let acquisition = if self.surface_attached_fiducials.contains(&model.object_id) {
+                acquire_surface_markers
+            } else {
+                acquire_tool
+            }(
+                &self.config,
+                &scene,
+                model,
+                optical_pose(body.pose),
+                MeasurementMode::Precision,
+                &t,
+            )
+            .map_err(metrology_error)?;
+            visibility.extend(acquisition.visibility);
+            match estimate_tool_pose(&self.config, model, &acquisition.observations).and_then(
+                |pose| {
+                    infer_part_feature(&pose, &registered.relation).map(|feature| (pose, feature))
+                },
+            ) {
+                Ok((pose, feature)) => {
+                    self.world.entities.insert(
+                        model.object_id,
+                        ObservedEntity {
+                            kind: ObservedEntityKind::Part,
+                            point: Some(feature.center.clone()),
+                            pose: Some(pose),
+                        },
+                    );
+                    inferred_features.insert(model.object_id, feature);
+                }
+                Err(e) => rejected.push((model.object_id, e)),
+            }
+        }
         let references = acquire_references(&self.config, &scene, &t).map_err(metrology_error)?;
         while mechanics.time_s < t.available_s + self.config.acquisition.max_trigger_skew_s {
             mechanics
@@ -263,7 +367,9 @@ impl MachineMetrology {
             machine_tick: mechanics.step_index,
             time_s: mechanics.time_s,
             config_sha256: sha256_hex(config_json.as_bytes()),
+            observation_config_sha256: self.configuration_stamp()?,
             world: self.world.clone(),
+            inferred_features,
             visibility,
             rejected_entities: rejected,
             occluder_count: scene.primitives.len(),
@@ -307,6 +413,21 @@ pub fn machine_optical_scene(s: &Simulation) -> Scene {
         push_shape(&mut scene, optical_pose(body.pose), body.shape, body.id.0);
     }
     for arm in &s.serial_arms {
+        if arm.gripper_config.distal_geometry.is_some() {
+            for component in arm
+                .gripper
+                .tool_collision_primitives(arm.tool_pose(), arm.gripper_config)
+            {
+                push_shape(
+                    &mut scene,
+                    optical_pose(component.pose),
+                    component.shape,
+                    pipe_sim_core::serial_arm_tool_body_id(arm.id, component.component_index)
+                        .expect("valid physical tool component")
+                        .0,
+                );
+            }
+        }
         for (i, (pose, shape)) in arm.kinematics.collision_capsules.iter().enumerate() {
             push_shape(
                 &mut scene,
@@ -321,6 +442,9 @@ pub fn machine_optical_scene(s: &Simulation) -> Scene {
             .iter()
             .enumerate()
         {
+            if arm.gripper_config.distal_geometry.is_some() {
+                continue;
+            }
             push_shape(
                 &mut scene,
                 optical_pose(*pose),
@@ -484,4 +608,98 @@ pub fn run_verification(
             "Common RMS priors are retained once after solving. These priors are not achieved accuracy; reported error is computed separately against independent geometry.",
             "Volume verification uses isolated feature geometry to measure sensor performance. Machine occlusion is a separate live-runtime test; no full-machine visibility or dense-surface precision claim."]
             .iter().map(|s|s.to_string()).collect()})
+}
+
+#[cfg(test)]
+mod body_registration_tests {
+    use super::*;
+
+    fn fixture() -> (Simulation, PipeCellConfig, MachineMetrology) {
+        let loaded = crate::machine_config::load_baseline_machine_config().unwrap();
+        let mut mechanics = crate::machine_config::build_baseline_machine(&loaded).unwrap();
+        mechanics
+            .add_body(pipe_sim_core::RigidBody::new(
+                pipe_sim_core::BodyId(700),
+                Shape::Sphere { radius_m: 0.0001 },
+                Pose::from_translation(pipe_sim_core::Vec3::new(0.003, 0.003, 0.0)),
+                pipe_sim_core::MotionType::Static,
+            ))
+            .unwrap();
+        let mut metrology = MachineMetrology::for_machine(loaded.cell).unwrap();
+        metrology.tools.clear();
+        let mut fiducial = RigidFiducial::baseline(700);
+        fiducial.arm_id = None;
+        metrology.body_fiducials.push(RegisteredBodyFiducial {
+            body_id: 700,
+            fiducial,
+            relation: PartFeatureRelation {
+                feature_id: 1,
+                center_fiducial_m: Vec3::new(0.0, 0.0, 0.003),
+                axis_fiducial: Vec3::Z,
+                calibration_id: "independent_test_relation".into(),
+                provenance: RelationProvenance::SyntheticIndependentCharacterization,
+                characterization_rms_m: 1e-6,
+                axis_characterization_rms_rad: 0.0002,
+            },
+        });
+        (mechanics, loaded.cell, metrology)
+    }
+
+    #[test]
+    fn relation_changes_inference_not_fitted_marker_pose() {
+        let (mut a, cell, mut ma) = fixture();
+        let (mut b, _, mut mb) = fixture();
+        mb.body_fiducials[0].relation.center_fiducial_m.x += 0.0002;
+        let fa = ma.acquire(&mut a, cell).unwrap();
+        let fb = mb.acquire(&mut b, cell).unwrap();
+        assert_eq!(fa.world.entities[&700].pose, fb.world.entities[&700].pose);
+        assert_ne!(
+            fa.inferred_features[&700].center.position_world_m,
+            fb.inferred_features[&700].center.position_world_m
+        );
+        assert_ne!(fa.observation_config_sha256, fb.observation_config_sha256);
+        assert!(fa.inferred_features[&700].provenance.contains("not_direct"));
+    }
+
+    #[test]
+    fn occlusion_and_bad_registration_cannot_reuse_previous_body_observation() {
+        let (mut machine, cell, mut metrology) = fixture();
+        assert!(metrology
+            .acquire(&mut machine, cell)
+            .unwrap()
+            .inferred_features
+            .contains_key(&700));
+        metrology.extra_occluders = Scene::new(vec![Primitive::new(
+            Geometry::Sphere(Sphere {
+                center: Vec3::ZERO,
+                radius_m: 0.075,
+            }),
+            Material::default(),
+            9,
+        )]);
+        assert!(metrology
+            .require_current_capture(machine.machine_command_sequence)
+            .is_err());
+        let blocked = metrology.acquire(&mut machine, cell).unwrap();
+        assert!(blocked.inferred_features.is_empty());
+        assert!(!blocked.world.entities.contains_key(&700));
+        metrology
+            .body_fiducials
+            .push(metrology.body_fiducials[0].clone());
+        assert!(metrology.acquire(&mut machine, cell).is_err());
+        assert!(metrology.world.entities.is_empty());
+    }
+
+    #[test]
+    fn feature_calibration_mutation_invalidates_capture() {
+        let (mut machine, cell, mut metrology) = fixture();
+        metrology.acquire(&mut machine, cell).unwrap();
+        metrology
+            .require_current_capture(machine.machine_command_sequence)
+            .unwrap();
+        metrology.body_fiducials[0].relation.characterization_rms_m *= 2.;
+        assert!(metrology
+            .require_current_capture(machine.machine_command_sequence)
+            .is_err());
+    }
 }

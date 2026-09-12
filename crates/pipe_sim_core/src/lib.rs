@@ -31,7 +31,10 @@ pub use collision::{
 pub use geometry::{
     Aabb, BodyId, CollisionFilter, GearGeometry, Material, MotionType, RigidBody, Shape,
 };
-pub use gripper::{GraspCandidate, GripperConfig, GripperState, MIN_PARTIAL_GRASP_AXIAL_OVERLAP_M};
+pub use gripper::{
+    DistalToolGeometry, GraspCandidate, GripperConfig, GripperState, ToolCollisionPrimitive,
+    MIN_PARTIAL_GRASP_AXIAL_OVERLAP_M,
+};
 pub use machine::{
     wrap_angle_pi, CarriageConfig, CarriageState, CarriageTarget, MachineBackend, MachineCommand,
     MachineCommandError, MachineCommandEvent, ManipulatorId, ManipulatorMotionConfig,
@@ -44,7 +47,10 @@ pub use serial_arm::{
     TendonJointConfig, TendonJointTelemetry, ToolAxisSolution, ToolPositionIkError,
     ToolPositionSolution, TENDON_JOINT_COUNT,
 };
-pub use simulation::{serial_arm_link_body_id, SERIAL_ARM_COLLISION_BODY_ID_BASE};
+pub use simulation::{
+    serial_arm_link_body_id, serial_arm_tool_body_id, ToolPathCollisionDiagnostic,
+    SERIAL_ARM_COLLISION_BODY_ID_BASE,
+};
 pub use simulation::{
     ArmId, ArmInstance, SerialArmInstance, Simulation, SimulationConfig, SimulationError,
     StepReport, ToolMotionTraceSample,

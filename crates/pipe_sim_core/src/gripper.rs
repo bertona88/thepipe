@@ -18,6 +18,8 @@ pub struct GripperConfig {
     pub jaw_half_extents_m: Vec3,
     pub pad_compliance_m: f64,
     pub max_grip_force_n: f64,
+    /// Optional physical palm and fingers; legacy models remain unchanged.
+    pub distal_geometry: Option<DistalToolGeometry>,
 }
 
 impl Default for GripperConfig {
@@ -29,13 +31,15 @@ impl Default for GripperConfig {
             jaw_half_extents_m: Vec3::new(100.0e-6, 250.0e-6, 600.0e-6),
             pad_compliance_m: 12.0e-6,
             max_grip_force_n: 0.15,
+            distal_geometry: None,
         }
     }
 }
 
 impl GripperConfig {
     pub fn is_valid(self) -> bool {
-        self.min_opening_m >= 0.0
+        self.distal_geometry.map_or(true, |g| g.is_valid(self))
+            && self.min_opening_m >= 0.0
             && self.max_opening_m >= self.min_opening_m
             && self.max_speed_m_s > 0.0
             && self.jaw_half_extents_m.x > 0.0
@@ -43,6 +47,44 @@ impl GripperConfig {
             && self.jaw_half_extents_m.z > 0.0
             && self.pad_compliance_m >= 0.0
             && self.max_grip_force_n > 0.0
+    }
+}
+
+/// TCP-local, buildable U-shaped distal tool. Pads retain the existing grasp model.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DistalToolGeometry {
+    pub palm_center_z_m: f64,
+    pub palm_half_extents_m: Vec3,
+    pub finger_half_extents_xy_m: [f64; 2],
+}
+impl DistalToolGeometry {
+    pub fn is_valid(self, config: GripperConfig) -> bool {
+        self.palm_center_z_m.is_finite()
+            && self.palm_half_extents_m.is_finite()
+            && self.palm_half_extents_m.x > 0.0
+            && self.palm_half_extents_m.y > 0.0
+            && self.palm_half_extents_m.z > 0.0
+            && self
+                .finger_half_extents_xy_m
+                .iter()
+                .all(|v| v.is_finite() && *v > 0.0)
+            && self.palm_center_z_m + self.palm_half_extents_m.z < -config.jaw_half_extents_m.z
+            && self.palm_half_extents_m.x
+                >= config.max_opening_m / 2.0
+                    + config.jaw_half_extents_m.x
+                    + self.finger_half_extents_xy_m[0]
+    }
+}
+/// Stable component ordering: palm, negative/positive-X fingers, negative/positive-X pads.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolCollisionPrimitive {
+    pub component_index: u8,
+    pub pose: Pose,
+    pub shape: Shape,
+}
+impl ToolCollisionPrimitive {
+    pub fn is_pad(self) -> bool {
+        self.component_index >= 3
     }
 }
 
@@ -141,6 +183,55 @@ impl GripperState {
             half_extents_m: config.jaw_half_extents_m,
         };
         [shape, shape]
+    }
+
+    /// Physical geometry, also used by CAD/scene exports and path admission.
+    pub fn tool_collision_primitives(
+        self,
+        tool_pose: Pose,
+        config: GripperConfig,
+    ) -> Vec<ToolCollisionPrimitive> {
+        let Some(g) = config.distal_geometry else {
+            return Vec::new();
+        };
+        let mut result = vec![ToolCollisionPrimitive {
+            component_index: 0,
+            pose: tool_pose * Pose::from_translation(Vec3::Z * g.palm_center_z_m),
+            shape: Shape::Box {
+                half_extents_m: g.palm_half_extents_m,
+            },
+        }];
+        let proximal_z = g.palm_center_z_m + g.palm_half_extents_m.z;
+        let distal_z = -config.jaw_half_extents_m.z;
+        let offset = self.opening_m / 2.0 + config.jaw_half_extents_m.x;
+        for (index, sign) in [-1.0, 1.0].into_iter().enumerate() {
+            result.push(ToolCollisionPrimitive {
+                component_index: 1 + index as u8,
+                pose: tool_pose
+                    * Pose::from_translation(Vec3::new(
+                        sign * offset,
+                        0.0,
+                        (proximal_z + distal_z) / 2.0,
+                    )),
+                shape: Shape::Box {
+                    half_extents_m: Vec3::new(
+                        g.finger_half_extents_xy_m[0],
+                        g.finger_half_extents_xy_m[1],
+                        (distal_z - proximal_z) / 2.0,
+                    ),
+                },
+            });
+        }
+        for (index, pose) in self.jaw_poses(tool_pose, config).into_iter().enumerate() {
+            result.push(ToolCollisionPrimitive {
+                component_index: 3 + index as u8,
+                pose,
+                shape: Shape::Box {
+                    half_extents_m: config.jaw_half_extents_m,
+                },
+            });
+        }
+        result
     }
 
     /// Candidate test using an AABB evaluated directly in the tool frame.
