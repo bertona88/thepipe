@@ -31,6 +31,19 @@ loop, with explicit assumptions about how they represent the complete machine.
 design intent, implemented behavior, evidence, and limitations, rather than a
 prescribed sequence of future milestones.
 
+The current shared experiment is one **physically coherent, optically observed
+gear-on-shaft operation**: acquire, carry, align, guarded seat, release, withdraw,
+and verify, initially with one active arm and a fixed fixture in the existing
+160 mm ID machine. Tool, marker supports, optics, fixture, and controller must
+refer to that same configuration. Progress means resolving an uncertainty about
+assembling the gearbox; completion of a separate subsystem is supporting evidence.
+
+The [gear study](docs/GEAR_OBSERVABILITY.md) currently reports a collision-rejected
+approach and zero precision admissions. The integrated operation is not yet
+demonstrated. Its coupon differs from the reference gearbox, and the standalone
+100 mm optical candidate does not establish this machine's precision. Keep
+collision and uncertainty guards intact while revising the design.
+
 ## Reference documents
 
 - [Engineering requirements](docs/REQUIREMENTS.md)

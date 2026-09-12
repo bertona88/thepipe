@@ -28,6 +28,50 @@ different views of that machine, and changes should be considered across them.
 Prioritize physical correctness, deterministic simulation, explicit units,
 collision safety, testability, and honest fidelity boundaries.
 
+## Current integration focus
+
+The common design problem is one optically observed gear-on-shaft operation:
+acquire, carry, align the bore and shaft, seat under guarded contact, release,
+withdraw, and verify. Start with one active arm and a fixed fixture. Keep the
+complete executed and functionally checked gearbox as the destination.
+
+- Use the existing 160 mm ID machine for integration unless an explicit co-design
+  decision changes it. Keep the 100 mm optical candidate separate; do not transfer
+  precision claims between configurations.
+- Use the gear observability experiment as the starting evidence, not an assembly
+  success. State how its coupon represents the reference gearbox and which
+  clearance, grasp, visibility, and release difficulties it omits.
+- Resolve distal-tool clearance together with grasp, marker supports, optical
+  views, seating, release, and withdrawal. Change the tool or fixture when needed.
+  Refine conservative collision envelopes only when physical geometry justifies
+  it; never suppress relevant checks to obtain a pass.
+- Close the loop through the authoritative runtime and a common observation
+  boundary: observe, assess uncertainty and clearance, move a bounded distance,
+  observe again, assess contact and retention. Reuse guards and replay machinery.
+  Synthetic and eventual image-derived detections must preserve the same contract,
+  measured versus inferred provenance, and genuinely unobservable degrees of freedom.
+- Optimize observations for relative mating geometry. Keep point/TCP/feature RMS,
+  relative uncertainty, bias, tilt, motion after observation, and held-part error
+  distinct. Support any shared-error cancellation with covariance evidence.
+  Structured light and dense reconstruction must resolve a demonstrated task need;
+  neither is a prerequisite for this operation.
+- Use focused bench measurements of the same proposed arrangement to replace
+  consequential assumptions. Preserve held-out geometric verification and the
+  evaluation-only measurement path. Include mounts, triggering, illumination,
+  calibration equipment, cabling, and tools in the buildable cost accounting.
+- The lead engineer coordinating the operation is its integration owner and is
+  accountable for configuration consistency across contributions. Each change
+  should explain what was learned, what design/model changed, and what important
+  assumption remains untested. Use existing reports and the engineering inspector.
+- Report completed operations separately from controlled refusals. Preserve
+  regression demonstrations; defer broader tool libraries, multi-arm choreography,
+  presentation, and added physics unless they address this operation's limiting
+  uncertainty. Do not add a prescribed milestone plan.
+
+Current evidence and open constraints are in
+[docs/GEAR_OBSERVABILITY.md](docs/GEAR_OBSERVABILITY.md) and
+[docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+
 ## Visuals must be backed by implemented code
 
 - The legacy website and synthetic UI preview have been removed. Do not restore
