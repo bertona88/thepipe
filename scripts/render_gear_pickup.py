@@ -140,9 +140,21 @@ def render(report, output, fps, duration):
         raise ValueError("pickup replay requires one identified gear")
     center = vector(gear_bodies[0]["pose"]["translation_m"])*1000
     close_radius = 6.5
-    shoulder = vector(first_arm["shoulder_pose"]["translation_m"])*1000
-    whole_center = (shoulder+center)/2
-    whole_radius = max(40.,float(np.linalg.norm(shoulder-center))*.65)
+    # Fixed world view must encompass the entire executed carriage sweep, not
+    # merely its initial shoulder position. Bounds use recorded collider meshes.
+    lower = np.full(3, np.inf)
+    upper = np.full(3, -np.inf)
+    for sample in samples:
+        active = next(a for a in sample["scene_frame"]["truth"]["manipulators"] if a["id"] == arm_id)
+        for collider in active["link_colliders"] + active["tool_colliders"]:
+            points, _ = mesh(collider["shape"])
+            world = transform(collider["pose"], points)
+            lower = np.minimum(lower, world.min(axis=0))
+            upper = np.maximum(upper, world.max(axis=0))
+    lower = np.minimum(lower, center-close_radius)
+    upper = np.maximum(upper, center+close_radius)
+    whole_center = (lower+upper)/2
+    whole_radius = float(np.max(upper-lower))/2+5.
     fig = plt.figure(figsize=(14,8), facecolor="#f7f9fc")
     axes = [fig.add_axes([.035,.20,.43,.61],projection="3d"),fig.add_axes([.51,.20,.46,.61],projection="3d")]
     title = fig.text(.045,.955,"",fontsize=19,weight="bold",color="#182b40")
@@ -155,6 +167,7 @@ def render(report, output, fps, duration):
     fig.text(.045,.012,f"Revision {report['source_revision']}  |  Config {desc['machine_config_sha256'][:16]}",fontsize=8,color="#586675")
     writer = FFMpegWriter(fps=fps,metadata={"title":"The Pipe — recorded gear pickup operation"},codec="libx264",extra_args=["-pix_fmt","yuv420p"])
     output.parent.mkdir(parents=True,exist_ok=True)
+    held_preview_saved = False
     with writer.saving(fig,str(output),dpi=110):
         for frame_number,index in enumerate(indices):
             sample = samples[index]
@@ -196,9 +209,17 @@ def render(report, output, fps, duration):
             writer.grab_frame()
             if frame_number == len(indices)//2:
                 fig.savefig(output.with_suffix(".png"),dpi=130,facecolor=fig.get_facecolor())
+            if sample["phase"] == "hold_for_observation" and not held_preview_saved:
+                fig.savefig(output.with_suffix(".held.png"),dpi=130,facecolor=fig.get_facecolor())
+                held_preview_saved = True
+            if frame_number == len(indices)-1:
+                fig.savefig(output.with_suffix(".final.png"),dpi=130,facecolor=fig.get_facecolor())
     plt.close(fig)
     output.with_suffix(".render.json").write_text(json.dumps({
         "source_report_sha256": report["_render_source_sha256"],
+        "renderer_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "whole_view_center_mm": whole_center.tolist(),
+        "whole_view_radius_mm": whole_radius,
         "source_revision": report["source_revision"],
         "source_tree_sha256": report["source_tree_sha256"],
         "configuration_sha256": report["configuration_sha256"],

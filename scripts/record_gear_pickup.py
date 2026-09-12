@@ -4,12 +4,40 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 
 
 def git(root, *args):
     return subprocess.check_output(["git", "-C", str(root), *args])
+
+
+def validate_case(report, fault):
+    """A different early refusal cannot satisfy an injected-fault check."""
+    final = report["samples"][-1]
+    if fault:
+        reasons = {"missing-part": "part_unobserved", "stale": "Stale",
+                   "timeout": "motion timeout",
+                   "unsupported-release": "support release:GraspRejected"}
+        if (report["status"] != "controlled_refusal"
+                or reasons[fault] not in (report["refusal"] or "")
+                or final["phase"] != "controlled_stop"):
+            raise ValueError(f"{fault}: expected refusal and terminal hold not established")
+        expected_held = 700 if fault == "unsupported-release" else None
+        if final["held_part_body_id"] != expected_held:
+            raise ValueError(f"{fault}: unexpected terminal part ownership")
+    elif (report["status"] != "completed_pickup_return"
+          or final["held_part_body_id"] is not None
+          or "withdraw_and_verify" not in report["completed_phases"]):
+        raise ValueError("Nominal pickup/return completion not established")
+    for arm in final["scene_frame"]["truth"]["manipulators"]:
+        velocities = [arm["carriage_z_velocity_m_s"],
+                      arm["carriage_theta_velocity_rad_s"],
+                      arm["gripper"]["opening_velocity_m_s"],
+                      *arm["joint_velocities_rad_s"]]
+        if any(not math.isfinite(v) or abs(v) > 1e-12 for v in velocities):
+            raise ValueError("Terminal arm state is not stationary")
 
 
 def main():
@@ -43,6 +71,7 @@ def main():
         subprocess.run(command, cwd=root, check=True)
         content = path.read_bytes()
         report = json.loads(content)
+        validate_case(report, fault)
         return {
             "case": name, "status": report["status"], "refusal": report["refusal"],
             "completed_phases": report["completed_phases"],

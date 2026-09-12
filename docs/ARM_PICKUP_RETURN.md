@@ -79,22 +79,26 @@ attachment and pad compliance gives a force proxy, not a calibrated force sensor
 Missing or stale observations, motion timeout and unsupported release have
 explicit refusal paths. Refusal is reported separately from completion.
 
-## Executed development evidence
+## Executed evidence
 
-The integrated development run reports `completed_pickup_return`, no refusal,
+The clean run at `f805ce58addcb39e4f406656c8a28a9448a543d4` reports `completed_pickup_return`, no refusal,
 and all nine phases through `withdraw_and_verify`. It records 2,400 authoritative
 samples over 46.802 simulated seconds (final tick 46,802). Independent CAD FK
 checks every recorded articulated sample, including TCP orientation; maximum
 position discrepancy is 5.99 × 10⁻¹⁷ m. The recorded fixture exports as seven
 valid CAD solids. Final release gaps are +1.687, +1.482 and +1.728 µm; these
 are positive geometric separations in zero gravity, not physical settling
-or measured support loads. This run uses development provenance; an archived run from
-the final clean source revision is required for the release evidence record.
+or measured support loads. The [committed evidence summary](evidence/arm-pickup-return-f805ce5.json)
+records exact source/configuration identities and report hashes. All 2,400 runtime
+samples reproduce the development run exactly. Four injected faults refuse for
+their declared reasons with stationary terminal states; unsupported release
+retains the gear. The recorder checks reason and ownership, so an unrelated early
+refusal cannot satisfy a fault case.
 
 The experiment first exposed 50 µm clearance between the held gear and a
 fixture stem, causing a guarded lift refusal. Revised stems preserve their
 ball/plate attachments while providing 200 µm nominal clearance to the gear.
-The completed development run uses that revised geometry; collision guards
+The completed run uses that revised geometry; collision guards
 remain active. Completion establishes this reduced pickup/return experiment,
 not physical support transfer, insertion precision or gearbox assembly.
 

@@ -33,9 +33,10 @@ The [pickup and return implementation](ARM_PICKUP_RETURN.md) adds an opt-in
 located printed reference patches, independently observed gear state and a
 modeled fixed support nest. It retains the 160 mm machine and the existing
 authoritative runtime. Pickup admission is separate from the unchanged 5 µm
-insertion limit. Its integrated development run completes pickup and return
+insertion limit. Its clean-revision run completes pickup and return
 through all nine phases, with 2,400 recorded samples and independent CAD/runtime
-frame agreement; final clean-source evidence is still to be archived.
+frame agreement. The [committed summary](evidence/arm-pickup-return-f805ce5.json)
+records completion and four verified controlled-refusal cases.
 Rigid attachment, zero gravity and geometric support-gap release remain
 explicit limitations. It does not establish shaft insertion or hardware
 buildability. The earlier gear-study failures above remain historical evidence

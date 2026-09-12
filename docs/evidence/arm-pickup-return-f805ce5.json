@@ -1,0 +1,141 @@
+{
+  "source_revision": "f805ce58addcb39e4f406656c8a28a9448a543d4",
+  "source_tree_sha256": "7a59193a3ce43f726b0ffd6cfdcea3144b264271ffaecdfde413f4dd6d999f0b",
+  "source_tree_hash_definition": "SHA256(git ls-tree -r --full-tree HEAD output bytes)",
+  "configuration": "scenarios/machine_gear_pickup_v1.json",
+  "results": [
+    {
+      "case": "nominal",
+      "status": "completed_pickup_return",
+      "refusal": null,
+      "completed_phases": [
+        "open_gripper",
+        "coarse_fixture_approach",
+        "observed_pick_approach",
+        "close_and_grasp",
+        "observed_lift",
+        "hold_for_observation",
+        "observed_return",
+        "supported_release",
+        "withdraw_and_verify"
+      ],
+      "sample_count": 2400,
+      "final_tick": 46802,
+      "simulated_duration_s": 46.802,
+      "machine_config_sha256": "ceb55386adfee9824d440823bf2ead2d6ef5b49ff9b8a63015c5f0122c31b9e7",
+      "configuration_sha256": "a3c4d62439456250ad05e5587bfc9cf40fc000efdb8cf2dc57249600ff5dee6e",
+      "report_sha256": "164a97eb6b3b71cf21dd3e153e4c876a4207704897ed42a52a1ff1b5f374e2b9",
+      "release_support_gaps_m": [
+        [
+          710,
+          1.68712851525749e-06
+        ],
+        [
+          711,
+          1.4820660103470878e-06
+        ],
+        [
+          712,
+          1.727934458801468e-06
+        ]
+      ],
+      "insertion_precision_rejections": [],
+      "report_path": "nominal.json"
+    },
+    {
+      "case": "missing-part",
+      "status": "controlled_refusal",
+      "refusal": "observed_pick_approach:part_unobserved:[]",
+      "completed_phases": [
+        "open_gripper",
+        "coarse_fixture_approach"
+      ],
+      "sample_count": 1830,
+      "final_tick": 36364,
+      "simulated_duration_s": 36.364,
+      "machine_config_sha256": "ceb55386adfee9824d440823bf2ead2d6ef5b49ff9b8a63015c5f0122c31b9e7",
+      "configuration_sha256": "3078340bdf46fd57e177279c986de7d6af864b0107301910ed5c24f28293257e",
+      "report_sha256": "ed799c1625167801ca07509502b0b4b63d76babbb4e985c0fb6508c4089ebe34",
+      "release_support_gaps_m": null,
+      "insertion_precision_rejections": [],
+      "report_path": "missing-part.json"
+    },
+    {
+      "case": "stale",
+      "status": "controlled_refusal",
+      "refusal": "observed_pick_approach:pickup_precision:Stale",
+      "completed_phases": [
+        "open_gripper",
+        "coarse_fixture_approach"
+      ],
+      "sample_count": 1830,
+      "final_tick": 36364,
+      "simulated_duration_s": 36.364,
+      "machine_config_sha256": "ceb55386adfee9824d440823bf2ead2d6ef5b49ff9b8a63015c5f0122c31b9e7",
+      "configuration_sha256": "89092aa23e0c5a138a97b8ab972ea91827170902f76f7adb0f1933a695f3764d",
+      "report_sha256": "11bee01257c697270122ea014fe58bc43348d4fe779df5fbd4d950f245f99fcb",
+      "release_support_gaps_m": null,
+      "insertion_precision_rejections": [],
+      "report_path": "stale.json"
+    },
+    {
+      "case": "timeout",
+      "status": "controlled_refusal",
+      "refusal": "coarse_fixture_approach:motion timeout",
+      "completed_phases": [
+        "open_gripper"
+      ],
+      "sample_count": 8,
+      "final_tick": 3,
+      "simulated_duration_s": 0.003,
+      "machine_config_sha256": "ceb55386adfee9824d440823bf2ead2d6ef5b49ff9b8a63015c5f0122c31b9e7",
+      "configuration_sha256": "7227ab6e6ae336ab98a0f230e42b5de62ee2f222d18be0d2965d20c7f1f88898",
+      "report_sha256": "b6f8cc514c49adb5571007bcb7d031c98cb7613ed8b73b37f9361171f7303030",
+      "release_support_gaps_m": null,
+      "insertion_precision_rejections": [],
+      "report_path": "timeout.json"
+    },
+    {
+      "case": "unsupported-release",
+      "status": "controlled_refusal",
+      "refusal": "support release:GraspRejected",
+      "completed_phases": [
+        "open_gripper",
+        "coarse_fixture_approach",
+        "observed_pick_approach",
+        "close_and_grasp",
+        "observed_lift",
+        "hold_for_observation",
+        "observed_return"
+      ],
+      "sample_count": 2294,
+      "final_tick": 44777,
+      "simulated_duration_s": 44.777,
+      "machine_config_sha256": "ceb55386adfee9824d440823bf2ead2d6ef5b49ff9b8a63015c5f0122c31b9e7",
+      "configuration_sha256": "24bf228ad5fbe625d5956c5411a3dc553db584ccee473800a71412fe6b7a093e",
+      "report_sha256": "449335c29a01a07ef412ac544abe2c85b6e7f24dafea424d07127d9fb2afc29c",
+      "release_support_gaps_m": null,
+      "insertion_precision_rejections": [],
+      "report_path": "unsupported-release.json"
+    }
+  ],
+  "fidelity": [
+    "Authoritative 1ms deterministic Simulation; actual arm, distal tool, support and part collision geometry. All other arms remain parked in the 160mm tube.",
+    "Synthetic noisy image features, ray occlusion and independently estimated gear markers; no controller truth fallback. Surface markers use substrate-constrained physical endpoints with tangential registration/manufacturing errors; camera error and feature calibration uncertainty remain modeled; normal substrate form error is not simulated. Rim marks lie on the cylindrical gear collision envelope, not validated printable tooth surfaces: this is a marked gear-envelope coupon, not a qualified toothed-gear marker layout. Printed marks and their nominal calibrated relation are not hardware qualified.",
+    "Pickup-only admission uses conservative 3-sigma relative uncertainty against 100um engagement margin; this is not the unchanged 5um insertion admission or assembly success.",
+    "Rigid attachment, zero gravity and compliance-derived grip force proxy. Supported-release admission permits up to20um positive gap to three supports. Zero gravity supplies no physical settling or load transfer; the exact gaps are reported, not called measured contact.",
+    "Support stems and plate are fixed fixture components; their internal overlap is intentional. The return nest datum is nominal design geometry, not an independently calibrated fixture observation. No tool or moving part collision masks are suppressed.",
+    "Replay physical poses are simulation truth; optical estimates are stored separately and never substituted. Active tool-plan Stop is an instantaneous idealized simulation hold, not actuator braking or a calibrated stopping distance. Final stopped state and velocities are sampled. Motion samples every 20 ticks; acquisition and phase transitions additionally sampled, with no display interpolation."
+  ],
+  "verification": {
+    "expected_fault_reason_and_terminal_ownership": "passed_all_four",
+    "terminal_stationary_state": "passed_all_five",
+    "repeated_nominal_samples": "all_2400_identical_to_development_run",
+    "cad_frame_verification": {
+      "samples": 2400,
+      "maximum_position_difference_m": 5.98495e-17,
+      "orientation_agreement": true,
+      "fixture_valid_solids": 7
+    }
+  }
+}
