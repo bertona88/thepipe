@@ -26,6 +26,21 @@ Review contributions by what was learned, which design/model changed, and which
 important assumption remains untested. Preserve earlier regressions and report
 completed operations separately from controlled refusals.
 
+## Observed gear pickup candidate
+
+The [pickup and return implementation](ARM_PICKUP_RETURN.md) adds an opt-in
+5 mm distal standoff, shared CAD/runtime palm/finger/pad solids, physically
+located printed reference patches, independently observed gear state and a
+modeled fixed support nest. It retains the 160 mm machine and the existing
+authoritative runtime. Pickup admission is separate from the unchanged 5 µm
+insertion limit. Its integrated development run completes pickup and return
+through all nine phases, with 2,400 recorded samples and independent CAD/runtime
+frame agreement; final clean-source evidence is still to be archived.
+Rigid attachment, zero gravity and geometric support-gap release remain
+explicit limitations. It does not establish shaft insertion or hardware
+buildability. The earlier gear-study failures above remain historical evidence
+for the earlier configuration.
+
 ## Capability inventory
 
 | Capability | Current implementation | What remains for a hardware-qualified claim |

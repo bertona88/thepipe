@@ -166,3 +166,33 @@ micro-gears.  Run a vendor-specific
 tolerance study by perturbing bores, shaft seats, center distances, and backlash
 after the nominal geometry and optical/collision simulation agree. Those
 perturbations are not yet consumed by the Rust acceptance runtime.
+
+### Executed pickup distal candidate
+
+The opt-in pickup candidate uses the same machine JSON as the runtime:
+
+```sh
+python cad/scripts/export_arm_candidate.py scenarios/machine_gear_pickup_v1.json \
+  --output build/cad/arm_candidate
+python -m pytest cad/tests/test_arm_candidate.py
+```
+
+This export preserves the legacy catalogue. It generates five actual nominal
+solids (palm, two fingers, two pads), STEP/STL, source-file SHA256, and explicit
+TCP-frame metadata. Input lengths are metres; CAD lengths are millimetres.
+Unlike the legacy gripper, this candidate uses the runtime TCP frame: jaws close
+along X, approach is +Z, and the wrist endpoint is at TCP Z = −5 mm. The palm's
+rear face meets that endpoint. The palm and fingers meet without an unsupported
+visual gap, and the fingers meet the contact pads. Finger travel is nominal;
+actuation, sliding guides, fastening, strength and build tolerances remain
+unqualified. This is a geometric candidate, not a fabrication release.
+
+`pipe_cad.arm_candidate.runtime_frames` independently expresses the runtime's
+mobile-base and Y/X/X/Z joint rotations. It does not reuse the legacy planar CAD
+frame convention. `make_recorded_fixture(description, frame, body_ids)` exports
+actual enabled fixture primitives from a recorded simulation truth sample. It
+requires explicit IDs and rejects missing truth or unsupported shapes, so the
+three return contact balls, stems and plate can be exported without maintaining
+another set of fixture dimensions. Printed fiducial patches reside on the
+existing gear and palm faces; they need no floating support solids. Marker
+coordinates and normals remain in the operation's metrology models.

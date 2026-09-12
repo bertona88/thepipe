@@ -1,6 +1,6 @@
 use pipe_sim_core::{
-    ArmId, CarriageConfig, GripperConfig, ManipulatorMotionConfig, PipeCellConfig,
-    QualificationTargets, RailTopology, SafetyConfig, SerialArm, SerialArmConfig,
+    ArmId, CarriageConfig, DistalToolGeometry, GripperConfig, ManipulatorMotionConfig,
+    PipeCellConfig, QualificationTargets, RailTopology, SafetyConfig, SerialArm, SerialArmConfig,
     SerialArmInstance, SerialJointPositions, Simulation, SimulationConfig, TendonJointConfig,
     TubeGeometry, Vec3, MACHINE_CONFIG_SCHEMA_VERSION, TENDON_JOINT_COUNT,
 };
@@ -77,6 +77,8 @@ struct CarriageDocument {
 #[serde(deny_unknown_fields)]
 struct ArmDocument {
     link_lengths_m: [f64; 3],
+    #[serde(default)]
+    tool_standoff_m: f64,
     link_collision_radii_m: [f64; 3],
     joint_limits_rad: [[f64; 2]; TENDON_JOINT_COUNT],
     max_joint_speed_rad_s: [f64; TENDON_JOINT_COUNT],
@@ -103,6 +105,16 @@ struct GripperDocument {
     jaw_half_extents_m: [f64; 3],
     pad_compliance_m: f64,
     max_grip_force_n: f64,
+    #[serde(default)]
+    distal_geometry: Option<DistalGeometryDocument>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DistalGeometryDocument {
+    palm_center_z_m: f64,
+    palm_half_extents_m: [f64; 3],
+    finger_half_extents_xy_m: [f64; 2],
 }
 
 #[derive(Debug, Deserialize)]
@@ -142,7 +154,7 @@ pub(crate) fn load_m1e_coupon_machine_config() -> Result<LoadedMachineConfig, Si
     load_machine_config(M1E_COUPON_MACHINE_CONFIG_JSON)
 }
 
-fn load_machine_config(source_json: &str) -> Result<LoadedMachineConfig, SimError> {
+pub(crate) fn load_machine_config(source_json: &str) -> Result<LoadedMachineConfig, SimError> {
     let document: MachineConfigDocument = serde_json::from_str(source_json)
         .map_err(|error| SimError::InvalidScenario(format!("machine config: {error}")))?;
     if document.schema_version != MACHINE_CONFIG_SCHEMA_VERSION {
@@ -177,6 +189,7 @@ fn load_machine_config(source_json: &str) -> Result<LoadedMachineConfig, SimErro
         upper_arm_length_m: document.arm.link_lengths_m[0],
         forearm_length_m: document.arm.link_lengths_m[1],
         wrist_length_m: document.arm.link_lengths_m[2],
+        tool_standoff_m: document.arm.tool_standoff_m,
         link_collision_radii_m: document.arm.link_collision_radii_m,
         joint_limits_rad: document.arm.joint_limits_rad,
         tendon_joints: [tendon; TENDON_JOINT_COUNT],
@@ -214,6 +227,18 @@ fn load_machine_config(source_json: &str) -> Result<LoadedMachineConfig, SimErro
             ),
             pad_compliance_m: document.gripper.pad_compliance_m,
             max_grip_force_n: document.gripper.max_grip_force_n,
+            distal_geometry: document
+                .gripper
+                .distal_geometry
+                .map(|g| DistalToolGeometry {
+                    palm_center_z_m: g.palm_center_z_m,
+                    palm_half_extents_m: Vec3::new(
+                        g.palm_half_extents_m[0],
+                        g.palm_half_extents_m[1],
+                        g.palm_half_extents_m[2],
+                    ),
+                    finger_half_extents_xy_m: g.finger_half_extents_xy_m,
+                }),
         },
         safety: SafetyConfig {
             minimum_unplanned_clearance_m: document.safety.minimum_unplanned_clearance_m,

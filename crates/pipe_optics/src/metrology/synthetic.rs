@@ -563,6 +563,55 @@ pub fn acquire_tool(
     mode: MeasurementMode,
     timing: &AcquisitionTiming,
 ) -> Result<SyntheticAcquisition, MetrologyError> {
+    acquire_fiducial(
+        config,
+        scene,
+        model,
+        truth_world_from_tcp,
+        mode,
+        timing,
+        false,
+    )
+}
+
+/// Direct printed marks stay on their declared substrate tangent planes.
+/// Mount/manufacturing variation is tangential; normal substrate form error is
+/// not simulated by this reduced frontend. Calibration covariance and independent
+/// marker-to-feature characterization remain required. This does not exempt any
+/// ray from occlusion by the marked body or change the endpoint tolerance.
+pub fn acquire_surface_markers(
+    config: &MetrologyConfig,
+    scene: &Scene,
+    model: &RigidFiducial,
+    truth_world_from_tcp: RigidTransform,
+    mode: MeasurementMode,
+    timing: &AcquisitionTiming,
+) -> Result<SyntheticAcquisition, MetrologyError> {
+    if model.features.iter().any(|f| f.normal_fiducial.is_none()) {
+        return Err(MetrologyError::InvalidConfiguration(
+            "surface marks require substrate normals".into(),
+        ));
+    }
+    acquire_fiducial(
+        config,
+        scene,
+        model,
+        truth_world_from_tcp,
+        mode,
+        timing,
+        true,
+    )
+}
+
+fn acquire_fiducial(
+    config: &MetrologyConfig,
+    scene: &Scene,
+    model: &RigidFiducial,
+    truth_world_from_tcp: RigidTransform,
+    mode: MeasurementMode,
+    timing: &AcquisitionTiming,
+    surface_attached: bool,
+) -> Result<SyntheticAcquisition, MetrologyError> {
     model.validate()?;
     if !valid_transform(truth_world_from_tcp) {
         return Err(MetrologyError::InvalidObservation);
@@ -590,13 +639,29 @@ pub fn acquire_tool(
                 &[33, model.object_id as u64, feature.id as u64],
                 config.errors.fiducial_manufacturing_rms_m,
             );
+        let nominal_fiducial = truth_world_from_tcp.compose(model.tcp_from_fiducial);
+        let displaced = actual_fiducial.transform_point(local);
+        let normal = if surface_attached {
+            feature
+                .normal_fiducial
+                .map(|n| nominal_fiducial.transform_vector(n))
+        } else {
+            feature
+                .normal_fiducial
+                .map(|n| actual_fiducial.transform_vector(n))
+        };
+        let point_world_m = if surface_attached {
+            let nominal = nominal_fiducial.transform_point(feature.point_fiducial_m);
+            let n = normal.ok_or(MetrologyError::InvalidObservation)?;
+            nominal + surface_tangent_displacement(displaced - nominal, n)
+        } else {
+            displaced
+        };
         let truth = TruthFeature {
             object_id: model.object_id,
             feature_id: feature.id,
-            point_world_m: actual_fiducial.transform_point(local),
-            normal_world: feature
-                .normal_fiducial
-                .map(|n| actual_fiducial.transform_vector(n)),
+            point_world_m,
+            normal_world: normal,
             velocity_world_m_s: Vec3::ZERO,
             surface: SurfaceResponse {
                 feature_width_m: feature.diameter_m,
@@ -615,6 +680,9 @@ pub fn acquire_tool(
         out.visibility.extend(a.visibility);
     }
     Ok(out)
+}
+fn surface_tangent_displacement(displacement: Vec3, unit_normal: Vec3) -> Vec3 {
+    displacement - unit_normal * displacement.dot(unit_normal)
 }
 pub fn timing(
     config: &MetrologyConfig,
@@ -681,4 +749,103 @@ pub fn acquire_references(
         }
     }
     Ok(points)
+}
+
+#[cfg(test)]
+mod surface_mark_tests {
+    use super::*;
+    use crate::{Geometry, Material, Primitive, Sphere, Triangle};
+
+    #[test]
+    fn surface_marks_remain_visible_only_from_the_unblocked_substrate_side() {
+        let config = MetrologyConfig::baseline();
+        let mut model = RigidFiducial::baseline(700);
+        model.arm_id = None;
+        model.tcp_from_fiducial = RigidTransform::new(Mat3::IDENTITY, Vec3::ZERO);
+        for (index, feature) in model.features.iter_mut().enumerate() {
+            feature.point_fiducial_m = Vec3::new(
+                ((index % 3) as f64 - 1.) * 0.001,
+                ((index / 3) as f64 - 0.5) * 0.001,
+                0.,
+            );
+            feature.normal_fiducial = Some(Vec3::Z);
+        }
+        let mut scene = Scene::default();
+        for (a, b, c) in [
+            (
+                Vec3::new(-0.01, -0.01, 0.),
+                Vec3::new(0.01, -0.01, 0.),
+                Vec3::new(0.01, 0.01, 0.),
+            ),
+            (
+                Vec3::new(-0.01, -0.01, 0.),
+                Vec3::new(0.01, 0.01, 0.),
+                Vec3::new(-0.01, 0.01, 0.),
+            ),
+        ] {
+            scene.push(Primitive::new(
+                Geometry::Triangle(Triangle {
+                    a,
+                    b,
+                    c,
+                    double_sided: true,
+                }),
+                Material::default(),
+                700,
+            ));
+        }
+        let t = timing(&config, 1, 0.01, 0.);
+        let visible = acquire_surface_markers(
+            &config,
+            &scene,
+            &model,
+            RigidTransform::new(Mat3::IDENTITY, Vec3::ZERO),
+            MeasurementMode::Precision,
+            &t,
+        )
+        .unwrap();
+        assert!(visible.observations.len() >= 6);
+        for attempt in visible.visibility.iter().filter(|v| v.rejection.is_none()) {
+            assert!(
+                config
+                    .device(attempt.sensor_id)
+                    .unwrap()
+                    .model
+                    .center_world()
+                    .z
+                    > 0.
+            );
+        }
+        scene.push(Primitive::new(
+            Geometry::Sphere(Sphere {
+                center: Vec3::ZERO,
+                radius_m: 0.005,
+            }),
+            Material::default(),
+            701,
+        ));
+        let blocked = acquire_surface_markers(
+            &config,
+            &scene,
+            &model,
+            RigidTransform::new(Mat3::IDENTITY, Vec3::ZERO),
+            MeasurementMode::Precision,
+            &t,
+        )
+        .unwrap();
+        assert!(
+            blocked.observations.is_empty(),
+            "surface mode must not exempt occluders"
+        );
+        model.features[0].normal_fiducial = None;
+        assert!(acquire_surface_markers(
+            &config,
+            &scene,
+            &model,
+            RigidTransform::new(Mat3::IDENTITY, Vec3::ZERO),
+            MeasurementMode::Precision,
+            &t
+        )
+        .is_err());
+    }
 }

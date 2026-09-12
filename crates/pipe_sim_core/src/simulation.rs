@@ -2,7 +2,7 @@
 
 use crate::arm::{ArmError, ArmKinematics, ContinuumArm};
 use crate::collision::{query_pair, Clearance, CollisionReport, CollisionSettings, Contact};
-use crate::geometry::{BodyId, MotionType, RigidBody};
+use crate::geometry::{BodyId, MotionType, RigidBody, Shape};
 use crate::gripper::{GripperConfig, GripperState};
 use crate::machine::{
     wrap_angle_pi, CarriageConfig, MachineBackend, MachineCommand, MachineCommandError,
@@ -23,6 +23,7 @@ const SERIAL_ARM_LINK_COUNT: u8 = 3;
 const TOOL_PATH_MAX_ANGULAR_STEP_RAD: f64 = core::f64::consts::PI / 180.0;
 const TOOL_PATH_MAX_LINEAR_STEP_M: f64 = 0.25e-3;
 const TOOL_PATH_MAX_SAMPLE_COUNT: usize = 4_096;
+const DISTAL_TOOL_PATH_MAX_SAMPLE_COUNT: usize = 32_768;
 const SMOOTHSTEP_MAX_SLOPE: f64 = 1.5;
 
 /// Stable mapping from a serial arm and physical link index to its reserved
@@ -37,6 +38,25 @@ pub fn serial_arm_link_body_id(arm_id: ArmId, link_index: u8) -> Option<BodyId> 
     ))
 }
 
+/// Tool IDs preserve existing link identifiers.
+pub fn serial_arm_tool_body_id(arm_id: ArmId, index: u8) -> Option<BodyId> {
+    (arm_id.0 <= 0x01ff_ffff && index < 5)
+        .then_some(BodyId(0xB000_0000 | (arm_id.0 << 3) | index as u32))
+}
+fn serial_arm_tool_key(id: BodyId) -> Option<(ArmId, u8)> {
+    (id.0 >= 0xB000_0000 && id.0 < 0xC000_0000 && (id.0 & 7) < 5)
+        .then_some((ArmId((id.0 & 0x0fff_ffff) >> 3), (id.0 & 7) as u8))
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ToolPathCollisionDiagnostic {
+    pub arm_id: ArmId,
+    pub sample_index: usize,
+    pub progress: f64,
+    pub moving_body_id: BodyId,
+    pub obstacle_body_id: BodyId,
+    pub signed_distance_m: f64,
+}
+
 fn serial_arm_link_key(body_id: BodyId) -> Option<(ArmId, u8)> {
     if body_id.0 < SERIAL_ARM_COLLISION_BODY_ID_BASE {
         return None;
@@ -49,12 +69,29 @@ fn serial_arm_link_key(body_id: BodyId) -> Option<(ArmId, u8)> {
     Some((ArmId(encoded >> 2), link_index))
 }
 
+fn intended_robot_interface(a: BodyId, b: BodyId) -> bool {
+    if let (Some((aa, la)), Some((ab, lb))) = (serial_arm_link_key(a), serial_arm_link_key(b)) {
+        return aa == ab && la.abs_diff(lb) <= 1;
+    }
+    if let (Some((aa, ta)), Some((ab, tb))) = (serial_arm_tool_key(a), serial_arm_tool_key(b)) {
+        return aa == ab
+            && ((ta == 0 && (tb == 1 || tb == 2))
+                || (tb == 0 && (ta == 1 || ta == 2))
+                || ta.abs_diff(tb) == 2 && ta.min(tb) >= 1 && ta.min(tb) <= 2);
+    }
+    let pair = serial_arm_link_key(a)
+        .zip(serial_arm_tool_key(b))
+        .or_else(|| serial_arm_link_key(b).zip(serial_arm_tool_key(a)));
+    pair.is_some_and(|((aa, l), (ab, t))| aa == ab && l == 2 && t == 0)
+}
+
 /// Carried parts always participate in collision checks against arm links.
 /// World-body filters can intentionally narrow process contact (for example,
 /// a peg against its socket), but they must not suppress robot self- or
 /// inter-arm collision preflight.
 fn carried_body_collision_enabled(carried: &RigidBody, obstacle: &RigidBody) -> bool {
     serial_arm_link_key(obstacle.id).is_some()
+        || serial_arm_tool_key(obstacle.id).is_some()
         || carried.collision_filter.allows(obstacle.collision_filter)
 }
 
@@ -124,6 +161,10 @@ pub struct SerialArmInstance {
     /// Scale applied when time-parameterizing Cartesian plans. Direct axis
     /// commands retain their configured limits.
     pub tool_motion_speed_scale: f64,
+    /// Explicit static support interface for the carried part, at most 2um overlap.
+    pub support_body_ids: Vec<BodyId>,
+    /// Explicit acquisition target; only pad contacts within compliance are intended.
+    pub grasp_target_body_id: Option<BodyId>,
 }
 
 impl SerialArmInstance {
@@ -149,6 +190,8 @@ impl SerialArmInstance {
             carriage_config,
             motion_config: ManipulatorMotionConfig::default(),
             tool_motion_speed_scale: 1.0,
+            support_body_ids: Vec::new(),
+            grasp_target_body_id: None,
         })
     }
 
@@ -280,6 +323,7 @@ pub struct Simulation {
     /// are appended only while a tool plan advances, including its terminal
     /// sample, and are never synthesized by presentation adapters.
     pub tool_motion_trace: Vec<ToolMotionTraceSample>,
+    pub last_tool_path_collision: Option<ToolPathCollisionDiagnostic>,
     /// Remainder used only by [`Simulation::advance_by`]. Calling `step`
     /// directly leaves this unchanged.
     pub accumulator_s: f64,
@@ -300,12 +344,13 @@ impl Simulation {
             machine_command_sequence: 0,
             machine_command_log: Vec::new(),
             tool_motion_trace: Vec::new(),
+            last_tool_path_collision: None,
             accumulator_s: 0.0,
         })
     }
 
     pub fn add_body(&mut self, body: RigidBody) -> Result<(), SimulationError> {
-        if body.id.0 >= SERIAL_ARM_COLLISION_BODY_ID_BASE {
+        if body.id.0 >= 0xB000_0000 {
             return Err(SimulationError::ReservedBodyId);
         }
         if !body.shape.is_valid()
@@ -373,7 +418,10 @@ impl Simulation {
     }
 
     pub fn add_serial_arm(&mut self, arm: SerialArmInstance) -> Result<(), SimulationError> {
-        if arm.id.0 > MAX_SERIAL_ARM_COLLISION_ID {
+        if arm.id.0 > MAX_SERIAL_ARM_COLLISION_ID
+            || (arm.gripper_config.distal_geometry.is_some()
+                && serial_arm_tool_body_id(arm.id, 0).is_none())
+        {
             return Err(SimulationError::ArmIdOutOfRange);
         }
         if self.arms.iter().any(|existing| existing.id == arm.id)
@@ -498,6 +546,18 @@ impl Simulation {
                 None
             };
 
+            if let MachineCommand::SetGripperOpening {
+                target_opening_m, ..
+            } = command
+            {
+                if self.serial_arms[arm_index]
+                    .gripper_config
+                    .distal_geometry
+                    .is_some()
+                {
+                    self.validate_gripper_motion_path(arm_id, target_opening_m)?;
+                }
+            }
             let arm = &mut self.serial_arms[arm_index];
             if let Some(plan) = tool_plan {
                 arm.motion.start_tool_motion(plan);
@@ -524,137 +584,257 @@ impl Simulation {
         Ok(self.machine_command_sequence)
     }
 
+    /// Read the actual current geometry through the same path/contact policy.
+    /// Does not command motion or advance time; useful after each plant step.
+    pub fn validate_serial_arm_current_clearance(
+        &mut self,
+        arm_id: ArmId,
+    ) -> Result<(), SimulationError> {
+        let arm = self
+            .serial_arm(arm_id)
+            .ok_or(SimulationError::ArmNotFound)?;
+        let plan = ToolMotionPlan::new(
+            arm.tool_pose().translation,
+            arm.motion.positions(),
+            arm.motion.positions(),
+            arm.carriage_config,
+            arm.motion_config,
+            arm.tool_motion_speed_scale,
+        );
+        self.validate_tool_motion_path(arm_id, plan)
+    }
+
+    fn validate_gripper_motion_path(
+        &mut self,
+        arm_id: ArmId,
+        target: f64,
+    ) -> Result<(), SimulationError> {
+        let arm = self
+            .serial_arm(arm_id)
+            .ok_or(SimulationError::ArmNotFound)?
+            .clone();
+        let count = ((target - arm.gripper.opening_m).abs() / 10.0e-6)
+            .ceil()
+            .max(1.0) as usize;
+        let mut probe = self.clone();
+        let plan = ToolMotionPlan::new(
+            arm.tool_pose().translation,
+            arm.motion.positions(),
+            arm.motion.positions(),
+            arm.carriage_config,
+            arm.motion_config,
+            arm.tool_motion_speed_scale,
+        );
+        for i in 0..=count {
+            probe.serial_arm_mut(arm_id).expect("arm").gripper.opening_m =
+                arm.gripper.opening_m + (target - arm.gripper.opening_m) * i as f64 / count as f64;
+            if let Err(error) = probe.validate_tool_motion_path(arm_id, plan) {
+                self.last_tool_path_collision = probe.last_tool_path_collision;
+                return Err(error);
+            }
+        }
+        Ok(())
+    }
+
     fn validate_tool_motion_path(
-        &self,
+        &mut self,
         arm_id: ArmId,
         plan: ToolMotionPlan,
     ) -> Result<(), SimulationError> {
-        let moving_arm = self
+        self.last_tool_path_collision = None;
+        let arm = self
             .serial_arm(arm_id)
-            .ok_or(SimulationError::ArmNotFound)?;
-        let held_body_id = moving_arm.gripper.held_body;
-        let held_attachment = match (held_body_id, moving_arm.held_body_local_pose) {
-            (Some(body_id), Some(local_pose)) => Some((
-                self.body(body_id)
-                    .ok_or(SimulationError::BodyNotFound)?
-                    .clone(),
-                local_pose,
+            .ok_or(SimulationError::ArmNotFound)?
+            .clone();
+        let held = match (arm.gripper.held_body, arm.held_body_local_pose) {
+            (Some(id), Some(local)) => Some((
+                self.body(id).ok_or(SimulationError::BodyNotFound)?.clone(),
+                local,
             )),
             (None, None) => None,
             _ => return Err(SimulationError::GraspRejected),
         };
-        let obstacle_bodies = self
+        let mut obstacles: Vec<_> = self
             .bodies
             .iter()
-            .filter(|body| body.enabled && Some(body.id) != held_body_id)
+            .filter(|b| b.enabled && Some(b.id) != arm.gripper.held_body)
             .cloned()
-            .chain(
-                self.serial_arms
-                    .iter()
-                    .filter(|arm| arm.id != arm_id)
-                    .flat_map(|arm| {
-                        arm.kinematics
-                            .collision_capsules
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(index, (pose, shape))| {
-                                Some(RigidBody::new(
-                                    serial_arm_link_body_id(arm.id, index as u8)?,
-                                    *shape,
-                                    *pose,
-                                    MotionType::Kinematic,
-                                ))
-                            })
-                    }),
-            )
-            .collect::<Vec<_>>();
-        let sample_count = tool_path_sample_count(plan)?;
-        let mut candidate = moving_arm.arm.clone();
-        for sample in 0..=sample_count {
-            let progress = sample as f64 / sample_count as f64;
+            .collect();
+        obstacles.extend(self.serial_arm_collision_bodies().into_iter().filter(|b| {
+            serial_arm_link_key(b.id).map(|k| k.0) != Some(arm_id)
+                && serial_arm_tool_key(b.id).map(|k| k.0) != Some(arm_id)
+        }));
+        let mut samples = tool_path_sample_count(plan)?;
+        if arm.gripper_config.distal_geometry.is_some() {
+            // Bound nominal distal displacement per sample to 50um using the
+            // sum of all rotating-axis contributions, not only TCP translation.
+            let angular_sum: f64 = plan
+                .start
+                .tendon_joint_angles()
+                .iter()
+                .zip(plan.goal.tendon_joint_angles())
+                .map(|(a, b)| (b - a).abs())
+                .sum();
+            let travel_bound = angular_sum * arm.arm.config.maximum_reach_m()
+                + wrap_angle_pi(plan.goal.base_theta_rad - plan.start.base_theta_rad).abs()
+                    * (arm.arm.config.rail_radius_m + arm.arm.config.maximum_reach_m())
+                + (plan.goal.base_z_m - plan.start.base_z_m).abs();
+            let required = (SMOOTHSTEP_MAX_SLOPE * travel_bound / 50.0e-6).ceil();
+            if !required.is_finite() || required > DISTAL_TOOL_PATH_MAX_SAMPLE_COUNT as f64 {
+                return Err(SimulationError::InvalidMachineCommand(
+                    MachineCommandError::ToolPathSamplingLimit,
+                ));
+            }
+            samples = samples.max(required as usize);
+        }
+        let mut candidate = arm.arm.clone();
+        for sample in 0..=samples {
+            let progress = sample as f64 / samples as f64;
             candidate
                 .set_positions(plan.sample(progress))
                 .map_err(SimulationError::SerialArm)?;
-            let candidate_kinematics = candidate.forward_kinematics();
-            let candidate_links = &candidate_kinematics.collision_capsules;
-            for (link_index, (pose, shape)) in candidate_links.iter().enumerate() {
-                let moving_body = RigidBody::new(
-                    serial_arm_link_body_id(arm_id, link_index as u8)
-                        .expect("serial arm has three physical links"),
-                    *shape,
-                    *pose,
-                    MotionType::Kinematic,
-                );
-                if obstacle_bodies.iter().any(|obstacle| {
-                    moving_body
-                        .collision_filter
-                        .allows(obstacle.collision_filter)
-                        && query_pair(&moving_body, obstacle).is_some_and(|proximity| {
-                            proximity.signed_distance_m
-                                <= self.config.collision.clearance_threshold_m
-                        })
-                }) {
-                    return Err(SimulationError::InvalidMachineCommand(
-                        MachineCommandError::ToolPathCollision,
-                    ));
-                }
-            }
-            if let Some((held_body, held_local_pose)) = &held_attachment {
-                let mut carried_body = held_body.clone();
-                carried_body.pose = candidate_kinematics.tool_pose * *held_local_pose;
-                let collides_with_obstacle = obstacle_bodies.iter().any(|obstacle| {
-                    carried_body_collision_enabled(&carried_body, obstacle)
-                        && query_pair(&carried_body, obstacle).is_some_and(|proximity| {
-                            proximity.signed_distance_m
-                                <= self.config.collision.clearance_threshold_m
-                        })
-                });
-                // The held object necessarily occupies the terminal tool
-                // envelope. It must still remain clear of the upstream links.
-                let collides_with_own_arm = candidate_links
-                    .iter()
-                    .take(candidate_links.len().saturating_sub(1))
-                    .enumerate()
-                    .any(|(link_index, (pose, shape))| {
-                        let link_body = RigidBody::new(
-                            serial_arm_link_body_id(arm_id, link_index as u8)
-                                .expect("serial arm has three physical links"),
-                            *shape,
-                            *pose,
+            let fk = candidate.forward_kinematics();
+            let mut robot: Vec<_> = fk
+                .collision_capsules
+                .iter()
+                .enumerate()
+                .map(|(i, (pose, shape))| {
+                    RigidBody::new(
+                        serial_arm_link_body_id(arm_id, i as u8).expect("valid arm"),
+                        *shape,
+                        *pose,
+                        MotionType::Kinematic,
+                    )
+                })
+                .collect();
+            robot.extend(
+                arm.gripper
+                    .tool_collision_primitives(fk.tool_pose, arm.gripper_config)
+                    .into_iter()
+                    .map(|p| {
+                        RigidBody::new(
+                            serial_arm_tool_body_id(arm_id, p.component_index)
+                                .expect("valid tool id"),
+                            p.shape,
+                            p.pose,
                             MotionType::Kinematic,
-                        );
-                        carried_body_collision_enabled(&carried_body, &link_body)
-                            && query_pair(&carried_body, &link_body).is_some_and(|proximity| {
-                                proximity.signed_distance_m
-                                    <= self.config.collision.clearance_threshold_m
-                            })
-                    });
-                if collides_with_obstacle || collides_with_own_arm {
-                    return Err(SimulationError::InvalidMachineCommand(
-                        MachineCommandError::ToolPathCollision,
-                    ));
+                        )
+                    }),
+            );
+            let mut collision = None;
+            for body in &robot {
+                for obstacle in &obstacles {
+                    if !body.collision_filter.allows(obstacle.collision_filter) {
+                        continue;
+                    }
+                    if let Some(p) = query_pair(body, obstacle) {
+                        let intended_pad = serial_arm_tool_key(body.id)
+                            .is_some_and(|k| k.0 == arm_id && k.1 >= 3)
+                            && arm.grasp_target_body_id == Some(obstacle.id)
+                            && p.signed_distance_m >= -2.0 * arm.gripper_config.pad_compliance_m
+                            && arm
+                                .gripper
+                                .evaluate_candidate(fk.tool_pose, obstacle, arm.gripper_config)
+                                .is_reachable(arm.gripper_config);
+                        if p.signed_distance_m <= self.config.collision.clearance_threshold_m
+                            && !intended_pad
+                        {
+                            collision = Some(p);
+                            break;
+                        }
+                    }
+                }
+                if collision.is_some() {
+                    break;
                 }
             }
-            if let (Some(first), Some(last)) = (candidate_links.first(), candidate_links.last()) {
-                let first_body = RigidBody::new(
-                    serial_arm_link_body_id(arm_id, 0).expect("valid link"),
-                    first.1,
-                    first.0,
-                    MotionType::Kinematic,
-                );
-                let last_body = RigidBody::new(
-                    serial_arm_link_body_id(arm_id, 2).expect("valid link"),
-                    last.1,
-                    last.0,
-                    MotionType::Kinematic,
-                );
-                if query_pair(&first_body, &last_body).is_some_and(|proximity| {
-                    proximity.signed_distance_m <= self.config.collision.clearance_threshold_m
-                }) {
-                    return Err(SimulationError::InvalidMachineCommand(
-                        MachineCommandError::ToolPathCollision,
-                    ));
+            if collision.is_none() {
+                if let Some((body, local)) = &held {
+                    let mut carried = body.clone();
+                    carried.pose = fk.tool_pose * *local;
+                    for obstacle in obstacles.iter().chain(robot.iter()) {
+                        let own_link = serial_arm_link_key(obstacle.id).filter(|k| k.0 == arm_id);
+                        let own_tool = serial_arm_tool_key(obstacle.id).filter(|k| k.0 == arm_id);
+                        if arm.gripper_config.distal_geometry.is_none()
+                            && own_link.is_some_and(|k| k.1 == 2)
+                        {
+                            continue;
+                        }
+                        if !carried_body_collision_enabled(&carried, obstacle) && own_tool.is_none()
+                        {
+                            continue;
+                        }
+                        let mut checked_carried = carried.clone();
+                        let mut checked_obstacle = obstacle.clone();
+                        if serial_arm_link_key(obstacle.id).is_some()
+                            || serial_arm_tool_key(obstacle.id).is_some()
+                        {
+                            checked_carried.collision_filter =
+                                crate::geometry::CollisionFilter::default();
+                            checked_obstacle.collision_filter =
+                                crate::geometry::CollisionFilter::default();
+                        }
+                        if let Some(p) = query_pair(&checked_carried, &checked_obstacle) {
+                            let pad_contact = own_tool.is_some_and(|k| k.1 >= 3)
+                                && p.signed_distance_m
+                                    >= -2.0 * arm.gripper_config.pad_compliance_m
+                                && arm
+                                    .gripper
+                                    .evaluate_held_candidate(
+                                        fk.tool_pose,
+                                        &carried,
+                                        arm.gripper_config,
+                                    )
+                                    .is_reachable(arm.gripper_config);
+                            let support_contact = arm.support_body_ids.contains(&obstacle.id)
+                                && obstacle.motion == MotionType::Static
+                                && matches!(obstacle.shape, Shape::Sphere { .. })
+                                && p.signed_distance_m >= -2.0e-6;
+                            if p.signed_distance_m <= self.config.collision.clearance_threshold_m
+                                && !pad_contact
+                                && !support_contact
+                            {
+                                collision = Some(p);
+                                break;
+                            }
+                        }
+                    }
                 }
+            }
+            if collision.is_none() {
+                // Nonadjacent links and upstream/tool interference. Wrist/palm
+                // and tool internal interfaces are intentional physical mounts.
+                for i in 0..robot.len() {
+                    for j in i + 1..robot.len() {
+                        if intended_robot_interface(robot[i].id, robot[j].id) {
+                            continue;
+                        }
+                        if let Some(p) = query_pair(&robot[i], &robot[j]) {
+                            if p.signed_distance_m <= self.config.collision.clearance_threshold_m {
+                                collision = Some(p);
+                                break;
+                            }
+                        }
+                    }
+                    if collision.is_some() {
+                        break;
+                    }
+                }
+            }
+            if let Some(p) = collision {
+                let a_moves = robot.iter().any(|b| b.id == p.body_a)
+                    || arm.gripper.held_body == Some(p.body_a);
+                self.last_tool_path_collision = Some(ToolPathCollisionDiagnostic {
+                    arm_id,
+                    sample_index: sample,
+                    progress,
+                    moving_body_id: if a_moves { p.body_a } else { p.body_b },
+                    obstacle_body_id: if a_moves { p.body_b } else { p.body_a },
+                    signed_distance_m: p.signed_distance_m,
+                });
+                return Err(SimulationError::InvalidMachineCommand(
+                    MachineCommandError::ToolPathCollision,
+                ));
             }
         }
         Ok(())
@@ -677,6 +857,16 @@ impl Simulation {
                     continue;
                 };
                 result.push(RigidBody::new(body_id, shape, pose, MotionType::Kinematic));
+            }
+        }
+        for instance in &self.serial_arms {
+            for p in instance.gripper.tool_collision_primitives(
+                instance.arm.forward_kinematics().tool_pose,
+                instance.gripper_config,
+            ) {
+                if let Some(id) = serial_arm_tool_body_id(instance.id, p.component_index) {
+                    result.push(RigidBody::new(id, p.shape, p.pose, MotionType::Kinematic));
+                }
             }
         }
         result.sort_by_key(|body| body.id);
@@ -705,12 +895,8 @@ impl Simulation {
                 {
                     continue;
                 }
-                if let (Some((arm_a, link_a)), Some((arm_b, link_b))) =
-                    (serial_arm_link_key(a.id), serial_arm_link_key(b.id))
-                {
-                    if arm_a == arm_b && link_a.abs_diff(link_b) <= 1 {
-                        continue;
-                    }
+                if intended_robot_interface(a.id, b.id) {
+                    continue;
                 }
                 if a.aabb().distance(b.aabb()) > settings.clearance_threshold_m.max(0.0) {
                     continue;
@@ -992,6 +1178,109 @@ impl Simulation {
             .ok_or(SimulationError::ArmNotFound)?;
         arm.held_body_local_pose = None;
         Ok(arm.gripper.release())
+    }
+
+    /// Reduced-model release onto three registered static spherical supports.
+    /// Checks geometry and stopped motion, not qualified contact force.
+    pub fn release_body_serial_on_support(
+        &mut self,
+        arm_id: ArmId,
+        support_ids: &[BodyId],
+        max_gap_m: f64,
+    ) -> Result<Option<BodyId>, SimulationError> {
+        let arm = self
+            .serial_arm(arm_id)
+            .ok_or(SimulationError::ArmNotFound)?;
+        let stationary = |v: f64| v.is_finite() && v.abs() <= 1.0e-12;
+        if support_ids.len() != 3
+            || !max_gap_m.is_finite()
+            || !(0.0..=20.0e-6).contains(&max_gap_m)
+            || !arm.motion.positions().is_finite()
+            || !arm.motion.carriage_target.z_m.is_finite()
+            || !arm.motion.carriage_target.theta_rad.is_finite()
+            || !stationary(arm.motion.carriage_target.z_m - arm.motion.carriage.z_m)
+            || !stationary(wrap_angle_pi(
+                arm.motion.carriage_target.theta_rad - arm.motion.carriage.theta_rad,
+            ))
+            || arm
+                .motion
+                .joint_targets_rad
+                .iter()
+                .zip(arm.motion.joint_positions_rad)
+                .any(|(a, b)| !a.is_finite() || !stationary(a - b))
+            || arm
+                .motion
+                .joint_velocities_rad_s
+                .iter()
+                .any(|v| !stationary(*v))
+            || !stationary(arm.motion.carriage.z_velocity_m_s)
+            || !stationary(arm.motion.carriage.theta_velocity_rad_s)
+            || !arm.gripper.opening_m.is_finite()
+            || !arm.gripper.command_opening_m.is_finite()
+            || !stationary(arm.gripper.command_opening_m - arm.gripper.opening_m)
+            || !stationary(arm.gripper.opening_velocity_m_s)
+            || arm
+                .motion
+                .tool_motion
+                .is_some_and(|p| p.status == ToolMotionStatus::Active)
+        {
+            return Err(SimulationError::GraspRejected);
+        }
+        let body = self
+            .body(
+                arm.gripper
+                    .held_body
+                    .ok_or(SimulationError::GraspRejected)?,
+            )
+            .ok_or(SimulationError::BodyNotFound)?;
+        if !body.enabled
+            || body.motion == MotionType::Static
+            || !body.pose.translation.is_finite()
+            || !body.pose.rotation.is_finite()
+            || arm.held_body_local_pose.is_none()
+        {
+            return Err(SimulationError::GraspRejected);
+        }
+        let mut local = Vec::new();
+        for (i, id) in support_ids.iter().enumerate() {
+            if support_ids[..i].contains(id) || !arm.support_body_ids.contains(id) {
+                return Err(SimulationError::GraspRejected);
+            }
+            let support = self.body(*id).ok_or(SimulationError::BodyNotFound)?;
+            if support.motion != MotionType::Static
+                || !support.enabled
+                || !matches!(support.shape, Shape::Sphere { .. })
+            {
+                return Err(SimulationError::GraspRejected);
+            }
+            let gap = query_pair(body, support)
+                .ok_or(SimulationError::GraspRejected)?
+                .signed_distance_m;
+            if !gap.is_finite() || gap < -2.0e-6 || gap > max_gap_m {
+                return Err(SimulationError::GraspRejected);
+            }
+            local.push(
+                body.pose
+                    .inverse()
+                    .transform_point(support.pose.translation),
+            );
+        }
+        // The coupon mating axis is body-local Z. Supports must bracket the
+        // centre on the positive face; duplicate/collinear contacts fail.
+        if local.iter().any(|p| p.z <= 0.0) {
+            return Err(SimulationError::GraspRejected);
+        }
+        let crosses: Vec<_> = (0..3)
+            .map(|i| {
+                let a = local[i];
+                let b = local[(i + 1) % 3];
+                a.x * b.y - a.y * b.x
+            })
+            .collect();
+        if !(crosses.iter().all(|c| *c > 1.0e-12) || crosses.iter().all(|c| *c < -1.0e-12)) {
+            return Err(SimulationError::GraspRejected);
+        }
+        self.release_body_serial(arm_id)
     }
 
     fn refresh_grasp_contacts(&mut self) {
@@ -1952,6 +2241,223 @@ mod tests {
         assert_eq!(
             simulation.add_body(make()),
             Err(SimulationError::DuplicateBodyId)
+        );
+    }
+    fn distal_candidate() -> Simulation {
+        let mut sim = Simulation::new(SimulationConfig {
+            gravity_m_s2: Vec3::ZERO,
+            ..SimulationConfig::default()
+        })
+        .unwrap();
+        let mut arm = baseline_serial_instance(1);
+        arm.arm.config.tool_standoff_m = 0.005;
+        arm.gripper_config.jaw_half_extents_m = Vec3::new(0.0001, 0.0011, 0.0006);
+        arm.gripper_config.distal_geometry = Some(crate::gripper::DistalToolGeometry {
+            palm_center_z_m: -0.004,
+            palm_half_extents_m: Vec3::new(0.0018, 0.0013, 0.001),
+            finger_half_extents_xy_m: [0.0001, 0.0011],
+        });
+        arm.kinematics = arm.arm.forward_kinematics();
+        sim.add_serial_arm(arm).unwrap();
+        sim
+    }
+    #[test]
+    fn physical_tool_collision_export_and_jaw_sweep_refuse_obstacles() {
+        let mut sim = distal_candidate();
+        assert_eq!(sim.serial_arm_collision_bodies().len(), 8);
+        let tool = sim.serial_arm(ArmId(1)).unwrap().tool_pose();
+        sim.add_body(RigidBody::new(
+            BodyId(12),
+            Shape::Sphere { radius_m: 0.00005 },
+            tool * Pose::from_translation(Vec3::new(0.0012, 0.0, 0.0)),
+            MotionType::Static,
+        ))
+        .unwrap();
+        let before = sim.serial_arm(ArmId(1)).unwrap().gripper;
+        assert!(sim
+            .submit_machine_command(MachineCommand::SetGripperOpening {
+                manipulator: ManipulatorId(1),
+                target_opening_m: 0.002
+            })
+            .is_err());
+        assert_eq!(sim.serial_arm(ArmId(1)).unwrap().gripper, before);
+        let d = sim.last_tool_path_collision.unwrap();
+        assert_eq!(d.obstacle_body_id, BodyId(12));
+        assert!(serial_arm_tool_key(d.moving_body_id).is_some());
+    }
+    #[test]
+    fn intended_target_allows_only_pad_contact_and_not_palm_interference() {
+        let mut sim = distal_candidate();
+        let tool = sim.serial_arm(ArmId(1)).unwrap().tool_pose();
+        sim.add_body(RigidBody::new(
+            BodyId(12),
+            Shape::Box {
+                half_extents_m: Vec3::new(0.001, 0.001, 0.0004),
+            },
+            tool,
+            MotionType::Kinematic,
+        ))
+        .unwrap();
+        sim.serial_arm_mut(ArmId(1)).unwrap().grasp_target_body_id = Some(BodyId(12));
+        sim.submit_machine_command(MachineCommand::SetGripperOpening {
+            manipulator: ManipulatorId(1),
+            target_opening_m: 0.001995,
+        })
+        .unwrap();
+        sim.body_mut(BodyId(12)).unwrap().pose =
+            tool * Pose::from_translation(Vec3::new(0.0, 0.0, -0.004));
+        assert!(sim
+            .submit_machine_command(MachineCommand::SetGripperOpening {
+                manipulator: ManipulatorId(1),
+                target_opening_m: 0.00199
+            })
+            .is_err());
+    }
+    #[test]
+    fn support_release_requires_three_registered_contacts_and_stopped_motion() {
+        let mut sim = distal_candidate();
+        let tool = sim.serial_arm(ArmId(1)).unwrap().tool_pose();
+        sim.add_body(RigidBody::new(
+            BodyId(12),
+            Shape::Box {
+                half_extents_m: Vec3::new(0.001, 0.001, 0.0004),
+            },
+            tool,
+            MotionType::Kinematic,
+        ))
+        .unwrap();
+        {
+            let arm = sim.serial_arm_mut(ArmId(1)).unwrap();
+            arm.gripper.opening_m = 0.001995;
+            arm.gripper.command_opening_m = 0.001995;
+        }
+        sim.grasp_body_serial(ArmId(1), BodyId(12)).unwrap();
+        let ids = [BodyId(20), BodyId(21), BodyId(22)];
+        for (i, id) in ids.iter().enumerate() {
+            let theta = i as f64 * core::f64::consts::TAU / 3.0;
+            sim.add_body(RigidBody::new(
+                *id,
+                Shape::Sphere { radius_m: 0.00015 },
+                tool * Pose::from_translation(Vec3::new(
+                    0.0006 * theta.cos(),
+                    0.0006 * theta.sin(),
+                    0.00055,
+                )),
+                MotionType::Static,
+            ))
+            .unwrap();
+        }
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1)).unwrap().support_body_ids = ids.to_vec();
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &[ids[0], ids[0], ids[2]], 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .motion
+            .carriage
+            .z_velocity_m_s = 0.001;
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .motion
+            .carriage
+            .z_velocity_m_s = 0.0;
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .motion
+            .joint_targets_rad[0] += 0.01;
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .motion
+            .joint_targets_rad[0] -= 0.01;
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .opening_velocity_m_s = f64::NAN;
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .opening_velocity_m_s = 0.0;
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .command_opening_m += 0.0001;
+        assert!(sim
+            .release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+            .is_err());
+        sim.serial_arm_mut(ArmId(1))
+            .unwrap()
+            .gripper
+            .command_opening_m -= 0.0001;
+        assert_eq!(
+            sim.release_body_serial_on_support(ArmId(1), &ids, 2e-6)
+                .unwrap(),
+            Some(BodyId(12))
+        );
+    }
+    #[test]
+    fn distal_ids_and_forced_tool_contact_do_not_depend_on_part_masks() {
+        let mut sim = distal_candidate();
+        let mut arm = sim.serial_arm(ArmId(1)).unwrap().clone();
+        arm.id = ArmId(0x0200_0000);
+        assert_eq!(
+            sim.add_serial_arm(arm),
+            Err(SimulationError::ArmIdOutOfRange)
+        );
+        let tool = sim.serial_arm(ArmId(1)).unwrap().tool_pose();
+        let mut body = RigidBody::new(
+            BodyId(12),
+            Shape::Box {
+                half_extents_m: Vec3::new(0.001, 0.001, 0.0004),
+            },
+            tool,
+            MotionType::Kinematic,
+        );
+        body.collision_filter = CollisionFilter { group: 0, mask: 0 };
+        sim.add_body(body).unwrap();
+        {
+            let a = sim.serial_arm_mut(ArmId(1)).unwrap();
+            a.gripper.opening_m = 0.001995;
+            a.gripper.command_opening_m = 0.001995;
+        }
+        sim.grasp_body_serial(ArmId(1), BodyId(12)).unwrap();
+        // Deliberately corrupted attachment reaches the palm. No world filter
+        // may hide held-part interference with physical robot geometry.
+        sim.serial_arm_mut(ArmId(1)).unwrap().held_body_local_pose =
+            Some(Pose::from_translation(Vec3::new(0.0, 0.0, -0.004)));
+        assert!(sim.validate_serial_arm_current_clearance(ArmId(1)).is_err());
+    }
+
+    #[test]
+    fn physical_tool_sampling_remains_computationally_bounded() {
+        let mut sim = distal_candidate();
+        let arm = sim.serial_arm(ArmId(1)).unwrap();
+        let mut goal = arm.motion.positions();
+        goal.shoulder_yaw_rad += 20.0;
+        let plan = ToolMotionPlan::new(
+            arm.tool_pose().translation,
+            arm.motion.positions(),
+            goal,
+            arm.carriage_config,
+            arm.motion_config,
+            1.0,
+        );
+        assert_eq!(
+            sim.validate_tool_motion_path(ArmId(1), plan),
+            Err(SimulationError::InvalidMachineCommand(
+                MachineCommandError::ToolPathSamplingLimit
+            ))
         );
     }
 }

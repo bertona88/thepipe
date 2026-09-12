@@ -2,8 +2,8 @@
 
 use pipe_optics::StructuredLightRig;
 use pipe_sim_core::{
-    serial_arm_link_body_id, Contact, ContactKind, MotionType, PipeCellConfig, Pose, RigidBody,
-    Shape, Simulation, ToolMotionStatus, Vec3, TENDON_JOINT_COUNT,
+    serial_arm_link_body_id, serial_arm_tool_body_id, Contact, ContactKind, MotionType,
+    PipeCellConfig, Pose, RigidBody, Shape, Simulation, ToolMotionStatus, Vec3, TENDON_JOINT_COUNT,
 };
 use serde::Serialize;
 
@@ -186,6 +186,8 @@ pub struct GripperSnapshot {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ManipulatorSnapshot {
+    /// Exact optional physical palm/finger/pad primitives from the core.
+    pub tool_colliders: Vec<ColliderSnapshot>,
     pub id: u32,
     pub carriage_z_m: f64,
     pub carriage_theta_rad: f64,
@@ -405,6 +407,22 @@ pub(crate) fn build_scene_frame(simulation: &Simulation, contacts: &[Contact]) -
                 })
                 .collect();
             ManipulatorSnapshot {
+                tool_colliders: instance
+                    .gripper
+                    .tool_collision_primitives(kinematics.tool_pose, instance.gripper_config)
+                    .into_iter()
+                    .map(|p| ColliderSnapshot {
+                        body_id: serial_arm_tool_body_id(instance.id, p.component_index)
+                            .expect("valid tool component index")
+                            .0,
+                        geometry_id: format!(
+                            "manipulator/{}/tool/{}",
+                            instance.id.0, p.component_index
+                        ),
+                        pose: p.pose.into(),
+                        shape: p.shape.into(),
+                    })
+                    .collect(),
                 id: instance.id.0,
                 carriage_z_m: instance.motion.carriage.z_m,
                 carriage_theta_rad: instance.motion.carriage.theta_rad,
