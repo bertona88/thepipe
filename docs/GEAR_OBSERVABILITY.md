@@ -123,6 +123,50 @@ marker placement, characterized marker-to-mating-feature geometry, transparent
 surface observability and shared-error covariance for relative alignment. Endpoint
 optical visibility alone is insufficient to qualify the proposed operation.
 
+## Role in the integrated assembly operation
+
+This study is the starting experiment for one active arm and a fixed fixture:
+acquire a gear-like part, carry it through an admissible path, align its bore to
+the shaft using observed geometry, seat under guarded contact, release, withdraw,
+and verify seating and release. These are intended outcomes, not capabilities
+established by the static states or the rejected command probe.
+
+The coupon is not the reference gearbox article in [REQUIREMENTS.md](REQUIREMENTS.md):
+
+| Geometry or task | Current coupon | Reference gearbox |
+| --- | --- | --- |
+| Gear body | 2 mm diameter, 0.8 mm thick annular envelope | 1.4/2.0/2.6 mm outside diameters, 0.35 mm tooth face and 1.30 mm total hub height |
+| Bore / shaft diameters | 0.52 / 0.50 mm | 0.420 / 0.350 mm |
+| Nominal radial clearance | 10 µm | 35 µm |
+| Surroundings and function | Single gear/shaft study | Housing, neighboring gears, cover, tooth engagement and functional rotation |
+
+The tighter coupon clearance does not make it a conservative substitute for all
+gearbox difficulties. Its annulus, nominal marker tabs and isolated mating task
+do not establish hub/tooth grasp access, neighboring-part visibility, release
+clearance or mesh behavior. Changes to the coupon must state which gearbox
+constraint they preserve or omit.
+
+Distal wrist/jaw or pickup geometry, physical marker supports, and fixture
+orientation remain co-design choices. Evaluate clearance and visibility along
+approach, loaded transfer, seating, release and withdrawal. A refined envelope
+needs backing from the intended physical shape; marker supports must also occupy
+space and contribute occlusion and calibration/deformation uncertainty.
+
+Admission should describe lateral offset, axis misalignment, axial separation and
+their uncertainty. The 10 µm radial clearance must cover the relevant tilt, bias,
+motion since observation and held-part uncertainty as well as measurement error.
+Keep the 3–5 µm local 3D measurement objective distinct from relative-feature
+admission. The present conservative bound remains until a justified joint error
+model or direct relative measurement supports replacing it; do not assume
+independence or shared-error cancellation.
+
+Prioritize calibrated feature/reference views and suitable illumination.
+Structured light remains optional where it adds useful evidence. Feed observations
+into the existing bounded manipulation loop with measured/inferred provenance and
+freshness intact. Use the [bench protocol](HARDWARE_COUPON_M1E.md) for independent
+accuracy, obstructed views, calibration stability, loaded correction/settling,
+retention, release and contact measurements on the proposed arrangement.
+
 ## Reproduction
 
 ```sh

@@ -17,6 +17,29 @@ assumptions. It is not permission to claim micrometre arm accuracy, camera accur
 yield, or four-arm feasibility. Six global cameras, replicated macro heads, a final projector SKU,
 and production wrist packaging remain downstream decisions.
 
+### Application to the current gear operation
+
+The peg, jaws and camera/projector arrangement below define the original M1e
+protocol, not a frozen hardware selection for the
+[gear-on-shaft operation](GEAR_OBSERVABILITY.md). Adapt the article, tool, marker
+supports, fixture and illumination together around that operation, recording
+configuration changes and corresponding acceptance limits. Structured light is
+optional when calibrated feature views provide the required evidence.
+
+Prioritize real feature detections through the intended optical path with the
+tool present, independent mating-feature accuracy, calibration stability, loaded
+small corrections and settling/drift, retention, release and contact evidence.
+These measurements must describe the same proposed arrangement and feed its
+versioned simulation parameters. Preserve the calibration/held-out/evaluation-only
+separation below; fitting residuals alone cannot qualify a bore location.
+
+Provide a buildable BOM covering mounts, triggering, illumination, calibration
+equipment, cabling and tools as well as cameras and motors. State exclusions and
+compare the cost of obtaining trustworthy operation evidence. The historical
+cell budget is not a priced or qualified coupon build. Bench work can precede
+the complete tube and optical renderer, but requires physical travel stops,
+current limits, an enclosure and emergency-stop provisions.
+
 ## 1. Qualification question and claim boundary
 
 The coupon shall answer one question:

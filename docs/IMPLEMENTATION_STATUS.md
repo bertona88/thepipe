@@ -4,6 +4,30 @@ This repository contains an executable engineering foundation, not the entire qu
 machine described in `REQUIREMENTS.md`. The table below prevents an implemented proxy from
 being mistaken for a higher-fidelity claim.
 
+## Current integration decision
+
+Steering applied against main at `4ccbd72c954fa8dd699b43b1eb900428942cfdbb`.
+This is a direction change, not a new simulation or hardware result.
+
+One observed gear-on-shaft operation in the existing 160 mm ID machine is the
+common experiment. The lead engineer coordinating it owns agreement between
+geometry, observations, commands, and outcome. The complete gearbox, including
+an executed functional check, remains the goal.
+
+| Current evidence | Consequence for the shared operation |
+| --- | --- |
+| First command probe rejects approach with `ToolPathCollision` at tick 0; static gear/wrist envelopes overlap by about 1.54 mm | Diagnose distal geometry, grasp and envelope fidelity together; this is a conservative-model conflict, not proven hardware interference |
+| Zero of 16 candidates passes precision admission; favorable synthetic errors are about 3.7 µm RMS while the conservative relative bound is about 7 µm against a 5 µm gate | Improve feature calibration, marker support/layout or justified relative uncertainty; do not relax the gate to match favorable samples |
+| Cylindrical metrology and M1e/M1f still use different sensing paths; standalone optics is 100 mm ID | Integrate through the existing observation and motion boundaries using one explicitly identified physical candidate |
+| Gearbox execution remains a reduced surrogate; no hardware-qualified result | Demonstrate arm-owned observed execution and obtain targeted bench evidence before claiming buildability or physical precision |
+
+See [the gear study](GEAR_OBSERVABILITY.md) for reproduction and coupon limitations.
+Review contributions by what was learned, which design/model changed, and which
+important assumption remains untested. Preserve earlier regressions and report
+completed operations separately from controlled refusals.
+
+## Capability inventory
+
 | Capability | Current implementation | What remains for a hardware-qualified claim |
 | --- | --- | --- |
 | Machine and part CAD | Parametric build123d cell, serial tendon arms, jaw grippers, CAD/scenario-locked global sensor datums, a CAD-modeled rigid 12 mm wrist macro head, fixture, ideal involute gearbox, parametric vacuum/probe/rotary/calibration tool solids, and a named export manifest | Runtime STEP/STL collision-mesh ingestion, runtime tool behavior/tool changing, operational projector/macro extrinsic validation, joint sweep optimization, cable/service-loop keep-outs, independent physical mass/inertia checks and hardware drawings |
