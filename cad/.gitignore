@@ -1,6 +1,0 @@
-.verify_deps/
-.verify_output/
-.venv/
-build/
-__pycache__/
-*.py[cod]
