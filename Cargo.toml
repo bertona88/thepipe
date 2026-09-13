@@ -1,26 +1,9 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/pipe_sim_core",
-    "crates/pipe_optics",
-    "crates/pipe_physics",
-    "crates/pipe_planner",
-    "crates/pipe_sim",
-    "crates/pipe_sim_cli",
-    "crates/pipe_sim_wasm",
-]
+members = ["crates/pipe_sim_core", "crates/pipe_optics"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 rust-version = "1.81"
-
-[profile.release]
-lto = "thin"
-codegen-units = 1
-opt-level = 3
-panic = "abort"
-
-[profile.release.package.pipe_sim_wasm]
-opt-level = "s"

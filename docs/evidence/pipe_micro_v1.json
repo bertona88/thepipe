@@ -1,0 +1,678 @@
+{
+  "schema": "pipe-micro-evidence-matrix/v1",
+  "source": {
+    "revision": "16cc2da3e9d37775d449b6acc37fc1ac5f5b425e",
+    "dirty": false,
+    "working_tree_sha256": "35bad8a44fbfbdabd7cba1d40038d0f0e06c62408079bdcec78b799fd90218a5"
+  },
+  "machine_hash": "8eb95ac5f22a42e4d40e4fa441b300e6a310969537f969ddfa8237fa04cbd5de",
+  "command": "python3 scripts/record_micro_evidence.py",
+  "evidence_class": "synthetic_contact",
+  "hardware_qualified": false,
+  "cases": [
+    {
+      "fault": "none",
+      "completed": true,
+      "refusal": null,
+      "ticks": 684,
+      "replay_sha256": "00f7bbb43818404971bfd21c4133e6ae3640e5ddb32c9ad213711a7363b86813",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "separation_observed",
+          "tick": 483,
+          "evidence_ids": [
+            "483/part",
+            "483/donor",
+            "483/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "retention_verified",
+          "tick": 484,
+          "evidence_ids": [
+            "484/part",
+            "484/donor",
+            "484/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_withdrawn",
+          "tick": 523,
+          "evidence_ids": [
+            "523/part",
+            "523/donor",
+            "523/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "destination_release_commanded",
+          "tick": 603,
+          "evidence_ids": [
+            "603/part",
+            "603/donor",
+            "603/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "destination_separation_observed",
+          "tick": 644,
+          "evidence_ids": [
+            "644/part",
+            "644/donor",
+            "644/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "final_pose_verified",
+          "tick": 683,
+          "evidence_ids": [
+            "683/part",
+            "683/donor",
+            "683/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "bbd94ef4a7a185e92a3748fe419d738390c993436286c74eab968070af69c031"
+    },
+    {
+      "fault": "stale",
+      "completed": false,
+      "refusal": "stale_observation",
+      "ticks": 1,
+      "replay_sha256": "ca109d3fc63881b67a6f848f8b4d8865d2ea73d8b6956edf52c8b67822a523d6",
+      "events": [],
+      "operation_hash": "630cd74a8854661f3f2e8ec12f19f9f572ba6d4e080d3bec819b34c0142a8a6e"
+    },
+    {
+      "fault": "wrong_calibration",
+      "completed": false,
+      "refusal": "observation_identity",
+      "ticks": 1,
+      "replay_sha256": "05be8c0ea7b6a7012193d1dda0da558da695fe69d0ce8ca997ee8d1f58242dbf",
+      "events": [],
+      "operation_hash": "318ee5ce4d8d047f47680943d6abe34497e9f2db3e00c7a173392a33d9e9fb8e"
+    },
+    {
+      "fault": "wrong_identity",
+      "completed": false,
+      "refusal": "missing_or_invalid_part",
+      "ticks": 1,
+      "replay_sha256": "19345de2a5b19b0c50a865b869f1b2bb00a50282d21c0ac8fd0dda0f1169f7c6",
+      "events": [],
+      "operation_hash": "875ca05859b6c641a4e06d475c57ac46e7657e0903b104c7c3344fd48b9a7c67"
+    },
+    {
+      "fault": "occlusion",
+      "completed": false,
+      "refusal": "missing_or_invalid_part",
+      "ticks": 1,
+      "replay_sha256": "0b160cc3a75995405599d3b1afa68e00a907dcd3216824e530326eaa2419f29d",
+      "events": [],
+      "operation_hash": "f31632c6d904f2cce83e178845ed863a0cc76267b84998cb7ba9ddf8893b24c8"
+    },
+    {
+      "fault": "unobservable",
+      "completed": false,
+      "refusal": "unobservable_required_translation",
+      "ticks": 1,
+      "replay_sha256": "da76721dad10dea242a577cdc3a26e493d2e5d6905dc472695921edb8db7460b",
+      "events": [],
+      "operation_hash": "8936fa1f207f993fcb1b944a53c53107e97acb34b668a823cb944ca1c1b547c0"
+    },
+    {
+      "fault": "donor_adhesion",
+      "completed": false,
+      "refusal": "separation_unverified",
+      "ticks": 484,
+      "replay_sha256": "743ea27fc7daf8ed01c9dc2df0e68f7f931348d4c11f1a88c3a26a69e6b437b2",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "bd0c983d26163b097d67c7fcc8692c9e5d72a24e3f6d4749fb68d87c5cdd15bd"
+    },
+    {
+      "fault": "receiver_slip",
+      "completed": false,
+      "refusal": "phase_timeout_ReceiverContact",
+      "ticks": 1002,
+      "replay_sha256": "78f30c9bcf60e25492ddcd26475c12026e194f7bc69f8b5607ddbeffdbc8874f",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "23c0fbd6194305d1d9d49f1a483b34a53424b21ecec6e8f26fb7238e0cac644e"
+    },
+    {
+      "fault": "residual_bridge",
+      "completed": false,
+      "refusal": "separation_unverified",
+      "ticks": 484,
+      "replay_sha256": "acfac2e44d82c40862ed92a9cf4a8b5fd49244ccf1581a45d40a36b6d088b92e",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "af700e5255d1f0fab074dc1b90c770c9cada11cea01039c3f4e64885aaf9d133"
+    },
+    {
+      "fault": "ambiguous_gap",
+      "completed": false,
+      "refusal": "separation_unverified",
+      "ticks": 484,
+      "replay_sha256": "36e41fda95a18787a087d278501c0b039760dcf6f2c318196a4dcbf48c29173b",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "306ade0384cbfffdd0544bcc78482f417df7debcace199d2f0d2432abd8e6433"
+    },
+    {
+      "fault": "missing_destination",
+      "completed": false,
+      "refusal": "missing_or_invalid_part",
+      "ticks": 604,
+      "replay_sha256": "e49c822139745e065de252ff91c754190fb4210a5bea0c90c237fa74888563c8",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "separation_observed",
+          "tick": 483,
+          "evidence_ids": [
+            "483/part",
+            "483/donor",
+            "483/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "retention_verified",
+          "tick": 484,
+          "evidence_ids": [
+            "484/part",
+            "484/donor",
+            "484/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_withdrawn",
+          "tick": 523,
+          "evidence_ids": [
+            "523/part",
+            "523/donor",
+            "523/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "240f58181643c283df1446c3cb4c6d669aa7df5a5ba40bab5c8577175ad2f9d1"
+    },
+    {
+      "fault": "blocked_jaw",
+      "completed": false,
+      "refusal": "blocked_jaw",
+      "ticks": 444,
+      "replay_sha256": "0b3f6d7f8c64010fd77e40806ab03d2c83f4c56b166d0ffbde049ba063f5c53e",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "de036010d5ad82ee1090db213d6a7f0b6ce9b5ce75eea149135f41c1d55aa134"
+    },
+    {
+      "fault": "blocked_withdrawal",
+      "completed": false,
+      "refusal": "blocked_withdrawal",
+      "ticks": 486,
+      "replay_sha256": "f701d30ba3a09cf15e10771c3cef0602fb7904a4d858f9c075aa5daf3b1aecb8",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "dual_supported",
+          "tick": 441,
+          "evidence_ids": [
+            "441/part",
+            "441/donor",
+            "441/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "release_commanded",
+          "tick": 442,
+          "evidence_ids": [
+            "442/part",
+            "442/donor",
+            "442/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "separation_observed",
+          "tick": 483,
+          "evidence_ids": [
+            "483/part",
+            "483/donor",
+            "483/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "retention_verified",
+          "tick": 484,
+          "evidence_ids": [
+            "484/part",
+            "484/donor",
+            "484/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "07bccdfbff464c6bd6f2fda69e19ab72a4da142212787689299bd755dc3d0ee6"
+    },
+    {
+      "fault": "service_wrap",
+      "completed": false,
+      "refusal": "service_wrap",
+      "ticks": 1,
+      "replay_sha256": "cdd8614e2fef5e20548afa0f6e6e4b19498608dc0547dca2b3ee931e89c66c00",
+      "events": [],
+      "operation_hash": "63709ce57d9da4648633388ef655f4fa3b247ee1b85ff732b7c237e34e4bead4"
+    },
+    {
+      "fault": "part_rotation",
+      "completed": false,
+      "refusal": "orientation_departure",
+      "ticks": 442,
+      "replay_sha256": "95f011d771d7c674cf2ce92de6494a47342c27e2a29da7ade27a7d2027dff08e",
+      "events": [
+        {
+          "event": "base_positioned",
+          "tick": 40,
+          "evidence_ids": [
+            "40/part",
+            "40/donor",
+            "40/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "donor_retained",
+          "tick": 160,
+          "evidence_ids": [
+            "160/part",
+            "160/donor",
+            "160/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        },
+        {
+          "event": "receiver_contact_requested",
+          "tick": 400,
+          "evidence_ids": [
+            "400/part",
+            "400/donor",
+            "400/receiver"
+          ],
+          "evidence_class": "synthetic_contact"
+        }
+      ],
+      "operation_hash": "c5edc4659b25a48725878d9a435016be80efa97c925456f1087ebe34a3b26644"
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 [toolchain]
-# Keep the channel aligned with bootstrap.sh, which provisions the stable alias
-# and installs this target on that alias for clean local setups.
+# Independent Rust libraries are checked on the same stable channel as CI.
 channel = "stable"
 profile = "minimal"
 targets = ["wasm32-unknown-unknown"]

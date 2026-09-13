@@ -1,0 +1,151 @@
+{
+  "schema": "pipe-micro-machine/v1",
+  "model_id": "near_wall_v1",
+  "evidence_class": "synthetic_contact",
+  "chamber": {
+    "radius_m": 0.05,
+    "half_length_m": 0.03,
+    "transfer_port_xyz_m": [
+      0.05,
+      0,
+      0
+    ],
+    "transfer_port_radius_m": 0.002
+  },
+  "transport": {
+    "coupling": "shared_ring",
+    "z_limits_m": [
+      -0.0003,
+      0.0003
+    ],
+    "theta_limits_rad": [
+      -0.002,
+      0.002
+    ],
+    "start_z_m": -0.0002,
+    "start_theta_rad": -0.001,
+    "speed_m_s": 0.0005,
+    "speed_rad_s": 0.005,
+    "service_z_limit_m": 0.0004,
+    "service_theta_limit_rad": 0.003,
+    "passing": false,
+    "continuous_rotation": false
+  },
+  "shoulders": {
+    "donor": [
+      0.04,
+      -0.008,
+      0
+    ],
+    "receiver": [
+      0.04,
+      0.008,
+      0
+    ]
+  },
+  "flexure": {
+    "model": "bounded_linear_translation",
+    "reach_m": 0.012,
+    "stroke_m": 0.001,
+    "beam_length_m": 0.004,
+    "beam_thickness_m": 4e-05,
+    "beam_width_m": 0.0002,
+    "stiffness_n_m": 0.02,
+    "max_strain": 0.01,
+    "tendon_anchor_radius_m": 0.0002,
+    "max_tension_n": 5e-05,
+    "pretension_n": 5e-06
+  },
+  "tool": {
+    "x_offsets_m": {
+      "donor": -0.00015,
+      "receiver": 0.00015
+    },
+    "pad_half_extents_m": [
+      4e-05,
+      6e-05,
+      3e-05
+    ],
+    "finger_length_m": 0.0005,
+    "finger_half_width_m": 4e-05,
+    "jaw_open_m": 0.0006,
+    "jaw_speed_m_s": 0.001,
+    "tool_speed_m_s": 0.0005
+  },
+  "specimen": {
+    "id": "asymmetric-coupon-500um",
+    "half_extents_m": [
+      0.00025,
+      0.00015,
+      0.0001
+    ],
+    "mass_kg": 3.6e-08,
+    "material": "same-native-resin-as-tools",
+    "orientation_rad": 0
+  },
+  "fixtures": {
+    "pickup_xyz_m": [
+      0.04,
+      -0.0004,
+      0
+    ],
+    "destination_xyz_m": [
+      0.04,
+      0.0004,
+      0
+    ],
+    "half_extents_m": [
+      7e-05,
+      0.0002,
+      0.0001
+    ]
+  },
+  "optics": {
+    "calibration_id": "synthetic-near-wall-v1",
+    "source_id": "synthetic-independent-centroids-v1",
+    "sigma_m": 1e-06,
+    "max_age_ticks": 2,
+    "camera_xyz_m": [
+      [
+        0.02,
+        -0.02,
+        0.07
+      ],
+      [
+        0.06,
+        0.02,
+        0.07
+      ]
+    ],
+    "fov_radius_m": 0.004,
+    "observable_axes": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "environment": {
+    "temperature_c": 22,
+    "rh_fraction": 0.45,
+    "sealed": true,
+    "transfer_chamber": true,
+    "closed_during_operation": true
+  },
+  "assumptions": {
+    "source": "docs/decisions/NEAR_WALL_V1.md",
+    "status": "unmeasured_exploratory_bounds",
+    "domain": "synthetic 500um coupon, translation only, 22C/45%RH placeholders; no hardware use",
+    "resin_process_id": "R1-unselected-structural-resin-native-surface",
+    "resin_batch": null,
+    "contact_retention_n": [
+      1e-06,
+      2e-06
+    ],
+    "pull_off_n": [
+      1e-07,
+      2e-07
+    ],
+    "gravity_m_s2": 9.81,
+    "rationale": "Deliberately small exploratory loads. No measured modulus, adhesion, strain or environment prescription."
+  }
+}

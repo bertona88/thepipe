@@ -1,0 +1,13 @@
+{
+  "schema": "pipe-micro-operation/v1",
+  "operation_id": "native_resin_transfer_v1",
+  "model_id": "near_wall_v1",
+  "evidence_class": "synthetic_contact",
+  "seed": 17,
+  "dt_s": 0.01,
+  "max_ticks": 3000,
+  "position_tolerance_m": 1e-05,
+  "separation_m": 3e-05,
+  "withdrawal_m": 0.0002,
+  "fault": "none"
+}

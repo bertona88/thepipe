@@ -1,0 +1,1435 @@
+{
+  "schema": "pipe-micro-disposition/v1",
+  "baseline_revision": "4ccbd72c954fa8dd699b43b1eb900428942cfdbb",
+  "paths": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "49b2404be1027db7fa82b921fed72401e3bbb849fb2d0c5e7cf6aa904ed2edb2"
+    },
+    {
+      "path": ".gitignore",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "7b888170ccfd7fbfa1b9d1d8776d0e5fb41369d261b453ea08d81899043a3984"
+    },
+    {
+      "path": "AGENTS.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "d3404972c4218b2988c378febfd5e4da58a8ce63c5f6b74c632e8093743940fb"
+    },
+    {
+      "path": "Cargo.lock",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "bd19dc934e44d2f260387c2f3e58b4d4531d35e842174f9ec6e01225b108e61e"
+    },
+    {
+      "path": "Cargo.toml",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "cc832aa2ab636120c35ecf2bbbd109362b8c8d1a3c61816335cc40a17c9cbe63"
+    },
+    {
+      "path": "README.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "3bf75c428c601b2de405247f83396332a984f34bc857c777a1ce1d467204d70b"
+    },
+    {
+      "path": "cad/.gitignore",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "bde232490e7521706e22acb6719f318add89255ac7aca97776bcec1316a49cda"
+    },
+    {
+      "path": "cad/README.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "08d4d1a49084a0c11d54436f7bc155b9117e2a1f7ff64fdf496c43565979a2c7"
+    },
+    {
+      "path": "cad/baseline/gearbox.metadata.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d24d7786e4547402b8d03bab0f8f1d214940fe949e36723711807bb60237c424"
+    },
+    {
+      "path": "cad/pipe_cad/__init__.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "116ac4fec5e3a99c6fd922c15c52f049f706aa4ec3085f7c59f363a3da00f08a"
+    },
+    {
+      "path": "cad/pipe_cad/__main__.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "adc2ee974395f7decf2a8a02920861a694ec001ba54dc0070a46ed4d21bbf5cd"
+    },
+    {
+      "path": "cad/pipe_cad/arm.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "3c83d80ef9597489682a300d448748f3f9a9736ff6f87292440e27b7303418d9"
+    },
+    {
+      "path": "cad/pipe_cad/assemblies.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "9f3792e1dfcab80cbe78d5e469df32ef6046828712715d1dba132a22bb7ca7a0"
+    },
+    {
+      "path": "cad/pipe_cad/cli.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c49979b18c95d7257fbf86a801b1fb8ec888bffd5918987eaa1b8f60d3020d23"
+    },
+    {
+      "path": "cad/pipe_cad/digital_thread.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "566b85f2195deb1c201e59ac236c408d9136e8b2281f63f920ecb19a825aa1f2"
+    },
+    {
+      "path": "cad/pipe_cad/export.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "e797d6501bceeb1050b442cc473c7aeb5b1ea2abef58a0bfdb58a82e6d93770c"
+    },
+    {
+      "path": "cad/pipe_cad/gear_math.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "a7b19ad6bdcdc3c8139af4475af566cfa77ed5e1fee4e188325a440a0a8a38d3"
+    },
+    {
+      "path": "cad/pipe_cad/gearbox.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d3ee4d889f28b15e82c1108978ed420e5b4fc4461a02105b525ddbdb603118c9"
+    },
+    {
+      "path": "cad/pipe_cad/kinematics.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "8fc2d43009a0211328f7eeb0a09278c008b98c92f4c42ee36931953795aa619c"
+    },
+    {
+      "path": "cad/pipe_cad/params.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "eff6f4443c1151108b18c6c7e46945fabd2fa59bd9a22053143b77f5309ab81a"
+    },
+    {
+      "path": "cad/pipe_cad/records.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "b7daed108aab73c6331d044bf43f5dce2335f6eb45cd9af6e98547578d9d9121"
+    },
+    {
+      "path": "cad/pipe_cad/sensing.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "de8484866d0d9011c5a2fc7a15b7854c4184956ac5cff2fbc76e46354df4b3d5"
+    },
+    {
+      "path": "cad/pipe_cad/structure.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d726742285f2ee0a59e6e518808ebab9483b6575436c563e887627dbbd369756"
+    },
+    {
+      "path": "cad/pipe_cad/tooling.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "12e19b47b76f3ad3866964711d2be475b682499948452e12c85c3a52b9ba2431"
+    },
+    {
+      "path": "cad/pyproject.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c7470342e801dcfdd13f3c4db553a37c0c11a80acbcff709037e977e9786a445"
+    },
+    {
+      "path": "cad/requirements.txt",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "2098950e01c60b5634773cc3bdca1e72a3c4126b7c5285a51d0458c9bfd4044e"
+    },
+    {
+      "path": "cad/scripts/export_assembly.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "8f7057d826cb421a5ff92a22e0f33c4a885fead780fcbd36d1d8e4f79faa2adc"
+    },
+    {
+      "path": "cad/scripts/export_gearbox.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "98c84b1177b4d68a1d02594798649993a93d280898988fc9502204fa774d7c50"
+    },
+    {
+      "path": "cad/scripts/export_gearbox_exploded.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c392cbba7ba4631b6dced1a5cc2c31bafd0412855dff1ea7bd5d2f8423544d26"
+    },
+    {
+      "path": "cad/scripts/export_tooling.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "2aa2ff174c4f2e66c277b1b802523a4f5171b8d2465c8bdd9d941dbd742877cc"
+    },
+    {
+      "path": "cad/scripts/validate_parameters.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "76230446a3a0b00338633518da377f0568b6a8046d660df423d4d6d4e10ac514"
+    },
+    {
+      "path": "cad/tests/test_build123d_models.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "11dc478a1bc945a91ce9e6a2adb1700afbfa35914d2bbd864ae75df74b343e72"
+    },
+    {
+      "path": "cad/tests/test_parameters.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "bc9800bd99793a91a6cd4f531324ecc9c433982bbf7232d1bd2525a6ae2418f5"
+    },
+    {
+      "path": "crates/pipe_optics/Cargo.toml",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "1d6f9e1bb7c381e5b7f37058bdc44a5e7fefc8b969c6ec71fb0da3cfff22b397"
+    },
+    {
+      "path": "crates/pipe_optics/README.md",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "7febfbceb2577bc5607aec48f20c7fa3e0ba8821a0237fcfb42aa560c2079de7"
+    },
+    {
+      "path": "crates/pipe_optics/src/camera.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "d81bb399e4db59d3095f51e6b7eae6e509826798fc93f5644bfeee6d2fc316fd"
+    },
+    {
+      "path": "crates/pipe_optics/src/lib.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "415604d339ab0e5caf6df5adc3b100516febe25949bb8f38c1f8a1a67633e35a"
+    },
+    {
+      "path": "crates/pipe_optics/src/math.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "0cd8288a56caaf732d57d48ee1e46d2c3473c72d455012b4581e35336a48d231"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/config.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "b743a206bd84c4ff8e5a4696796431c4506f3db598db8628ba4c8238dc1723f3"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/contract.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "bd8b1954cbf03b08bcfb26af99597154931d8cb8e5518e7317ccf7f57218baac"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/mod.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "6542bfd0dbe7af0e6731efde483e81593d78cfbbee2387f35cd0db77a499c61f"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/part.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "01503b164af376e75339baee2a86f4d5048274a1161ba8f1dd855d6e1c8ab38e"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/products.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "292eaabb68ace78c91436478283f3d3f033de8b19b949070c9ff3f2196884632"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/solve.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "38d5dc417edca93e6a13216930e5237046956190eb41d787c048d3409a8620ed"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/structured.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "976d0c9f3834032615aa6ff143e7a84242a32395e7ff83956aa14b43e5253269"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/synthetic.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "2ba2697cfffd1a04b2e4861b485d175a52e592de7872358e58b32b6ff60b5c05"
+    },
+    {
+      "path": "crates/pipe_optics/src/metrology/verification.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "07852d2a3f08278802c68246ef2caf32cf1c91c9f9f1340f0518e8d17a858e92"
+    },
+    {
+      "path": "crates/pipe_optics/src/noise.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "8f84525ad15fce2ec7f54306cf05bb4678d1673bc1236cca4b03841c1f829fb1"
+    },
+    {
+      "path": "crates/pipe_optics/src/precision.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "70e01d606b3ef48ccd07cf1aa6cc679a14122cbabc27554abf955eff79c6a2ea"
+    },
+    {
+      "path": "crates/pipe_optics/src/reconstruction.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "a19d0b5682ea5ec7430423b390e6f126a7f3876679661c99564731dc3d127a7f"
+    },
+    {
+      "path": "crates/pipe_optics/src/scene.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "6afe3b8634fe4841ce696d695a29a4096b15453ace8be04f33522baa7b0fad79"
+    },
+    {
+      "path": "crates/pipe_optics/src/sensing.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "4d8588a5190b11e2b457dc103b04e8e9f77a9a171e1fd5f0e587b7a80934399c"
+    },
+    {
+      "path": "crates/pipe_optics/tests/metrology.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "88552351587e8fc057eb54f88d33e31d5ff2940d656a2b8d9da8a1019dd0e119"
+    },
+    {
+      "path": "crates/pipe_optics/tests/part_inference.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "2c05ba4fa260bdb81bd9892372148636aa4d22c1ee5ec80bfc0c856b2b600e89"
+    },
+    {
+      "path": "crates/pipe_physics/Cargo.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "961cd9ff023ef44de5ed846ca85d6762c2f8a488cfa65abdfa12fb2bbd656f27"
+    },
+    {
+      "path": "crates/pipe_physics/src/lib.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "a8bcc3631bdee463eacf8c8b977109e957518c9135d6fd34c19ced065c8d79db"
+    },
+    {
+      "path": "crates/pipe_planner/Cargo.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "13d37f73a0c066074e63785335e8a62bc647bc31e6e809d89b1e5c15d3aefeb2"
+    },
+    {
+      "path": "crates/pipe_planner/src/core_adapter.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d9eb194b1abd66bbc48c7967cf81e0b918ba7bb66298a7104d7a64c5d42e7b6d"
+    },
+    {
+      "path": "crates/pipe_planner/src/executive.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "0f708d8668fcb2acc47a9e9f734d3ef9bedbb6a2225b863c98b36caa34944258"
+    },
+    {
+      "path": "crates/pipe_planner/src/lib.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "fa7dc9494eb664f9637096e70668fe38750672e0b703bbcbac916adc7147bc63"
+    },
+    {
+      "path": "crates/pipe_planner/src/model.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "ca09ba17617255f53f64a1677becb1d7d0f14b235ceda3e8ff4c6ca78d769166"
+    },
+    {
+      "path": "crates/pipe_planner/src/scenario.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "08d74f135d37e583dc8f047bdd8cf2a1c932713c7b2898030b0e49a022e2571d"
+    },
+    {
+      "path": "crates/pipe_planner/tests/task_executive.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "1da3bddb4aa36269f2a0d60b4c3d9f17b83f2fe2808d909c21a1e8388714eae6"
+    },
+    {
+      "path": "crates/pipe_sim/Cargo.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "b9d1e70a3edad46da7802fd73279a8eecece8fa0fda9c63fbd1291ea8854ca20"
+    },
+    {
+      "path": "crates/pipe_sim/src/gear_observability.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "670d95e61a6239ff718935d6ae1392f10604a1bfa6a19b5eba3f22bc9514ea7d"
+    },
+    {
+      "path": "crates/pipe_sim/src/handoff/controller.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d761b24b6ca1ce0e1601e238772ac0d03d74529c77238329585b14141f88e2c6"
+    },
+    {
+      "path": "crates/pipe_sim/src/handoff/mod.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "2dbdc84a1d3a5a0da9f85543813f6740362e2edaaaa1a9b8ccafc0bb4711d2a8"
+    },
+    {
+      "path": "crates/pipe_sim/src/handoff/plant.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "e3e64d4c1da343e865af53b302fd30b9f01c5ee86caec06891d3e8488ef66f44"
+    },
+    {
+      "path": "crates/pipe_sim/src/lib.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "e9b4de16eb06dfed6b2f574dc8cfe3c67dee6a8fe6d1f6a34562ab726679d12a"
+    },
+    {
+      "path": "crates/pipe_sim/src/machine_config.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "9ca3184116618a2e05bbda8fa361bffc046cfdf4005f4d0d183d2452f72e48de"
+    },
+    {
+      "path": "crates/pipe_sim/src/metrology.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "43c539d5e7ef8dc27a03dd9919bfea5df7f1c0729bd415c7232acc71c415181a"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/controller.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "44004f5a170a741a1d82ae7361b2bb273867ae9eab3008768fe56cc6ad54247e"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/estimator.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "82bee7fe556b8a86ebcbd02f35e223ef72d19594f4bdf253d92cc887625eb8d6"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/m1f_tests.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "4c93b8c801995bb0afc1e922fe0e05722019773b992dbf64232047c559b0418a"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/mod.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "3b14957ca241533a1231b35ac0c9c499623885277f7a7c89077fc71a31711e01"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/plant.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "32fe9c55c8f2f96c0d20ae3929c230c6e9b0000ae41afcee1e258f4ffea34d54"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/replay.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "ab65c78df60fe1d1504c783b219cdd7be78fb7ba881b1ed81b8f49a510761eef"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/report.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "a9074edca66359445c899b21873f1d4ff4901cc7e9df272205dd1c85d60baa3f"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/runtime.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "277f07de0c4c32906840f432e2f8c53fd666ef699194851a0c03748688b34163"
+    },
+    {
+      "path": "crates/pipe_sim/src/observed_manipulation/scenario.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "01f28edb9e5e8ea5a621510841fe2a99a5cf1d460a352917c0d5422e33dbd69b"
+    },
+    {
+      "path": "crates/pipe_sim/src/optical_codesign.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "5a34c34a004c94233ef9c0f364026e37159ffdd9fd0a336311634ff7037dea39"
+    },
+    {
+      "path": "crates/pipe_sim/src/point_motion.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "59e4ab6329dce8d897ee039b2bda1341506992375aa299001572da66ebb62093"
+    },
+    {
+      "path": "crates/pipe_sim/src/scene.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "a9424bafe2b62c5e75e56888ec083be8c461057262ff61232f5bf7d2eb8fe18a"
+    },
+    {
+      "path": "crates/pipe_sim/src/simple_manipulation.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "6dbe03fa2c851f40d529f8ca0376fa8e8f81e76f4d439e4ebdeb77a90a181506"
+    },
+    {
+      "path": "crates/pipe_sim/tests/gear_observability.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "9860afc117d1e725ea8a17d2e6c44a334d54ca57b1c3ffce4bae0f85be96008a"
+    },
+    {
+      "path": "crates/pipe_sim/tests/m1e_acceptance.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "61bdd003a333263dfca64f29f87ac13f7f49412599cdfec0593c50cd5e0c9118"
+    },
+    {
+      "path": "crates/pipe_sim/tests/m1e_fault_traces.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "f504bd5fbb74c706196815375c51fcc43810f697e527a6d429f2ac2233982070"
+    },
+    {
+      "path": "crates/pipe_sim/tests/m1e_truth_firewall.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "30b93a06da53f5f5baa64c23eff9b2afb67b36227b1f30e7dc16ed7a7b1b291a"
+    },
+    {
+      "path": "crates/pipe_sim/tests/metrology.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c87334b1c6ae397425a1c4c4e197fa43575eadb518f21b4e1d7196bbfde77871"
+    },
+    {
+      "path": "crates/pipe_sim/tests/observed_replay.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "2bae290d8baf0a22a8634e607036efdb0fd2c6f1a4eab89af02141d0dfc76fa4"
+    },
+    {
+      "path": "crates/pipe_sim/tests/stationary_handoff.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "e214895e7447a315d5d4825c43440d4fdbf15918ceb07702468a9ec96a41fdda"
+    },
+    {
+      "path": "crates/pipe_sim_cli/Cargo.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "6d072e7967ed1538d8a510cd5832ec77c747d4e14ded2fb979fab72eb9ebab19"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-gear-observability.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "66c87e8cf7f8500cee26b852a21c10b84cb064076e5ed9dc4c9b8df22d6ad69d"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-handoff.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "65b3864eca5c776e63a5267377fe39f5407805efccba5dabc3421c5cfbc6c345"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-manipulation.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "336caaa4efdf0f2dce33eae444e43032901742ba3ef50a49caac941eb521f0e1"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-metrology.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "50c5486d27f77398515c8c3d30a54badac7b516d4f6a66693a04cad340f82da9"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-observed-manipulation.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "4f4b1f0717d2f1e2e85a0ecb27d5d471df2285d7b87e5bd556ef9036bf83bd02"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-observed-replay.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "812ab252506c44572f278d4d0e1797a01701813e8672a4a801b80e818f89d78c"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/bin/pipe-optical-codesign.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "500dc628ced2b5e06c28993f6091dd8f55d70206708976d51cc5f28f799aa9e0"
+    },
+    {
+      "path": "crates/pipe_sim_cli/src/main.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "82879d88c60379a4f948c02d6abd0bc8c8705fde24801036dea7ac24a8f2816d"
+    },
+    {
+      "path": "crates/pipe_sim_cli/tests/metrology_cli.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "146b15ee0904fba9338b681e4106c771abe2ff282739e2c7d4fe3892c93be3d6"
+    },
+    {
+      "path": "crates/pipe_sim_cli/tests/observed_manipulation_cli.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "321d3db907133967557a3979a39f8c5a70fb468494076fa8b8c43905852b7be8"
+    },
+    {
+      "path": "crates/pipe_sim_core/Cargo.toml",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "18550cf87bb4fcf3698899eb907528c88ca62f803e5005a8f8fcd7204d547652"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/actuator.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "0948a98b9ab0eb2d96184ddc501d973e4e92aeb3c192826a64e16414608cc6e8"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/arm.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "516ec52da1073f4cea8e4670f9501ae1e58be8e699122a34d9d576d6de2815b8"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/collision.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "f76c7f4d8ca04e0ab2761ac2ad1633c901885a1bed90d220c995d0df51e02c7b"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/geometry.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "084b3714ac8b2e0c73711ca5a249ce4a30de7ab87dce404773d79e15857e2650"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/gripper.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "d33c40944eb3725ec0d472b52dbdb3cdbcb84fe5708c390cf7a1d5d8aa39d908"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/lib.rs",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "8ca3d1dc447f10f2e176d67fabae0125636c511ab139f1fab08f8ed162b67c1d"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/machine.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "71c79c5df71efbd5ba63026d0c0eff6d3d8da18fe20dbfa9050a1b43e71258a9"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/math.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "f27f1a4e293d01ab5827a957d9392ead7ad6c3198e9b25a024fdbe85f552f0d0"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/serial_arm.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "4c84999623fa3e1dccd1ee57c8954c8c173e74c41f37f08b03a7a91441a312e1"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/simulation.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "b008324dfbf9965b587447fd1260f87c46927962fd307d565d8b69518940bc4e"
+    },
+    {
+      "path": "crates/pipe_sim_core/src/units.rs",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "668c965ab9120f060bc9c47b7f3094327f528d46154809aca27e71b6e96c9a81"
+    },
+    {
+      "path": "crates/pipe_sim_core/tests/serial_handoff.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "b2e5521c177e5ef83b950aebfc7785eba6e073c6ab9ebddac6046562dc8fcfaf"
+    },
+    {
+      "path": "crates/pipe_sim_wasm/Cargo.toml",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "781bc7066cae50ffbec2afbec7264ed3c395bcb0cf2a09641af6e70f814a9c9a"
+    },
+    {
+      "path": "crates/pipe_sim_wasm/src/lib.rs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "613653f5a3b255c3f0eab7feb0dda61a6f4b446f0936c8f49bf2e76905fe6854"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "29e72ee90f8a664e44d6fbf27cfc3820970f950190289b1d6b9a9e0d04344788"
+    },
+    {
+      "path": "docs/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "6febe7931a50f50c1e216198c0e5235b52eca78dfbb4ffc062a1ad11b52213d2"
+    },
+    {
+      "path": "docs/FIXED_HEAD_MANIPULATION_M1F.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/FIXED_HEAD_MANIPULATION_M1F.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "a504e2808c5126ac936ad0c576ac037c8db7fd28684bedf5865ff44f2a5a3adb"
+    },
+    {
+      "path": "docs/GEAR_OBSERVABILITY.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/GEAR_OBSERVABILITY.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "a0d6cf0716d32b52d958dfdc3d6eb40fd16181f44936aedbbb1d813eb36ffd42"
+    },
+    {
+      "path": "docs/HARDWARE_COUPON_M1E.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/HARDWARE_COUPON_M1E.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "a3fdf75ecd8ee7648e502770bf152153251e143e886c5e6fa50acdf85b1e8b79"
+    },
+    {
+      "path": "docs/IMPLEMENTATION_STATUS.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "ae76edd5ff62a7ab8530bcd3434970b4bf89f052ac6ffc6915a1ad64acc70eb7"
+    },
+    {
+      "path": "docs/MACHINE_RUNTIME_M1.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/MACHINE_RUNTIME_M1.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "62d781bea305161003b72cfb7adff69365239d250785af1dcd13330c6f6c121a"
+    },
+    {
+      "path": "docs/MACHINE_RUNTIME_M1C.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/MACHINE_RUNTIME_M1C.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "ac5f3812d452f46421f6be2f0eb1eaa1788bd31f998f7d157885195d5c3c9b6f"
+    },
+    {
+      "path": "docs/OBSERVED_STATE_MANIPULATION_M1E.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/OBSERVED_STATE_MANIPULATION_M1E.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "4ecfab46a10cea3161e3a7922cb8f5a1c7efb4542a23155582e7d52e8ebd4265"
+    },
+    {
+      "path": "docs/OPTICAL_CODESIGN_M1D.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/OPTICAL_CODESIGN_M1D.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "b77e51b8e2d736365a1ee7ead2e05dd255b1f33bf0a046f43bd4432fd65bd7c3"
+    },
+    {
+      "path": "docs/OPTICAL_METROLOGY.md",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/OPTICAL_METROLOGY.md",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "1d1bce1fd700d6ba0eb151a1c9c69e3eceaac7c4eafc44f7040a0845232d3cd5"
+    },
+    {
+      "path": "docs/REQUIREMENTS.md",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "Replace obsolete authority or executable boundary.",
+      "baseline_sha256": "60b13b96b08b4e3f658475f96f1ccc709d64adc2ec6b448374d05045c92fc1f8"
+    },
+    {
+      "path": "docs/evidence/gear_observability_v1.json",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/evidence/gear_observability_v1.json",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "21a848a3c476afd8b292f43cfd2b6d63dbebfbeaf74a52dcc517c63799550d46"
+    },
+    {
+      "path": "docs/evidence/m1f_robustness_v1.json",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/evidence/m1f_robustness_v1.json",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "0c011810b6e0f8ab811318152dd9475209c62e935ebb214e6de93ea4987aa33e"
+    },
+    {
+      "path": "docs/evidence/metrology_machine_v1.json",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/evidence/metrology_machine_v1.json",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "1d94b832a86cf43354d33e5e3d337c6a7fc50dac9c5b89d0b2fd91b4e53b351d"
+    },
+    {
+      "path": "docs/evidence/metrology_v1.json",
+      "disposition": "archive",
+      "destination": "docs/history/pre-micro/evidence/metrology_v1.json",
+      "reason": "Historical only; exact bytes and baseline revision preserved.",
+      "baseline_sha256": "cdd07f706ce9afe640e016481e2a15c87a1524f9ac43615fafcc0f806bf300ae"
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "disposition": "keep",
+      "destination": null,
+      "reason": "Independent library only; not imported by active operation. Existing test domain retained; no Pipe \u00b5 qualification.",
+      "baseline_sha256": "11d9e034c6014b52ff636dff1f1d561fed804350b499bd644ba5a30d98201a45"
+    },
+    {
+      "path": "scenarios/gear_observability_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "3171701d5512dabb19e479ba7e70ae74672917f8dc3bcbdfab64382ceb4ccfce"
+    },
+    {
+      "path": "scenarios/gearbox_acceptance.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "f00915d0e0f15f49b21c9a490c6e541ebeecbff54fe082fbd42a7d1f93f02b25"
+    },
+    {
+      "path": "scenarios/machine_baseline_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "bb4b3516fb17194bc9c9109f4c31bc66cdf8b8197ffb461d494b701d2281fbfb"
+    },
+    {
+      "path": "scenarios/machine_m1e_coupon_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "03b6b7406f9c9ed8dba748719ee7d7686ef9cbf5abe069ebf4f720f1af61aec5"
+    },
+    {
+      "path": "scenarios/metrology_cylindrical_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "5c6f5dc4f1f039362b94996f52992137288d7f405cd50e86e056db50418d0406"
+    },
+    {
+      "path": "scenarios/observed_manipulation_m1e_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "a08a4ae233d9297169fc564678374f09252c282c565f3d28bdded205125953b0"
+    },
+    {
+      "path": "scenarios/observed_manipulation_m1f_v2.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "233f6d26d96a8d3b81b5bdd4088e99559411cc4c6d6996efb7027e7c4ca370fe"
+    },
+    {
+      "path": "scenarios/optical_codesign_m1d.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "f55dbb297f162344d4762688a659fa62fdf93dbb9633825a3cc79ef0ed423872"
+    },
+    {
+      "path": "scenarios/robustness_m1f_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "21d0b69a9a5f940f6db647d31bc312dcc8a69b28a261270a2a68da6c53011178"
+    },
+    {
+      "path": "scenarios/stationary_handoff_m1g_v1.json",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "83ed9b2a4530664881c02c2f61795ec167f379eedcf3e863d2d2a7903eaba2d7"
+    },
+    {
+      "path": "scripts/bootstrap.sh",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "b25cf4f0608f72ed8ddc241b72a1d498b8f3284bfd8084fb1b992af536159c24"
+    },
+    {
+      "path": "scripts/build_wasm.sh",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "51084bbfa7f5cdf6cf64b1713647d330ad106547abe08911ece194252416eb8a"
+    },
+    {
+      "path": "scripts/check_m1f_robustness.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "9381395639b36ae8bdfbd46c120b906434cb643f07c0646d8d56bd86c7f382a4"
+    },
+    {
+      "path": "scripts/check_observed_replay.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "e8ac8e10ffa1587b6130e9e75ce69d28a0bac3c7b8a179ff8b0b60b0b4c4c719"
+    },
+    {
+      "path": "scripts/check_observed_replay_js.cjs",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "262dd9ea3a65e05476ac278a89514cc57937f11af5c05c3ab07ba04b7957c951"
+    },
+    {
+      "path": "scripts/inspect_observed_replay.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c31b11129ad5389bea2659ed62718f6937b4a900f57d3df30b32a9f410805cf3"
+    },
+    {
+      "path": "scripts/observed_replay_inspector.html",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "c5cb91c1d56cb0e1b32adae3830d722431a06f537baab3ac0939bbef288c3c09"
+    },
+    {
+      "path": "scripts/record_observed_replay.py",
+      "disposition": "retire",
+      "destination": null,
+      "reason": "Retired machine-specific contract. Recoverable at pinned baseline; property gaps tracked in TEST_DISPOSITIONS.md.",
+      "baseline_sha256": "ff283296d1cf66c7737bdf12687f3851be0a93a3f72562552b3a2a21a6144f04"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "disposition": "replace",
+      "destination": null,
+      "reason": "New Pipe \u00b5 verification entrypoint; no legacy scripts invoked.",
+      "baseline_sha256": "2edfe717d45f82b64369fa5031c25e6a374ca6efc2473fa00469d3f08f4a41e1"
+    }
+  ],
+  "new_paths": [
+    {
+      "path": "cad/export_micro.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "designs/pipe_micro/near_wall_v1/machine.json",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/decisions/NEAR_WALL_V1.md",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/decisions/PIPE_MICRO_RESET.md",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/decisions/pipe-micro-project-reset-plan.md",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/history/pre-micro/ENGINEERING_REPLAY_AND_HANDOFF_M1G.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/FIXED_HEAD_MANIPULATION_M1F.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/GEAR_OBSERVABILITY.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/HARDWARE_COUPON_M1E.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/MACHINE_RUNTIME_M1.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/MACHINE_RUNTIME_M1C.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/OBSERVED_STATE_MANIPULATION_M1E.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/OPTICAL_CODESIGN_M1D.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/OPTICAL_METROLOGY.md",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/evidence/gear_observability_v1.json",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/evidence/m1f_robustness_v1.json",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/evidence/metrology_machine_v1.json",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/history/pre-micro/evidence/metrology_v1.json",
+      "disposition": "historical-only"
+    },
+    {
+      "path": "docs/migration/README.md",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/migration/TEST_DISPOSITIONS.md",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/migration/legacy_inventory.json",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/migration/pipe_micro_disposition.yaml",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/the-pipe-micro/00-vision/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/00-vision/design-choices.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/00-vision/design-principles.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/00-vision/machine-in-use.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/01-architecture/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/01-architecture/energy-material-information.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/01-architecture/mobility-and-reach.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/01-architecture/scale-and-workspace.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/01-architecture/spatial-coordination.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/control/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/control/collision-and-recovery.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/control/verified-handoff.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/end-effectors/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/end-effectors/contact-microarchitecture.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/end-effectors/mechanical-grippers.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/end-effectors/vacuum-and-fluidics.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/environment/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/environment/contamination-and-load-locks.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/environment/humidity-and-electrostatics.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/fabrication/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/fabrication/materials-and-process.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/flexure-arms/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/flexure-arms/joint-and-arm-families.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/flexure-arms/printed-interfaces.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/optics/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/optics/fiducials-and-transparent-parts.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/tendons/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/tendons/routing-and-preload.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/transport/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/02-subsystems/transport/mechanism-options.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/03-physics/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/03-physics/contact-and-adhesion.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/03-physics/release-and-retention.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/03-physics/scaling.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/assembling-the-next-arms.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/directional-adhesion.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/integrated-and-fluidic-mechanisms.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/optical-and-mechanical-sensing.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/passive-fixtures-and-part-design.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/04-2pp-opportunities/wet-tools-and-capillary-transfer.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/05-evidence/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/05-evidence/coupon-atlas.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/05-evidence/macro-and-micro-prototypes.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/05-evidence/measurement-and-models.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/06-reference/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/06-reference/discussion-map.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/06-reference/open-questions.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/06-reference/parameter-register.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/06-reference/sources-and-glossary.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/DIRECTORY.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "docs/the-pipe-micro/README.md",
+      "disposition": "keep-intent"
+    },
+    {
+      "path": "pipe_micro/__init__.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/__main__.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/contracts.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/controller.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/geometry.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/plant.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/runtime.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "pipe_micro/sensor.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "scenarios/pipe_micro/native_resin_transfer_v1.json",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "scripts/inventory_legacy.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "tests/test_micro.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "scripts/record_micro_evidence.py",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/evidence/pipe_micro_v1.json",
+      "disposition": "new-pipe-micro"
+    },
+    {
+      "path": "docs/migration/PUBLICATION.md",
+      "disposition": "new-pipe-micro"
+    }
+  ]
+}
